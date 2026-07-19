@@ -1,0 +1,66 @@
+site_name: "vLLM Core Architecture & Performance Mechanics"
+site_description: "An AI Engineering Textbook and Production Reference"
+site_author: "linghuanym"
+
+nav:
+  - Curriculum & Principles: index.md
+  - Module 1 - Inference Fundamentals: 01_llm_inference_fundamentals.md
+  - Module 2 - vLLM Core Architecture: 02_vllm_core_architecture.md
+  - Appendix - Master Glossary: appendix_glossary_and_terminology.md
+
+theme:
+  name: material
+  language: en
+  palette:
+    # Light mode toggle
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode toggle
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.top
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: folder
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: zh
+          name: 简体中文
+          build: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.arithmatex:
+      generic: true
+  - tables
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
