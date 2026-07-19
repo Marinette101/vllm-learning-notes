@@ -1,0 +1,1083 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An AI Engineering Textbook and Production Reference">
+      
+      
+        <meta name="author" content="linghuanym">
+      
+      
+      
+      
+        <link rel="next" href="01_llm_inference_fundamentals/">
+      
+      
+        
+          <link rel="alternate" href="/" hreflang="en">
+        
+          <link rel="alternate" href="/zh/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>vLLM Core Architecture & Performance Mechanics</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#vllm-deep-dive-leading-principles-and-comprehensive-curriculum" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-header__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            vLLM Core Architecture & Performance Mechanics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Curriculum & Principles
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/zh/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-nav__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    vLLM Core Architecture & Performance Mechanics
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Curriculum & Principles
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Curriculum & Principles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-leading-principles-of-llm-inference-and-vllm-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: Leading Principles of LLM Inference and vLLM Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: Leading Principles of LLM Inference and vLLM Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#principle-1-memory-is-the-ultimate-bottleneck-in-llm-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principle 1: Memory is the Ultimate Bottleneck in LLM Decoding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#principle-2-continuous-and-iteration-level-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principle 2: Continuous and Iteration-Level Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#principle-3-hardware-kernel-algorithm-co-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principle 3: Hardware-Kernel-Algorithm Co-Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#principle-4-composable-parallelism-and-production-grade-orchestration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principle 4: Composable Parallelism and Production-Grade Orchestration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-curriculum-structure-and-textbook-roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: Curriculum Structure and Textbook Roadmap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-deep-dive-module-breakdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Deep-Dive Module Breakdown
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Deep-Dive Module Breakdown">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#module-1-llm-inference-fundamentals-and-the-bottlenecks-01_llm_inference_fundamentalsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 1] LLM Inference Fundamentals and The Bottlenecks (01_llm_inference_fundamentals.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#module-2-vllm-core-architecture-and-pagedattention-02_vllm_core_architecturemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 2] vLLM Core Architecture and PagedAttention (02_vllm_core_architecture.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#module-3-performance-quality-and-engine-enhancements-03_performance_and_qualitymd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 3] Performance, Quality and Engine Enhancements (03_performance_and_quality.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#module-4-hardware-interaction-and-kernel-co-design-04_hardware_and_kernel_optimizationmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 4] Hardware Interaction and Kernel Co-Design (04_hardware_and_kernel_optimization.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#module-5-distributed-inference-and-parallelism-strategies-05_distributed_parallelismmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 5] Distributed Inference and Parallelism Strategies (05_distributed_parallelism.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#module-6-production-deployment-and-cloud-orchestration-06_deployment_and_orchestrationmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 6] Production Deployment and Cloud Orchestration (06_deployment_and_orchestration.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-how-we-will-build-and-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: How We Will Build and Learn
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="01_llm_inference_fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 1 - Inference Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="02_vllm_core_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 2 - vLLM Core Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="appendix_glossary_and_terminology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix - Master Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-leading-principles-of-llm-inference-and-vllm-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: Leading Principles of LLM Inference and vLLM Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: Leading Principles of LLM Inference and vLLM Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#principle-1-memory-is-the-ultimate-bottleneck-in-llm-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principle 1: Memory is the Ultimate Bottleneck in LLM Decoding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#principle-2-continuous-and-iteration-level-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principle 2: Continuous and Iteration-Level Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#principle-3-hardware-kernel-algorithm-co-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principle 3: Hardware-Kernel-Algorithm Co-Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#principle-4-composable-parallelism-and-production-grade-orchestration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principle 4: Composable Parallelism and Production-Grade Orchestration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-curriculum-structure-and-textbook-roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: Curriculum Structure and Textbook Roadmap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-deep-dive-module-breakdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Deep-Dive Module Breakdown
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Deep-Dive Module Breakdown">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#module-1-llm-inference-fundamentals-and-the-bottlenecks-01_llm_inference_fundamentalsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 1] LLM Inference Fundamentals and The Bottlenecks (01_llm_inference_fundamentals.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#module-2-vllm-core-architecture-and-pagedattention-02_vllm_core_architecturemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 2] vLLM Core Architecture and PagedAttention (02_vllm_core_architecture.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#module-3-performance-quality-and-engine-enhancements-03_performance_and_qualitymd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 3] Performance, Quality and Engine Enhancements (03_performance_and_quality.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#module-4-hardware-interaction-and-kernel-co-design-04_hardware_and_kernel_optimizationmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 4] Hardware Interaction and Kernel Co-Design (04_hardware_and_kernel_optimization.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#module-5-distributed-inference-and-parallelism-strategies-05_distributed_parallelismmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 5] Distributed Inference and Parallelism Strategies (05_distributed_parallelism.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#module-6-production-deployment-and-cloud-orchestration-06_deployment_and_orchestrationmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Module 6] Production Deployment and Cloud Orchestration (06_deployment_and_orchestration.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-how-we-will-build-and-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: How We Will Build and Learn
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="vllm-deep-dive-leading-principles-and-comprehensive-curriculum">vLLM Deep Dive: Leading Principles and Comprehensive Curriculum<a class="headerlink" href="#vllm-deep-dive-leading-principles-and-comprehensive-curriculum" title="Permanent link">&para;</a></h1>
+<p>Welcome to the <strong>vLLM Deep Dive Textbook</strong>. This series of learning modules is structured to take you from the fundamental physics and bottlenecks of Large Language Model (LLM) inference all the way to distributed multi-cluster orchestration, kernel optimizations, and hardware co-design.</p>
+<hr />
+<h2 id="part-1-leading-principles-of-llm-inference-and-vllm-design">Part 1: Leading Principles of LLM Inference and vLLM Design<a class="headerlink" href="#part-1-leading-principles-of-llm-inference-and-vllm-design" title="Permanent link">&para;</a></h2>
+<p>To truly master vLLM, we must anchor our understanding in four foundational design principles that drove its creation and evolution:</p>
+<pre class="mermaid"><code>flowchart TD
+    ROOT["⚡ Core Design Principles of vLLM"]
+
+    ROOT --&gt; P1["1. Memory is the Ultimate Bottleneck"]
+    P1 --&gt; S1["Decouple logical sequence from physical HBM allocation&lt;br&gt;*(Virtual Memory and PagedAttention)*"]
+
+    ROOT --&gt; P2["2. Dynamic and Continuous Scheduling"]
+    P2 --&gt; S2["Schedule at iteration granularity&lt;br&gt;*(Continuous Batching and Chunked Prefill)*"]
+
+    ROOT --&gt; P3["3. Hardware-Aware Co-Design"]
+    P3 --&gt; S3["Max HBM/SRAM bandwidth efficiency&lt;br&gt;*(Custom Fused Kernels and CUDA Graphs)*"]
+
+    ROOT --&gt; P4["4. Scale-Out and Scale-Up Synergy"]
+    P4 --&gt; S4["Multi-dimensional parallelism and cloud orchestration&lt;br&gt;*(TP, PP, CP, EP via K8s / Ray)*"]</code></pre>
+<h3 id="principle-1-memory-is-the-ultimate-bottleneck-in-llm-decoding">Principle 1: Memory is the Ultimate Bottleneck in LLM Decoding<a class="headerlink" href="#principle-1-memory-is-the-ultimate-bottleneck-in-llm-decoding" title="Permanent link">&para;</a></h3>
+<p>In traditional serving systems, the Key-Value (KV) cache is allocated contiguously in high-bandwidth memory (HBM) based on the <em>maximum potential length</em> of a request. Because request lengths are unpredictable, this causes:</p>
+<ul>
+<li><strong>Internal Fragmentation</strong>: Reserved space that is never used (often 60–80% of allocated KV cache).</li>
+<li><strong>External Fragmentation</strong>: Memory gaps between contiguous blocks that cannot be fulfilled for new requests.</li>
+<li><strong>Consequence</strong>: GPU compute units sit idle waiting for memory or are starved because concurrency is artificially capped by wasted KV cache allocations.</li>
+</ul>
+<p><strong>vLLM's Solution</strong>: Borrow the operating system's concept of <strong>Virtual Memory and Paging</strong>. By breaking the KV cache into fixed-size <strong>physical blocks</strong> (e.g., 16 tokens) mapped via <strong>block tables</strong> to logical sequence positions, vLLM achieves near-zero memory waste (&lt;4%), allowing significantly higher batch sizes and concurrency on the exact same hardware.</p>
+<hr />
+<h3 id="principle-2-continuous-and-iteration-level-execution">Principle 2: Continuous and Iteration-Level Execution<a class="headerlink" href="#principle-2-continuous-and-iteration-level-execution" title="Permanent link">&para;</a></h3>
+<p>Traditional deep learning frameworks operate on static batches where all sequences must finish together, or where new sequences wait until the slowest sequence in the batch concludes.
+<strong>vLLM's Solution</strong>: <strong>Continuous Batching (Iteration-level Scheduling)</strong>. </p>
+<ul>
+<li>At every single forward pass (iteration) of the model, the engine checks for completed sequences, evicts or frees their KV blocks immediately, and inserts newly arrived requests or scheduled chunks.</li>
+<li>Through techniques like <strong>Chunked Prefill</strong>, long incoming prompt evaluations are broken into manageable chunks and interleaved with the latency-sensitive decoding steps of active requests, preventing Time-to-First-Token (TTFT) spikes from degrading Inter-Token Latency (ITL).</li>
+</ul>
+<hr />
+<h3 id="principle-3-hardware-kernel-algorithm-co-design">Principle 3: Hardware-Kernel-Algorithm Co-Design<a class="headerlink" href="#principle-3-hardware-kernel-algorithm-co-design" title="Permanent link">&para;</a></h3>
+<p>Modern GPUs (NVIDIA Hopper/Blackwell, AMD CDNA3) possess immense compute capacity (TFLOPs/PFLOPs) but are fundamentally bounded by memory bandwidth (TB/s) during autoregressive decoding.
+<strong>vLLM's Solution</strong>:</p>
+<ul>
+<li><strong>PagedAttention Kernels</strong>: Custom fused CUDA/ROCm/XLA kernels that fetch non-contiguous KV blocks directly into fast on-chip SRAM (Shared Memory) during attention computation, eliminating extra HBM round-trips.</li>
+<li><strong>Graph Optimization</strong>: Integration with <strong>CUDA Graphs</strong> and <code>torch.compile</code> to eliminate CPU overhead and Python interpreter latency during the fast, repetitive token generation loop.</li>
+</ul>
+<hr />
+<h3 id="principle-4-composable-parallelism-and-production-grade-orchestration">Principle 4: Composable Parallelism and Production-Grade Orchestration<a class="headerlink" href="#principle-4-composable-parallelism-and-production-grade-orchestration" title="Permanent link">&para;</a></h3>
+<p>As models grow beyond the HBM capacity of a single GPU (or require multi-node execution for ultra-low latency), the inference engine must natively orchestrate complex parallel topologies without adding overhead.
+<strong>vLLM's Solution</strong>:</p>
+<ul>
+<li>Multi-dimensional parallelism: <strong>Tensor Parallelism (TP)</strong> for intra-node low latency, <strong>Pipeline Parallelism (PP)</strong> for inter-node scaling, <strong>Context/Sequence Parallelism (CP)</strong> for million-token contexts, and <strong>Expert Parallelism (EP)</strong> for Mixture-of-Experts (MoE).</li>
+<li>Clean separation between compute engines (managed via <strong>Ray</strong> or native multiprocessing) and serving gateways (OpenAI-compatible APIs, <strong>Kubernetes</strong> operators, and <strong>Triton Inference Server</strong> integration).</li>
+</ul>
+<hr />
+<h2 id="part-2-curriculum-structure-and-textbook-roadmap">Part 2: Curriculum Structure and Textbook Roadmap<a class="headerlink" href="#part-2-curriculum-structure-and-textbook-roadmap" title="Permanent link">&para;</a></h2>
+<p>This learning folder (<code>vLLM/</code>) is organized into 6 comprehensive, self-contained modules. Each module will be authored as a deep-dive Markdown document containing theoretical concepts, mathematical formulas, architecture diagrams, code patterns, and production trade-offs.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Module</th>
+<th style="text-align: left;">Filename</th>
+<th style="text-align: left;">Key Topics Covered</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Module 1: Fundamentals</strong></td>
+<td style="text-align: left;"><code>01_llm_inference_fundamentals.md</code></td>
+<td style="text-align: left;">Autoregressive decoding mechanics, Prefill vs. Decode phase, KV Cache math (<code>2 * b * s * l * h * d</code>), Arithmetic Intensity, and memory fragmentation economics.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Module 2: Core Architecture</strong></td>
+<td style="text-align: left;"><code>02_vllm_core_architecture.md</code></td>
+<td style="text-align: left;">OS Virtual Memory mapping, Block Manager anatomy, PagedAttention kernel workflow, Copy-on-Write (CoW) for beam search/shared prompts, and Automatic Prefix Caching (APC).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Module 3: Performance and Quality</strong></td>
+<td style="text-align: left;"><code>03_performance_and_quality.md</code></td>
+<td style="text-align: left;">Metrics (TTFT, ITL/TBT, Throughput), Chunked Prefill, CUDA Graphs, Speculative Decoding (Medusa/EAGLE/Draft models), and Quantization trade-offs (AWQ, GPTQ, FP8, W8A8).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Module 4: Hardware Interaction</strong></td>
+<td style="text-align: left;"><code>04_hardware_and_kernel_optimization.md</code></td>
+<td style="text-align: left;">GPU memory hierarchy (HBM/L2/SRAM), PagedAttention and FlashAttention SRAM tiling, V1 vs V2 engine async execution, and cross-hardware backends (CUDA, ROCm, TPU, Neuron).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Module 5: Distributed Parallelism</strong></td>
+<td style="text-align: left;"><code>05_distributed_parallelism.md</code></td>
+<td style="text-align: left;">Tensor Parallelism (Megatron-LM syncs over NVLink), Pipeline Parallelism (micro-batching and bubbles), Context Parallelism (Ring-Attention), and Expert Parallelism (MoE routing).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Module 6: K8s and Orchestration</strong></td>
+<td style="text-align: left;"><code>06_deployment_and_orchestration.md</code></td>
+<td style="text-align: left;">OpenAI API Server structure, Ray multi-host actors, Kubernetes deployment (GPU Operator, <code>/dev/shm</code> sizing, NUMA pinning), KEDA autoscaling on KV utilization, and Triton integration.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Appendix: Master Glossary</strong></td>
+<td style="text-align: left;"><code>appendix_glossary_and_terminology.md</code></td>
+<td style="text-align: left;">Comprehensive reference of all architectural, mathematical (<code>RoPE</code>, <code>SwiGLU</code>), physical hardware (<code>HBM</code>, <code>L2</code>, <code>SM</code>), and distributed systems (<code>EP</code>, <code>TP</code>, <code>PP</code>) terminology.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="part-3-deep-dive-module-breakdown">Part 3: Deep-Dive Module Breakdown<a class="headerlink" href="#part-3-deep-dive-module-breakdown" title="Permanent link">&para;</a></h2>
+<h3 id="module-1-llm-inference-fundamentals-and-the-bottlenecks-01_llm_inference_fundamentalsmd">[Module 1] LLM Inference Fundamentals and The Bottlenecks (<code>01_llm_inference_fundamentals.md</code>)<a class="headerlink" href="#module-1-llm-inference-fundamentals-and-the-bottlenecks-01_llm_inference_fundamentalsmd" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>The Anatomy of Transformer Generation</strong></li>
+<li><strong>Prefill (Prompt Phase)</strong>: Compute-bound, parallel processing of all input tokens simultaneously. Generates the initial KV cache and the first generated token.</li>
+<li><strong>Decode (Generation Phase)</strong>: Memory-bandwidth bound, sequential processing generating one token at a time while reading the entire historical KV cache from HBM for every step.</li>
+<li><strong>The Key-Value (KV) Cache Mathematical Formalism</strong></li>
+<li>Why caching <code>K</code> and <code>V</code> projections is mandatory to avoid <span class="arithmatex">\(\mathcal{O}(N^2)\)</span> recomputation.</li>
+<li>Calculating the exact memory footprint:</li>
+</ol>
+<div class="arithmatex">\[
+\text{KV_Bytes} = 2 \cdot \text{batch_size} \cdot \text{seq_len} \cdot \text{num_layers} \cdot \text{num_kv_heads} \cdot \text{head_dim} \cdot \text{sizeof(dtype)}
+\]</div>
+<ul>
+<li>Real-world example: Why a 70B model with 4K context instantly consumes tens of gigabytes just for KV memory before model weights are even considered.</li>
+<li><strong>The Memory vs. Compute Bound Paradigm</strong></li>
+<li>Roofline Model and <strong>Operational Intensity (Arithmetic Intensity)</strong>: <code>FLOPs / Byte</code>.</li>
+<li>Why doubling GPU TFLOPs does not speed up single-batch decoding without increasing HBM bandwidth (<code>GB/s</code>).</li>
+<li><strong>Traditional Serving Failures</strong></li>
+<li>Static batching and the padding tax.</li>
+<li>The contiguous memory requirement: Why pre-allocating <code>max_seq_len</code> causes <strong>Internal Fragmentation</strong> (wasted capacity) and <strong>External Fragmentation</strong> (checkerboard memory preventing new request admission).</li>
+</ul>
+<hr />
+<h3 id="module-2-vllm-core-architecture-and-pagedattention-02_vllm_core_architecturemd">[Module 2] vLLM Core Architecture and PagedAttention (<code>02_vllm_core_architecture.md</code>)<a class="headerlink" href="#module-2-vllm-core-architecture-and-pagedattention-02_vllm_core_architecturemd" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>The Operating System Analogy: Paging in LLMs</strong></li>
+<li>Logical Token Blocks vs. Physical KV Blocks.</li>
+<li>The <strong>Block Table</strong>: Translating logical sequence offsets to physical block indices in HBM in <span class="arithmatex">\(\mathcal{O}(1)\)</span> time.</li>
+<li><strong>PagedAttention Deep Dive</strong></li>
+<li>Architectural difference between standard FlashAttention and PagedAttention.</li>
+<li>How the attention kernel performs on-the-fly block table lookups inside registers/SRAM to compute attention scores across fragmented physical HBM locations without copying data.</li>
+<li><strong>The Block Manager and Memory Allocator</strong></li>
+<li>Block Size selection (e.g., 16 tokens): balancing internal fragmentation (at most <code>block_size - 1</code> tokens wasted per sequence) vs. lookup overhead.</li>
+<li><strong>Copy-on-Write (CoW)</strong> mechanism: How shared system prompts, parallel sampling (<code>best_of_n</code>), and beam search share physical blocks with reference counting (<code>ref_count &gt; 1</code>) until a sequence diverges.</li>
+<li><strong>Automatic Prefix Caching (APC)</strong>: Hash-based identification and retention of reusable prefix blocks across independent API requests.</li>
+<li><strong>Continuous Batching and The Iteration Scheduler</strong></li>
+<li>The step-by-step lifecycle of a request in vLLM: <code>Waiting</code> -&gt; <code>Running</code> -&gt; <code>Swapped</code> / <code>Finished</code>.</li>
+<li>Preemption mechanics: When HBM KV space runs out, how vLLM chooses whether to <strong>Swap</strong> blocks to CPU host RAM over PCIe or <strong>Recompute</strong> them later.</li>
+</ol>
+<hr />
+<h3 id="module-3-performance-quality-and-engine-enhancements-03_performance_and_qualitymd">[Module 3] Performance, Quality and Engine Enhancements (<code>03_performance_and_quality.md</code>)<a class="headerlink" href="#module-3-performance-quality-and-engine-enhancements-03_performance_and_qualitymd" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Inference Metrics and Trade-Offs</strong></li>
+<li><strong>Time To First Token (TTFT)</strong>: The responsiveness metric (governed by prefill speed and queue wait time).</li>
+<li><strong>Inter-Token Latency (ITL / TBT)</strong>: The smoothness metric (governed by decode step duration).</li>
+<li><strong>Throughput vs. Latency Trade-off</strong>: How larger batch sizes increase total tokens/second while modestly increasing single-request ITL.</li>
+<li><strong>Advanced Scheduling: Chunked Prefill</strong></li>
+<li>The Head-of-Line (HoL) blocking problem when a massive 32K prompt arrives while 50 users are actively generating tokens.</li>
+<li>How Chunked Prefill divides the prompt into budget-bounded segments (<code>max_num_batched_tokens</code>) and co-schedules them with decode steps to maintain strict ITL SLAs.</li>
+<li><strong>Execution Overhead Minimization: CUDA Graphs and <code>torch.compile</code></strong></li>
+<li>Why Python interpreter and CUDA kernel launch overhead dominate latency at small batch sizes.</li>
+<li>How vLLM captures static computation graphs for fixed batch sizes and replays them with microsecond-level CPU overhead.</li>
+<li><strong>Speculative Decoding inside vLLM</strong></li>
+<li>Draft model + Target verification pipeline.</li>
+<li>Multi-token prediction architectures: Medusa, EAGLE, and n-gram speculative lookup.</li>
+<li>Tree-based attention verification kernels: Verifying <code>K</code> candidate tokens across multiple branches in a single target model pass.</li>
+<li><strong>Quantization and Precision Impact</strong></li>
+<li>Weight-Only Quantization (AWQ, GPTQ, Marlin kernels) vs. Weight-and-Activation Quantization (FP8 <code>e4m3fn</code>, W8A8 INT8 smoothquant).</li>
+<li>Impact on quality (Perplexity / downstream accuracy) and performance (memory bandwidth reduction vs. dequantization compute overhead). KV Cache quantization (FP8/INT8 KV blocks).</li>
+</ol>
+<hr />
+<h3 id="module-4-hardware-interaction-and-kernel-co-design-04_hardware_and_kernel_optimizationmd">[Module 4] Hardware Interaction and Kernel Co-Design (<code>04_hardware_and_kernel_optimization.md</code>)<a class="headerlink" href="#module-4-hardware-interaction-and-kernel-co-design-04_hardware_and_kernel_optimizationmd" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>GPU Memory Hierarchy and Bandwidth Realities</strong></li>
+<li>Anatomy of modern AI hardware: HBM3/HBM3e (up to 3-8 TB/s), L2 Cache (50-100 MB), and SRAM / Shared Memory per SM (192-256 KB).</li>
+<li>Inter-GPU interconnects: NVLink 4/5 (900-1800 GB/s bidirectional) vs. PCIe Gen5 (64 GB/s).</li>
+<li><strong>Inside the PagedAttention Kernel</strong></li>
+<li>Tiling strategy: Loading <code>Q</code>, <code>K</code>, and <code>V</code> block tiles from HBM into SRAM (<code>__shared__</code> memory).</li>
+<li>Software pipelining (<code>cp.async</code> on Ampere/Hopper and Tensor Memory Accelerator - TMA on Hopper/Blackwell) to overlap HBM memory loads with Tensor Core math.</li>
+<li><strong>The Async Engine Architecture (V1 vs. V2 Engine)</strong></li>
+<li>Asynchronous background loops, multi-stream execution, and zero-copy IPC tensors.</li>
+<li>Overlapped CPU scheduling while the GPU is executing the previous CUDA Graph iteration.</li>
+<li><strong>Cross-Hardware Ecosystem Abstraction</strong></li>
+<li><strong>AMD ROCm</strong>: Tuning custom kernels (<code>vllm._C</code> / HIP) for CDNA wavefront sizes (64 vs 32) and Matrix Core engines.</li>
+<li><strong>Google TPUs</strong>: Integrating PagedAttention into XLA compiler graphs via <code>torch-xla</code> and <code>vllm-tpu</code> backends.</li>
+<li><strong>AWS Neuron</strong>: Adaptations for Inferentia2 and Trainium architectures.</li>
+</ol>
+<hr />
+<h3 id="module-5-distributed-inference-and-parallelism-strategies-05_distributed_parallelismmd">[Module 5] Distributed Inference and Parallelism Strategies (<code>05_distributed_parallelism.md</code>)<a class="headerlink" href="#module-5-distributed-inference-and-parallelism-strategies-05_distributed_parallelismmd" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Tensor Parallelism (TP)</strong></li>
+<li>Column-Parallel and Row-Parallel Linear layer splitting (Megatron-LM pattern).</li>
+<li>All-Reduce collective communication over NVLink after every transformer MLP and Attention block.</li>
+<li>Overlapping communication with computation using custom fused kernels.</li>
+<li><strong>Pipeline Parallelism (PP)</strong></li>
+<li>Partitioning transformer layers sequentially across multiple GPUs or physical nodes.</li>
+<li>Micro-batching strategies and minimizing the "Pipeline Bubble" during long generation sessions.</li>
+<li><strong>Context / Sequence Parallelism (CP / SP)</strong></li>
+<li>Scaling single sequences beyond the memory of a single GPU (e.g., 1M+ token contexts).</li>
+<li><strong>Ring-Attention</strong> and FlashAttention-based sequence partitioning across NVLink rings without quadratic communication overhead.</li>
+<li><strong>Expert Parallelism (EP) for Mixture-of-Experts (MoE)</strong></li>
+<li>The MoE routing challenge: Why models like Mixtral 8x22B or DeepSeek-V3/R1 require specialized token distribution.</li>
+<li>All-To-All communication patterns, expert load balancing, and hybrid TP + EP + DP topologies.</li>
+<li><strong>Data Parallelism (DP) and Multi-Replica Scaling</strong></li>
+<li>When to use TP within a node vs. DP across nodes.</li>
+<li>Prefix-aware request routing across DP replicas to maximize automatic prefix cache hit rates.</li>
+</ol>
+<hr />
+<h3 id="module-6-production-deployment-and-cloud-orchestration-06_deployment_and_orchestrationmd">[Module 6] Production Deployment and Cloud Orchestration (<code>06_deployment_and_orchestration.md</code>)<a class="headerlink" href="#module-6-production-deployment-and-cloud-orchestration-06_deployment_and_orchestrationmd" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>vLLM Engine and API Gateway Architecture</strong></li>
+<li><code>AsyncLLMEngine</code> vs <code>LLMEngine</code>: Event loop architecture, FastAPI integration, and OpenAI-compatible endpoint compatibility (<code>/v1/completions</code>, <code>/v1/chat/completions</code>).</li>
+<li>Token streaming mechanisms via Server-Sent Events (SSE) and gRPC for inter-service communication.</li>
+<li><strong>Multi-Host Distributed Orchestration with Ray</strong></li>
+<li>How <code>vllm</code> uses <strong>Ray Core</strong> (<code>ray.remote</code>, Ray Actor handles, and Placement Groups) to spin up worker processes across multiple physical bare-metal servers or cloud instances.</li>
+<li>IPC and NCCL initialization lifecycle within Ray clusters.</li>
+<li><strong>Kubernetes (K8s) Production Deployment Patterns</strong></li>
+<li><strong>Containerization Requirements</strong>: NVIDIA GPU Operator, CUDA compatibility matrices, and crucial shared memory configuration (<code>--shm-size=10g</code> or <code>/dev/shm</code> volume mounts to prevent NCCL IPC crashes).</li>
+<li><strong>Resource Allocation and Topology</strong>: Setting <code>resources.limits.nvidia.com/gpu</code>, NUMA node pinning, and Topology Manager policies (<code>single-numa-node</code>) for maximum NVLink/PCIe throughput.</li>
+<li><strong>Autoscaling with KEDA</strong>: Why CPU/Memory utilization are terrible metrics for LLM autoscaling. Configuring custom Prometheus metrics (<code>vllm:num_requests_waiting</code>, <code>vllm:gpu_cache_usage_perc</code>) to trigger <strong>KEDA (Kubernetes Event-driven Autoscaling)</strong> horizontal pod scaling.</li>
+<li><strong>Serving Framework and Gateway Integrations</strong></li>
+<li><strong>Triton Inference Server</strong>: Using the <code>vllm_backend</code> for multi-model serving, dynamic model loading/unloading, and unified enterprise monitoring.</li>
+<li><strong>KServe / Knative</strong>: Serverless inference patterns and scale-to-zero configurations for bursty workloads.</li>
+<li><strong>Intelligent LLM Gateways/Routers</strong>: Implementing semantic routing, prompt caching layer gateways, and fallback policies in front of vLLM replica pools.</li>
+</ol>
+<hr />
+<h2 id="part-4-how-we-will-build-and-learn">Part 4: How We Will Build and Learn<a class="headerlink" href="#part-4-how-we-will-build-and-learn" title="Permanent link">&para;</a></h2>
+<p>In our upcoming sessions, we will sequentially write, study, and expand each of these 6 deep-dive <code>.md</code> modules inside this directory. Each module will follow a strict, high-value pedagogical format:</p>
+<ol>
+<li><strong>Conceptual and Theoretical Foundation</strong>: The "Why" and the math behind the mechanism.</li>
+<li><strong>System Architecture and Data Flow</strong>: Detailed ASCII and Mermaid diagrams mapping out what happens in memory and across threads.</li>
+<li><strong>Code and Configuration Anatomy</strong>: Real-world Python/CUDA/YAML configurations showing how vLLM implements the concept.</li>
+<li><strong>Production Pitfalls and Tuning Guide</strong>: Practical advice on configuration flags, monitoring metrics, and performance debugging.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

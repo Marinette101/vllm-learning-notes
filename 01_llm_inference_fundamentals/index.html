@@ -1,0 +1,3212 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An AI Engineering Textbook and Production Reference">
+      
+      
+        <meta name="author" content="linghuanym">
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../02_vllm_core_architecture/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="en">
+        
+          <link rel="alternate" href="../zh/01_llm_inference_fundamentals/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Module 1 - Inference Fundamentals - vLLM Core Architecture & Performance Mechanics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#module-1-llm-inference-fundamentals-and-the-bottlenecks" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-header__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            vLLM Core Architecture & Performance Mechanics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Module 1 - Inference Fundamentals
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../zh/01_llm_inference_fundamentals/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-nav__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    vLLM Core Architecture & Performance Mechanics
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Curriculum & Principles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 1 - Inference Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 1 - Inference Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-transformer-architecture-analysis-and-self-attention-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: Transformer Architecture Analysis and Self-Attention Mechanics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: Transformer Architecture Analysis and Self-Attention Mechanics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-a-birds-eye-view-classic-encoder-decoder-vs-modern-decoder-only-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 A Bird's-Eye View: Classic Encoder-Decoder vs. Modern Decoder-Only Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.1 A Bird&#39;s-Eye View: Classic Encoder-Decoder vs. Modern Decoder-Only Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-modern-llms-evolved-to-decoder-only-single-tower-architectures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Modern LLMs Evolved to Decoder-Only ("Single-Tower") Architectures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-the-library-analogy-intuitive-meaning-of-query-q-key-k-and-value-v" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 The Library Analogy: Intuitive Meaning of Query (Q), Key (K), and Value (V)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2 The Library Analogy: Intuitive Meaning of Query (Q), Key (K), and Value (V)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concrete-word-example-the-semantic-shift-of-apple" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete Word Example: The Semantic Shift of "Apple"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-mathematical-notation-and-canonical-variable-nomenclature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Mathematical Notation and Canonical Variable Nomenclature
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.3 Mathematical Notation and Canonical Variable Nomenclature">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-operator-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Operator Conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-canonical-variable-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Canonical Variable Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-chronological-execution-lifecycle-token-embeddings-vs-positional-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Chronological Execution Lifecycle: Token Embeddings vs. Positional Encoding
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.4 Chronological Execution Lifecycle: Token Embeddings vs. Positional Encoding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-what-does-a-4096-dimensional-token-vector-x-actually-look-like" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. What Does a 4,096-Dimensional Token Vector (X) Actually Look Like?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-physical-byte-footprint-of-initial-activation-tensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Physical Byte Footprint of Initial Activation Tensors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-why-rope-is-applied-to-q-and-k-instead-of-x_0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Why RoPE is Applied to Q and K Instead of X_0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-exact-matrix-dimensions-of-r_m-and-how-rope-rotates-inside-head_dim-128" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Exact Matrix Dimensions of \(R_m\) and How RoPE Rotates Inside head_dim = 128
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-tensor-dimensions-and-physical-interpretation-of-attention-projections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Tensor Dimensions and Physical Interpretation of Attention Projections
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.5 Tensor Dimensions and Physical Interpretation of Attention Projections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-static-weights-vs-dynamic-vectors-crucial-conceptual-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Static Weights vs. Dynamic Vectors (Crucial Conceptual Boundary)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-why-is-num_heads-placed-before-seq_len-after-reshaping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Why is num_heads Placed Before seq_len After Reshaping?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-physical-and-semantic-interpretation-of-individual-cell-values-across-q-k-and-v" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Physical and Semantic Interpretation of Individual Cell Values Across Q, K, and V
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Physical and Semantic Interpretation of Individual Cell Values Across Q, K, and V">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-before-head-reshaping-seq_len-hidden_dim-1000-8192" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Before Head Reshaping ([seq_len, hidden_dim] -&gt; [1000, 8192])
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-after-head-reshaping-num_q_heads-seq_len-head_dim-64-1000-128" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. After Head Reshaping ([num_q_heads, seq_len, head_dim] -&gt; [64, 1000, 128])
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-head-by-head-attention-computation-and-score-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6 Head-by-Head Attention Computation and Score Normalization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.6 Head-by-Head Attention Computation and Score Normalization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-calculating-similarity-scores-raw-attention-logits-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Calculating Similarity Scores (Raw Attention Logits Matrix)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 1: Calculating Similarity Scores (Raw Attention Logits Matrix)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#physical-and-semantic-interpretation-of-individual-cells-across-the-score-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Physical and Semantic Interpretation of Individual Cells Across the Score Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-scale-and-probability-normalization-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Scale and Probability Normalization (Softmax)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2: Scale and Probability Normalization (Softmax)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-do-we-apply-softmax-across-the-last-seq_len-dimension-axis-1-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Do We Apply Softmax Across the Last seq_len Dimension (axis = -1) Only?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-information-extraction-and-output-projection-w_o" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Information Extraction and Output Projection (W_O)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-feed-forward-networks-ffns-swiglu-architecture-and-multiplicative-gating" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.7 Feed-Forward Networks (FFNs): SwiGLU Architecture and Multiplicative Gating
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.7 Feed-Forward Networks (FFNs): SwiGLU Architecture and Multiplicative Gating">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-static-nature-and-associative-memory-role-w_1-vs-w_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Static Nature and Associative Memory Role (W_1 vs W_2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-exact-tensor-dimensions-and-why-ffn-takes-80-of-model-parameters-swiglu-anatomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Exact Tensor Dimensions and Why FFN Takes &gt; 80% of Model Parameters (SwiGLU Anatomy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-step-by-step-data-flow-through-swiglu-and-residual-highway" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Step-by-Step Data Flow Through SwiGLU and Residual Highway
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-architectural-rationale-for-swiglu-over-classic-relu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Architectural Rationale for SwiGLU Over Classic ReLU
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-attention-structural-variations-mha-mqa-and-grouped-query-attention-gqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.8 Attention Structural Variations: MHA, MQA, and Grouped-Query Attention (GQA)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.8 Attention Structural Variations: MHA, MQA, and Grouped-Query Attention (GQA)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architectural-rationale-behind-grouped-query-attention-gqa-vs-mhamqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Rationale Behind Grouped-Query Attention (GQA) vs. MHA/MQA
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#19-sparse-architecture-evolution-mixture-of-experts-moe-routing-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.9 Sparse Architecture Evolution: Mixture of Experts (MoE) Routing Mechanics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.9 Sparse Architecture Evolution: Mixture of Experts (MoE) Routing Mechanics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-how-sparse-routing-works-top-k-softmax-and-swiglu-anatomy-per-expert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. How Sparse Routing Works (Top-K Softmax and SwiGLU Anatomy per Expert)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-why-serving-moe-models-is-challenging-for-production-engines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Why Serving MoE Models is Challenging for Production Engines
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-gpu-memory-hierarchy-l2-vs-hbm-and-why-tiny-sub-batches-destroy-compute-efficiency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. GPU Memory Hierarchy (L2 vs. HBM) and Why Tiny Sub-Batches Destroy Compute Efficiency
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. GPU Memory Hierarchy (L2 vs. HBM) and Why Tiny Sub-Batches Destroy Compute Efficiency">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-what-is-the-l2-cache-vs-hbm-the-physical-memory-pyramid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. What is the L2 Cache vs. HBM? (The Physical Memory Pyramid)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-why-tiny-sub-batches-destroy-compute-efficiency-tile-starvation-and-roofline-plunge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Why Tiny Sub-Batches Destroy Compute Efficiency (Tile Starvation and Roofline Plunge)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-industry-rule-why-moe-serving-is-strictly-multi-gpu-multi-node-in-production-ep-tp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Industry Rule: Why MoE Serving is Strictly Multi-GPU / Multi-Node in Production (EP + TP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-the-key-value-kv-cache-solution-and-memory-formalism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: The Key-Value (KV) Cache Solution and Memory Formalism
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: The Key-Value (KV) Cache Solution and Memory Formalism">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-core-performance-metrics-of-production-llm-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Core Performance Metrics of Production LLM Serving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-naive-unoptimized-inference-how-systems-operate-without-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Naive Unoptimized Inference: How Systems Operate Without Caching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-autoregressive-decoding-with-kv-caching-trading-hbm-space-for-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Autoregressive Decoding with KV Caching: Trading HBM Space for Time
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-computational-complexity-anatomy-the-quadratic-explosion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Computational Complexity Anatomy: The Quadratic Explosion
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4 Computational Complexity Anatomy: The Quadratic Explosion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-where-do-the-constants-2-and-11-come-from" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Where Do the Constants 2 and 11 Come From?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-exact-derivation-for-llama-3-405b-swiglu-gqa-81-active-parameter-math" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Exact Derivation for Llama 3 405B (SwiGLU + GQA 8:1 Active Parameter Math)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-memory-vs-compute-paradigm-and-the-gpu-roofline-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Memory vs. Compute Paradigm and The GPU Roofline Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Memory vs. Compute Paradigm and The GPU Roofline Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-exact-kv-cache-memory-footprint-formalism-and-llama-3-70b-case-study" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Exact KV Cache Memory Footprint Formalism and Llama 3 70B Case Study
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Exact KV Cache Memory Footprint Formalism and Llama 3 70B Case Study">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#case-study-llama-3-70b-gqa-81-ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Case Study: Llama-3-70B (GQA, 8:1 ratio)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-advanced-compression-deepseek-multi-head-latent-attention-mla-case-study" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Advanced Compression: DeepSeek Multi-Head Latent Attention (MLA) Case Study
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 Advanced Compression: DeepSeek Multi-Head Latent Attention (MLA) Case Study">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-joint-low-rank-compression-c_kv-and-on-the-fly-sram-restoration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Joint Low-Rank Compression (c_kv) and On-the-Fly SRAM Restoration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-the-rope-dilemma-and-decoupled-positional-keys-k_pe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. The RoPE Dilemma and Decoupled Positional Keys (k_pe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-industry-status-did-mla-become-a-new-industry-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Industry Status: Did MLA Become a New Industry Standard?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-arithmetic-intensity-and-the-gpu-roofline-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Arithmetic Intensity and The GPU Roofline Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-physical-mechanics-of-the-slanted-memory-slope-vs-flat-compute-ceiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Physical Mechanics of the Slanted Memory Slope vs. Flat Compute Ceiling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-comparative-gpu-evaluation-why-a-lower-ridge-point-is-superior-for-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Comparative GPU Evaluation: Why a Lower Ridge Point is Superior for Serving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-single-batch-decoding-utilization-and-the-canonical-intensity-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Single-Batch Decoding Utilization and The Canonical Intensity Range
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.6 Single-Batch Decoding Utilization and The Canonical Intensity Range">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-batch-1-decoding-ranged-from-10-to-20-flopsbyte-the-canonical-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Batch-1 Decoding Ranged from 1.0 to 2.0 FLOPs/Byte (The Canonical Standard)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-batched-matrix-multiplication-bmm-and-amortization-economics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 Batched Matrix Multiplication (BMM) and Amortization Economics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-the-contiguous-memory-requirement-and-fragmentation-economics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: The Contiguous Memory Requirement and Fragmentation Economics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: The Contiguous Memory Requirement and Fragmentation Economics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-the-pre-allocation-trap-why-contiguous-memory-is-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 The Pre-Allocation Trap: Why Contiguous Memory is Required
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-internal-fragmentation-memory-waste-inside-allocated-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Internal Fragmentation: Memory Waste Inside Allocated Boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-external-fragmentation-memory-waste-outside-allocated-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 External Fragmentation: Memory Waste Outside Allocated Boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-the-concurrency-ceiling-dilemma-and-why-we-need-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 The Concurrency Ceiling Dilemma and Why We Need vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_vllm_core_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 2 - vLLM Core Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix_glossary_and_terminology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix - Master Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-transformer-architecture-analysis-and-self-attention-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: Transformer Architecture Analysis and Self-Attention Mechanics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: Transformer Architecture Analysis and Self-Attention Mechanics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-a-birds-eye-view-classic-encoder-decoder-vs-modern-decoder-only-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 A Bird's-Eye View: Classic Encoder-Decoder vs. Modern Decoder-Only Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.1 A Bird&#39;s-Eye View: Classic Encoder-Decoder vs. Modern Decoder-Only Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-modern-llms-evolved-to-decoder-only-single-tower-architectures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Modern LLMs Evolved to Decoder-Only ("Single-Tower") Architectures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-the-library-analogy-intuitive-meaning-of-query-q-key-k-and-value-v" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 The Library Analogy: Intuitive Meaning of Query (Q), Key (K), and Value (V)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2 The Library Analogy: Intuitive Meaning of Query (Q), Key (K), and Value (V)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concrete-word-example-the-semantic-shift-of-apple" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete Word Example: The Semantic Shift of "Apple"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-mathematical-notation-and-canonical-variable-nomenclature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Mathematical Notation and Canonical Variable Nomenclature
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.3 Mathematical Notation and Canonical Variable Nomenclature">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-operator-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Operator Conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-canonical-variable-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Canonical Variable Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-chronological-execution-lifecycle-token-embeddings-vs-positional-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Chronological Execution Lifecycle: Token Embeddings vs. Positional Encoding
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.4 Chronological Execution Lifecycle: Token Embeddings vs. Positional Encoding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-what-does-a-4096-dimensional-token-vector-x-actually-look-like" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. What Does a 4,096-Dimensional Token Vector (X) Actually Look Like?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-physical-byte-footprint-of-initial-activation-tensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Physical Byte Footprint of Initial Activation Tensors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-why-rope-is-applied-to-q-and-k-instead-of-x_0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Why RoPE is Applied to Q and K Instead of X_0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-exact-matrix-dimensions-of-r_m-and-how-rope-rotates-inside-head_dim-128" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Exact Matrix Dimensions of \(R_m\) and How RoPE Rotates Inside head_dim = 128
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-tensor-dimensions-and-physical-interpretation-of-attention-projections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Tensor Dimensions and Physical Interpretation of Attention Projections
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.5 Tensor Dimensions and Physical Interpretation of Attention Projections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-static-weights-vs-dynamic-vectors-crucial-conceptual-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Static Weights vs. Dynamic Vectors (Crucial Conceptual Boundary)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-why-is-num_heads-placed-before-seq_len-after-reshaping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Why is num_heads Placed Before seq_len After Reshaping?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-physical-and-semantic-interpretation-of-individual-cell-values-across-q-k-and-v" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Physical and Semantic Interpretation of Individual Cell Values Across Q, K, and V
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Physical and Semantic Interpretation of Individual Cell Values Across Q, K, and V">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-before-head-reshaping-seq_len-hidden_dim-1000-8192" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Before Head Reshaping ([seq_len, hidden_dim] -&gt; [1000, 8192])
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-after-head-reshaping-num_q_heads-seq_len-head_dim-64-1000-128" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. After Head Reshaping ([num_q_heads, seq_len, head_dim] -&gt; [64, 1000, 128])
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-head-by-head-attention-computation-and-score-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6 Head-by-Head Attention Computation and Score Normalization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.6 Head-by-Head Attention Computation and Score Normalization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-calculating-similarity-scores-raw-attention-logits-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Calculating Similarity Scores (Raw Attention Logits Matrix)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 1: Calculating Similarity Scores (Raw Attention Logits Matrix)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#physical-and-semantic-interpretation-of-individual-cells-across-the-score-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Physical and Semantic Interpretation of Individual Cells Across the Score Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-scale-and-probability-normalization-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Scale and Probability Normalization (Softmax)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2: Scale and Probability Normalization (Softmax)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-do-we-apply-softmax-across-the-last-seq_len-dimension-axis-1-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Do We Apply Softmax Across the Last seq_len Dimension (axis = -1) Only?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-information-extraction-and-output-projection-w_o" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Information Extraction and Output Projection (W_O)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-feed-forward-networks-ffns-swiglu-architecture-and-multiplicative-gating" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.7 Feed-Forward Networks (FFNs): SwiGLU Architecture and Multiplicative Gating
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.7 Feed-Forward Networks (FFNs): SwiGLU Architecture and Multiplicative Gating">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-static-nature-and-associative-memory-role-w_1-vs-w_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Static Nature and Associative Memory Role (W_1 vs W_2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-exact-tensor-dimensions-and-why-ffn-takes-80-of-model-parameters-swiglu-anatomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Exact Tensor Dimensions and Why FFN Takes &gt; 80% of Model Parameters (SwiGLU Anatomy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-step-by-step-data-flow-through-swiglu-and-residual-highway" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Step-by-Step Data Flow Through SwiGLU and Residual Highway
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-architectural-rationale-for-swiglu-over-classic-relu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Architectural Rationale for SwiGLU Over Classic ReLU
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-attention-structural-variations-mha-mqa-and-grouped-query-attention-gqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.8 Attention Structural Variations: MHA, MQA, and Grouped-Query Attention (GQA)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.8 Attention Structural Variations: MHA, MQA, and Grouped-Query Attention (GQA)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architectural-rationale-behind-grouped-query-attention-gqa-vs-mhamqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Rationale Behind Grouped-Query Attention (GQA) vs. MHA/MQA
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#19-sparse-architecture-evolution-mixture-of-experts-moe-routing-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.9 Sparse Architecture Evolution: Mixture of Experts (MoE) Routing Mechanics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.9 Sparse Architecture Evolution: Mixture of Experts (MoE) Routing Mechanics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-how-sparse-routing-works-top-k-softmax-and-swiglu-anatomy-per-expert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. How Sparse Routing Works (Top-K Softmax and SwiGLU Anatomy per Expert)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-why-serving-moe-models-is-challenging-for-production-engines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Why Serving MoE Models is Challenging for Production Engines
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-gpu-memory-hierarchy-l2-vs-hbm-and-why-tiny-sub-batches-destroy-compute-efficiency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. GPU Memory Hierarchy (L2 vs. HBM) and Why Tiny Sub-Batches Destroy Compute Efficiency
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. GPU Memory Hierarchy (L2 vs. HBM) and Why Tiny Sub-Batches Destroy Compute Efficiency">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-what-is-the-l2-cache-vs-hbm-the-physical-memory-pyramid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. What is the L2 Cache vs. HBM? (The Physical Memory Pyramid)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-why-tiny-sub-batches-destroy-compute-efficiency-tile-starvation-and-roofline-plunge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Why Tiny Sub-Batches Destroy Compute Efficiency (Tile Starvation and Roofline Plunge)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-industry-rule-why-moe-serving-is-strictly-multi-gpu-multi-node-in-production-ep-tp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Industry Rule: Why MoE Serving is Strictly Multi-GPU / Multi-Node in Production (EP + TP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-the-key-value-kv-cache-solution-and-memory-formalism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: The Key-Value (KV) Cache Solution and Memory Formalism
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: The Key-Value (KV) Cache Solution and Memory Formalism">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-core-performance-metrics-of-production-llm-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Core Performance Metrics of Production LLM Serving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-naive-unoptimized-inference-how-systems-operate-without-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Naive Unoptimized Inference: How Systems Operate Without Caching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-autoregressive-decoding-with-kv-caching-trading-hbm-space-for-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Autoregressive Decoding with KV Caching: Trading HBM Space for Time
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-computational-complexity-anatomy-the-quadratic-explosion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Computational Complexity Anatomy: The Quadratic Explosion
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4 Computational Complexity Anatomy: The Quadratic Explosion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-where-do-the-constants-2-and-11-come-from" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Where Do the Constants 2 and 11 Come From?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-exact-derivation-for-llama-3-405b-swiglu-gqa-81-active-parameter-math" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Exact Derivation for Llama 3 405B (SwiGLU + GQA 8:1 Active Parameter Math)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-memory-vs-compute-paradigm-and-the-gpu-roofline-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Memory vs. Compute Paradigm and The GPU Roofline Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Memory vs. Compute Paradigm and The GPU Roofline Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-exact-kv-cache-memory-footprint-formalism-and-llama-3-70b-case-study" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Exact KV Cache Memory Footprint Formalism and Llama 3 70B Case Study
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Exact KV Cache Memory Footprint Formalism and Llama 3 70B Case Study">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#case-study-llama-3-70b-gqa-81-ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Case Study: Llama-3-70B (GQA, 8:1 ratio)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-advanced-compression-deepseek-multi-head-latent-attention-mla-case-study" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Advanced Compression: DeepSeek Multi-Head Latent Attention (MLA) Case Study
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 Advanced Compression: DeepSeek Multi-Head Latent Attention (MLA) Case Study">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-joint-low-rank-compression-c_kv-and-on-the-fly-sram-restoration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Joint Low-Rank Compression (c_kv) and On-the-Fly SRAM Restoration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-the-rope-dilemma-and-decoupled-positional-keys-k_pe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. The RoPE Dilemma and Decoupled Positional Keys (k_pe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-industry-status-did-mla-become-a-new-industry-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Industry Status: Did MLA Become a New Industry Standard?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-arithmetic-intensity-and-the-gpu-roofline-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Arithmetic Intensity and The GPU Roofline Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-physical-mechanics-of-the-slanted-memory-slope-vs-flat-compute-ceiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Physical Mechanics of the Slanted Memory Slope vs. Flat Compute Ceiling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-comparative-gpu-evaluation-why-a-lower-ridge-point-is-superior-for-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Comparative GPU Evaluation: Why a Lower Ridge Point is Superior for Serving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-single-batch-decoding-utilization-and-the-canonical-intensity-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Single-Batch Decoding Utilization and The Canonical Intensity Range
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.6 Single-Batch Decoding Utilization and The Canonical Intensity Range">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-batch-1-decoding-ranged-from-10-to-20-flopsbyte-the-canonical-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Batch-1 Decoding Ranged from 1.0 to 2.0 FLOPs/Byte (The Canonical Standard)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-batched-matrix-multiplication-bmm-and-amortization-economics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 Batched Matrix Multiplication (BMM) and Amortization Economics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-the-contiguous-memory-requirement-and-fragmentation-economics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: The Contiguous Memory Requirement and Fragmentation Economics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: The Contiguous Memory Requirement and Fragmentation Economics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-the-pre-allocation-trap-why-contiguous-memory-is-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 The Pre-Allocation Trap: Why Contiguous Memory is Required
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-internal-fragmentation-memory-waste-inside-allocated-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Internal Fragmentation: Memory Waste Inside Allocated Boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-external-fragmentation-memory-waste-outside-allocated-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 External Fragmentation: Memory Waste Outside Allocated Boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-the-concurrency-ceiling-dilemma-and-why-we-need-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 The Concurrency Ceiling Dilemma and Why We Need vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="module-1-llm-inference-fundamentals-and-the-bottlenecks">Module 1: LLM Inference Fundamentals and The Bottlenecks<a class="headerlink" href="#module-1-llm-inference-fundamentals-and-the-bottlenecks" title="Permanent link">&para;</a></h1>
+<p>To understand why <strong>vLLM</strong> revolutionized Large Language Model (LLM) serving, we must build our mental model from first principles. This module systematically bridges the foundational architecture of Transformers, the exact mathematical data flows of self-attention, the performance metrics of production serving, and the physical memory/compute bottlenecks that trap traditional inference engines.</p>
+<hr />
+<h2 id="part-1-transformer-architecture-analysis-and-self-attention-mechanics">Part 1: Transformer Architecture Analysis and Self-Attention Mechanics<a class="headerlink" href="#part-1-transformer-architecture-analysis-and-self-attention-mechanics" title="Permanent link">&para;</a></h2>
+<p>In Large Language Models, the foundational engine is the <strong>Transformer</strong>, and its core heartbeat is the <strong>Self-Attention mechanism</strong>. To understand inference optimization, we must first analyze how data transforms through the layers and why the <strong>Query (<code>Q</code>)</strong>, <strong>Key (<code>K</code>)</strong>, and <strong>Value (<code>V</code>)</strong> vectors behave the way they do.</p>
+<h3 id="11-a-birds-eye-view-classic-encoder-decoder-vs-modern-decoder-only-architecture">1.1 A Bird's-Eye View: Classic Encoder-Decoder vs. Modern Decoder-Only Architecture<a class="headerlink" href="#11-a-birds-eye-view-classic-encoder-decoder-vs-modern-decoder-only-architecture" title="Permanent link">&para;</a></h3>
+<p>The original Transformer (<code>Vaswani et al., 2017</code>) was designed as a dual-tower <strong>Encoder-Decoder</strong> architecture tailored for translation tasks (<code>e.g., English to French</code>).</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph ENCODER ["🎙️ Encoder: Listening and Comprehending"]
+        E_IN["Input: 'The cat is black'"] --&gt; E_EMB["Embedding + Positional Encoding"]
+        E_EMB --&gt; E_ATT["Bidirectional Self-Attention"]
+        E_ATT --&gt; E_FFN["Feed-Forward Network (Knowledge Base)"]
+    end
+    subgraph DECODER ["✍️ Decoder: Translating and Expressing"]
+        D_IN["Input: '&lt;bos&gt; Le chat est'"] --&gt; D_EMB["Masked Unidirectional Attention"]
+        D_EMB --&gt; D_CROSS["Cross-Attention Layer"]
+        D_CROSS --&gt; D_LM["LM Head (Token Probabilities)"]
+    end
+    E_FFN ==&gt;|"Hidden States&lt;br&gt;Key and Value Tensors"| D_CROSS</code></pre>
+<p>We can compare this dual-tower design to <strong>simultaneous interpretation</strong>:</p>
+<ol>
+<li><strong>Left Tower: The Encoder ("Listening and Comprehending")</strong></li>
+<li><strong>Input</strong>: The complete source text (<code>e.g., "The cat is black"</code>).</li>
+<li><strong>Core Mechanism</strong>: <strong>Bidirectional Unmasked Self-Attention</strong>. Every word can attend to every other word simultaneously (<code>past and future</code>). This bidirectional view extracts holistic context and semantic relationships.</li>
+<li><strong>Output</strong>: High-dimensional hidden state vectors rich in deep contextual understanding.</li>
+<li><strong>Right Tower: The Decoder ("Translating and Expressing")</strong></li>
+<li><strong>Input</strong>: The previously generated words (<code>"&lt;bos&gt; Le chat est"</code>) combined with the Encoder's context.</li>
+<li><strong>Core Mechanism</strong>: <ul>
+<li><strong>Masked Self-Attention</strong>: Restricts the model to attend <em>only to preceding tokens</em>, preventing it from "peeking at the future." This maintains causality: during inference, future tokens do not exist yet.</li>
+<li><strong>Cross-Attention</strong>: Uses the Decoder's current query to search and extract matching facts from the Encoder's bidirectional hidden states.</li>
+</ul>
+</li>
+</ol>
+<h4 id="why-modern-llms-evolved-to-decoder-only-single-tower-architectures">Why Modern LLMs Evolved to Decoder-Only ("Single-Tower") Architectures<a class="headerlink" href="#why-modern-llms-evolved-to-decoder-only-single-tower-architectures" title="Permanent link">&para;</a></h4>
+<p>If the Encoder excels at bidirectional understanding, why do modern models (<code>GPT-4, Llama 3, DeepSeek-V3, Mistral</code>) discard the Encoder completely in favor of a <strong>Decoder-Only</strong> architecture?</p>
+<pre class="mermaid"><code>flowchart TD
+    IN["Input Sequence: [Prompt Tokens] + [Generated Tokens]"] --&gt; EMB["Token Embedding + RoPE Positional Encoding"]
+
+    subgraph TRANSFORMER_BLOCK ["⚡ Decoder Transformer Layer (x80 in Llama 3 70B)"]
+        EMB --&gt; N1["Pre-LayerNorm (RMSNorm)"]
+        N1 --&gt; ATT["Masked Multi-Head / GQA Self-Attention (Causal QKV)"]
+        ATT --&gt;|"Residual highway"| RES1(("➕"))
+        EMB --&gt; RES1
+
+        RES1 --&gt; N2["Pre-LayerNorm (RMSNorm)"]
+        N2 --&gt; FFN["SwiGLU Feed-Forward Network (Knowledge Projections)"]
+        FFN --&gt;|"Residual highway"| RES2(("➕"))
+        RES1 --&gt; RES2
+    end
+
+    RES2 --&gt; OUT_NORM["Final RMSNorm"] --&gt; LM_HEAD["LM Head (Next-Token Logits and Softmax Probabilities)"]</code></pre>
+<p>This reflects a fundamental paradigm shift:</p>
+<ol>
+<li><strong>Translation vs. Continuation</strong>: Transformers originally served translation (<code>distinct source vs. target sequences</code>). Modern AI unified all natural language tasks (<code>reasoning, coding, QA, chat</code>) into a single "next-token completion" game.</li>
+<li><strong>Structural Simplicity</strong>: By concatenating the user Prompt and model Response into a single unified sequence, the separate Encoder and Cross-Attention modules are eliminated.</li>
+<li><strong>Prefill vs. Decode Synergy in Decoder-Only Blocks</strong>:</li>
+<li>During the <strong>Prefill Phase</strong> (<code>when processing the user prompt</code>), all prompt tokens are available at once. Even though the attention mask is strictly causal (<code>lower-triangular</code>), processing all tokens in parallel allows every prompt token to attend across all its historical context—achieving the comprehensive understanding of an Encoder.</li>
+<li>During the <strong>Decode Phase</strong> (<code>when emitting new tokens step-by-step</code>), the causal mask guarantees that new tokens seamlessly attend to the cached prompt history without structural discontinuity.</li>
+</ol>
+<hr />
+<h3 id="12-the-library-analogy-intuitive-meaning-of-query-q-key-k-and-value-v">1.2 The Library Analogy: Intuitive Meaning of Query (<code>Q</code>), Key (<code>K</code>), and Value (<code>V</code>)<a class="headerlink" href="#12-the-library-analogy-intuitive-meaning-of-query-q-key-k-and-value-v" title="Permanent link">&para;</a></h3>
+<p>To conceptualize the operations of self-attention without immediate entanglement in dense linear algebra, consider an information retrieval analogy within an indexed document corpus:</p>
+<ol>
+<li><strong><code>Q</code> (Query)</strong>: The search intention and keywords (<code>e.g., "noise-canceling Bluetooth headphones"</code>). It represents <em>what the current token is seeking from context</em>.</li>
+<li><strong><code>K</code> (Key)</strong>: The metadata labels, index tags, or titles in the catalog (<code>e.g., Document A Key: "Wired Gaming Headset Review"</code>, <code>Document B Key: "Teardown of Sony Noise-Canceling Bluetooth Headphones"</code>).</li>
+<li><strong><code>V</code> (Value)</strong>: The underlying semantic payload inside the document (<code>e.g., acoustic diagrams, chip specifications, and evaluation text within Document B</code>).</li>
+</ol>
+<p>During the self-attention computation:</p>
+<ul>
+<li>Each <strong>Query (<code>Q</code>)</strong> is compared against every <strong>Key (<code>K</code>)</strong> via inner product to compute a <strong>Similarity Score</strong> (<code>relevance weight</code>).</li>
+<li>Based on these similarity weights, a weighted linear combination of the <strong>Values (<code>V</code>)</strong> is extracted to construct the updated contextual representation.</li>
+</ul>
+<h4 id="concrete-word-example-the-semantic-shift-of-apple">Concrete Word Example: The Semantic Shift of "Apple"<a class="headerlink" href="#concrete-word-example-the-semantic-shift-of-apple" title="Permanent link">&para;</a></h4>
+<p>Consider how the lexical token <code>"Apple"</code> shifts semantic orientation depending on surrounding syntax:</p>
+<ul>
+<li><strong>Sentence A</strong>: <code>"At today's new product launch, Apple introduced..."</code></li>
+<li><strong>Sentence B</strong>: <code>"At the supermarket, the box of apples I bought is very..."</code></li>
+</ul>
+<p>When the model processes the token <code>"Apple"</code>:</p>
+<ol>
+<li><strong>Dynamic Query Generation (<code>Q</code>)</strong>: <code>"Apple"</code> generates its query vector, effectively querying surrounding tokens to determine whether its semantic context relates to technology or agriculture.</li>
+<li><strong>Dot-Product Matching (<code>Q @ K^T</code>)</strong>:</li>
+<li>In <strong>Sentence A</strong>, the query (<code>Q</code>) for <code>"Apple"</code> yields high similarity against the keys (<code>K</code>) of <code>"product launch"</code> and <code>"introduced"</code>.</li>
+<li>In <strong>Sentence B</strong>, the query yields high similarity against <code>"supermarket"</code> and <code>"box"</code>.</li>
+<li><strong>Value Extraction (<code>Weights @ V</code>)</strong>:</li>
+<li>In <strong>Sentence A</strong>, the high attention weights on <code>"product launch"</code> pull the resulting representation of <code>"Apple"</code> toward a technology corporation.</li>
+<li>In <strong>Sentence B</strong>, the high attention weights on <code>"supermarket"</code> orient the representation toward fruit.</li>
+</ol>
+<hr />
+<h3 id="13-mathematical-notation-and-canonical-variable-nomenclature">1.3 Mathematical Notation and Canonical Variable Nomenclature<a class="headerlink" href="#13-mathematical-notation-and-canonical-variable-nomenclature" title="Permanent link">&para;</a></h3>
+<p>To avoid ambiguity across our mathematical derivations and architectural deep dives, we adopt rigorous linear algebra operator conventions and canonical variable shorthand across all modules:</p>
+<h4 id="1-operator-conventions">1. Operator Conventions<a class="headerlink" href="#1-operator-conventions" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong><code>@</code> (Matrix Multiplication / Batched Dot-Product)</strong>: Denotes standard linear algebra matrix-matrix or matrix-vector dot-product across the last two dimensions (<code>A @ B</code> or <code>torch.matmul(A, B)</code>). Examples: <code>Q = X @ W_Q</code>, <code>Score = Q @ K^T</code>.</li>
+<li><strong><code>(*)</code> (Element-Wise / Hadamard Multiplication)</strong>: Denotes cell-by-cell tensor multiplication where tensors of identical shape are multiplied precisely at matching coordinate indices (<code>A[i,j] * B[i,j]</code>). Example: <span class="arithmatex">\(\text{Activated_Tensor} = \text{SiLU}(\text{Gate_Tensor}) \odot \text{Up_Tensor}\)</span>.</li>
+<li><strong><code>*</code> and <code>/</code> (Scalar and Arithmetic Scaling)</strong>: Denotes simple arithmetic scaling by a single number or integer (<code>Score / sqrt(head_dim)</code>, <code>2 * b * s * L * h_kv * d_head</code>).</li>
+</ul>
+<h4 id="2-canonical-variable-table">2. Canonical Variable Table<a class="headerlink" href="#2-canonical-variable-table" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Canonical Variable Name</th>
+<th style="text-align: left;">Standard Shorthand</th>
+<th style="text-align: left;">Meaning</th>
+<th style="text-align: left;">Example Value (<code>Llama 3 70B</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong><code>batch_size</code></strong></td>
+<td style="text-align: left;"><strong><code>b</code></strong></td>
+<td style="text-align: left;">Number of concurrent user sequences processed in parallel.</td>
+<td style="text-align: left;"><code>64</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>seq_len</code></strong></td>
+<td style="text-align: left;"><strong><code>s</code></strong></td>
+<td style="text-align: left;">Total sequence length in tokens (<code>prompt + generated tokens</code>).</td>
+<td style="text-align: left;"><code>1,000</code> (or <code>4,096</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>hidden_dim</code></strong></td>
+<td style="text-align: left;"><strong><code>d</code></strong></td>
+<td style="text-align: left;">Base hidden representation dimension (<code>hidden_size</code>).</td>
+<td style="text-align: left;"><code>8,192</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>num_layers</code></strong></td>
+<td style="text-align: left;"><strong><code>L</code></strong></td>
+<td style="text-align: left;">Total number of Transformer blocks/layers (<code>num_hidden_layers</code>).</td>
+<td style="text-align: left;"><code>80</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>num_q_heads</code></strong></td>
+<td style="text-align: left;"><strong><code>h_q</code></strong></td>
+<td style="text-align: left;">Number of Query attention heads per layer (<code>num_attention_heads</code>).</td>
+<td style="text-align: left;"><code>64</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>num_kv_heads</code></strong></td>
+<td style="text-align: left;"><strong><code>h_kv</code></strong></td>
+<td style="text-align: left;">Number of Key-Value attention heads per layer (<code>num_key_value_heads</code>).</td>
+<td style="text-align: left;"><code>8</code> (<code>GQA 8:1</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>head_dim</code></strong></td>
+<td style="text-align: left;"><strong><code>d_head</code></strong></td>
+<td style="text-align: left;">Dimension of each attention head (<code>d_head = hidden_dim / num_q_heads</code>).</td>
+<td style="text-align: left;"><code>128</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>intermediate_dim</code></strong></td>
+<td style="text-align: left;"><strong><code>d_ffn</code></strong></td>
+<td style="text-align: left;">Inner dimension of the Feed-Forward Network (<code>SwiGLU</code> expansion).</td>
+<td style="text-align: left;"><code>28,672</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="14-chronological-execution-lifecycle-token-embeddings-vs-positional-encoding">1.4 Chronological Execution Lifecycle: Token Embeddings vs. Positional Encoding<a class="headerlink" href="#14-chronological-execution-lifecycle-token-embeddings-vs-positional-encoding" title="Permanent link">&para;</a></h3>
+<p>To trace how raw text enters a Transformer and transforms into dynamic activation vectors, we must distinguish between initial vocabulary embedding (<code>Step 0</code>) and positional orientation (<code>Step 2</code>):</p>
+<pre class="mermaid"><code>flowchart TD
+    S0["Step 0: Vocabulary Embedding Lookup&lt;br&gt;Look up raw tokens in W_Embed -&gt; X_0 [64, 1000, 8192]&lt;br&gt;*(CONTAINS ZERO POSITIONAL SIGNAL)*"]
+    S1["Step 1: Linear Projections Inside Layer&lt;br&gt;X_0 multiplies against W_Q and W_K&lt;br&gt;yields Unrotated Q and K Tensors"]
+    S2["Step 2: RoPE Rotation&lt;br&gt;Multiply 2D rotation matrix R_m against unrotated Q and K&lt;br&gt;yields Q_rotated and K_rotated"]
+    S3["Step 3: Dot-Product Attention&lt;br&gt;Score = (Q_rotated @ K_rotated^T) / sqrt(d_head)&lt;br&gt;*(Evaluates pristine relative token sequence distances)*"]
+
+    S0 ==&gt; S1 ==&gt; S2 ==&gt; S3</code></pre>
+<h4 id="1-what-does-a-4096-dimensional-token-vector-x-actually-look-like">1. What Does a 4,096-Dimensional Token Vector (<code>X</code>) Actually Look Like?<a class="headerlink" href="#1-what-does-a-4096-dimensional-token-vector-x-actually-look-like" title="Permanent link">&para;</a></h4>
+<p>When <code>X_0</code> is looked up from <code>W_Embed</code>, it is not an array of discrete integer digits; it is a 1D tensor containing exactly <code>4,096</code> continuous floating-point numbers (<code>or 8,192 numbers on Llama 3 70B</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Shape: [4096], Data Type: float16 (half-precision floating point)</span>
+<span class="n">token_embedding_X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span>
+     <span class="mf">0.1426</span><span class="p">,</span>  <span class="o">-</span><span class="mf">1.2031</span><span class="p">,</span>   <span class="mf">0.0842</span><span class="p">,</span>  <span class="o">-</span><span class="mf">0.4453</span><span class="p">,</span>   <span class="mf">2.1133</span><span class="p">,</span>   <span class="mf">0.0031</span><span class="p">,</span>  <span class="o">-</span><span class="mf">0.9121</span><span class="p">,</span>
+     <span class="mf">0.5518</span><span class="p">,</span>   <span class="mf">1.8848</span><span class="p">,</span>  <span class="o">-</span><span class="mf">0.1104</span><span class="p">,</span>   <span class="mf">0.7324</span><span class="p">,</span>  <span class="o">-</span><span class="mf">2.0195</span><span class="p">,</span>   <span class="mf">0.3120</span><span class="p">,</span>   <span class="mf">0.0098</span><span class="p">,</span>
+    <span class="o">...</span><span class="p">,</span> 
+    <span class="o">-</span><span class="mf">0.0192</span><span class="p">,</span>   <span class="mf">0.8877</span><span class="p">,</span>  <span class="o">-</span><span class="mf">0.3340</span><span class="p">,</span>   <span class="mf">1.4121</span><span class="p">,</span>  <span class="o">-</span><span class="mf">0.6611</span><span class="p">,</span>   <span class="mf">0.0412</span><span class="p">,</span>   <span class="mf">0.1992</span>
+<span class="p">])</span>
+<span class="c1"># |---------------- Exactly 4,096 decimal numbers in total ----------------|</span>
+</code></pre></div>
+<p>This array functions as a <strong>geometric coordinate inside a 4,096-dimensional semantic vector space</strong>. Each index correlates with an abstract feature domain (<code>e.g., Index 0 for biological animacy, Index 1 for hardware relevance</code>). Because <code>"Apple"</code> (<code>corporate entity</code>) and <code>"Microsoft"</code> share analogous coordinates across corporate/technological axes, their high-dimensional vectors point in nearly identical geometric directions (<code>high cosine similarity</code>).</p>
+<h4 id="2-physical-byte-footprint-of-initial-activation-tensors">2. Physical Byte Footprint of Initial Activation Tensors<a class="headerlink" href="#2-physical-byte-footprint-of-initial-activation-tensors" title="Permanent link">&para;</a></h4>
+<p>Because each element in <code>FP16</code> (<code>half-precision</code>) occupies <strong>2 bytes</strong> of physical memory (<code>sizeof(dtype) = 2</code>):
+$$
+\text{Memory per Token Embedding} = 4,096 \text{ parameters} \times 2 \text{ bytes/param} = \mathbf{8,192 \text{ bytes} \ (8 \text{ KB})}
+$$
+When a prompt of <code>1,000</code> tokens is processed by a 70B model (<code>hidden_dim = 8192</code>) at <code>batch_size = 64</code>, the initial embedding lookup produces a 3D activation tensor <code>[batch_size, seq_len, hidden_dim]</code>:
+$$
+\text{Input Tensor } X \text{ Shape} = [64, 1000, 8192] \implies 524,288,000 \text{ floating-point numbers} \approx \mathbf{1.048 \text{ GB (in FP16)}}
+$$</p>
+<h4 id="3-why-rope-is-applied-to-q-and-k-instead-of-x_0">3. Why <code>RoPE</code> is Applied to <code>Q</code> and <code>K</code> Instead of <code>X_0</code><a class="headerlink" href="#3-why-rope-is-applied-to-q-and-k-instead-of-x_0" title="Permanent link">&para;</a></h4>
+<p>Notice that at Step 0, <code>X_0</code> contains <strong>zero positional information</strong>. If positional rotations were applied directly to <code>X_0</code> (<code>analogous to legacy Absolute Position Embeddings in BERT</code>), the positional orientation would undergo complex linear distortion across <code>W_Q</code> and <code>W_K</code> projections across 80 sequential layers.
+By applying <code>RoPE</code> directly onto <code>Q</code> and <code>K</code> immediately prior to dot-product evaluation (<code>Score = Q @ K^T</code>), orthogonal rotation algebra guarantees that the resulting inner product reflects exact, undistorted relative sequence distances (<code>m - n</code>).</p>
+<h4 id="4-exact-matrix-dimensions-of-r_m-and-how-rope-rotates-inside-head_dim-128">4. Exact Matrix Dimensions of <span class="arithmatex">\(R_m\)</span> and How <code>RoPE</code> Rotates Inside <code>head_dim = 128</code><a class="headerlink" href="#4-exact-matrix-dimensions-of-r_m-and-how-rope-rotates-inside-head_dim-128" title="Permanent link">&para;</a></h4>
+<p>When evaluating <span class="arithmatex">\(k_{m, \text{after}} = R_m @ k_{m, \text{before}}\)</span> for a Key head, what are the exact dimensions of <span class="arithmatex">\(R_m\)</span>?</p>
+<ul>
+<li>In <code>GQA</code>, there are <code>num_kv_heads = 8</code> Key heads per token (<code>[8, 128]</code>). <code>RoPE</code> does <strong>not</strong> rotate across different attention heads (<code>Axis h = 0..7</code>), because each head encodes an independent semantic domain (<code>e.g., Head 0 tracks syntax, Head 1 tracks entity relations</code>). Mixing across heads would corrupt domain independence.</li>
+<li>Instead, <code>RoPE</code> operates <strong>strictly inside the <code>128</code> feature coordinates of each individual head (<code>Axis m = 0..127</code>)</strong>. For a single head vector <span class="arithmatex">\(k\)</span> (<code>shape [128]</code>), <code>RoPE</code> groups the <code>128</code> feature coordinates into <strong><code>64</code> pairs of adjacent 2D planes</strong>: <span class="arithmatex">\((k_0, k_1), (k_2, k_3), \dots, (k_{126}, k_{127})\)</span>.</li>
+<li>For a token at sequence index <span class="arithmatex">\(m\)</span>, each 2D coordinate pair <span class="arithmatex">\(i\)</span> (<code>from 0 to 63</code>) is multiplied by a <strong><code>2x2</code> rotation block</strong> with frequency angle <span class="arithmatex">\(\theta_i\)</span>:
+  $$
+\begin{bmatrix} k_{2i, \text{after}} \ k_{2i+1, \text{after}} \end{bmatrix} = \begin{bmatrix} \cos(m \cdot \theta_i) &amp; -\sin(m \cdot \theta_i) \ \sin(m \cdot \theta_i) &amp; \cos(m \cdot \theta_i) \end{bmatrix} \begin{bmatrix} k_{2i, \text{before}} \ k_{2i+1, \text{before}} \end{bmatrix}
+$$</li>
+<li>Therefore, when written as a unified matrix acting on the full <code>128</code>-dimensional head vector, <span class="arithmatex">\(R_m\)</span> is a <strong><code>[128, 128]</code> block-diagonal matrix containing sixty-four <code>2x2</code> rotation blocks along its diagonal</strong>:
+  $$
+R_m = \begin{bmatrix}
+R(m, \theta_0) &amp; 0 &amp; \dots &amp; 0 \
+0 &amp; R(m, \theta_1) &amp; \dots &amp; 0 \
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \
+0 &amp; 0 &amp; \dots &amp; R(m, \theta_{63})
+\end{bmatrix}, \quad \text{where } R(m, \theta_i) = \begin{bmatrix} \cos(m\theta_i) &amp; -\sin(m\theta_i) \ \sin(m\theta_i) &amp; \cos(m\theta_i) \end{bmatrix}
+$$</li>
+<li>Because all <code>64</code> Query heads and <code>8</code> Key heads undergo this exact <code>[128, 128]</code> rotation independently, the head dimensions (<code>64</code> or <code>8</code>) act purely as parallel batch indices across the <code>RoPE</code> CUDA kernel. Furthermore, during autoregressive decoding, historical keys <span class="arithmatex">\(k_0, k_1, \dots, k_{n-1}\)</span> are <strong>not</strong> re-rotated at step <span class="arithmatex">\(n\)</span>; their rotated vectors (<span class="arithmatex">\(R_m @ k_m\)</span>) were already permanently written to the <code>KV</code> cache when they were originally generated, enabling the engine to evaluate <span class="arithmatex">\(\text{Score} = (R_n @ q_n) @ k_{m, \text{cached}}^T\)</span> directly.</li>
+</ul>
+<hr />
+<h3 id="15-tensor-dimensions-and-physical-interpretation-of-attention-projections">1.5 Tensor Dimensions and Physical Interpretation of Attention Projections<a class="headerlink" href="#15-tensor-dimensions-and-physical-interpretation-of-attention-projections" title="Permanent link">&para;</a></h3>
+<p>To understand how memory footprint scales inside every layer, let us trace the exact dimensions across both static model weights and dynamic activation vectors (<code>using Llama 3 70B specifications where hidden_dim = 8192, num_q_heads = 64, num_kv_heads = 8, and head_dim = 128</code>):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Tensor / Projection</th>
+<th style="text-align: left;">Base Dimensional Equation</th>
+<th style="text-align: left;">Llama 3 70B Shape (GQA 8:1)</th>
+<th style="text-align: left;">Physical Memory Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Input Activation (<span class="arithmatex">\(X\)</span>)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\([\text{batch}, \text{seq}, d_{\text{hidden}}]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([64, 1000, 8192]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(1.048 \text{ GB (FP16)}\)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Query Weight (<span class="arithmatex">\(W_Q\)</span>)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\([d_{\text{hidden}}, N_q \cdot d_{\text{head}}]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([8192, 8192]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(134.2 \text{ MB per layer}\)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Key Weight (<span class="arithmatex">\(W_K\)</span>)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\([d_{\text{hidden}}, N_{kv} \cdot d_{\text{head}}]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([8192, 1024]\)</span></td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(16.8 \text{ MB per layer (8x smaller!)}\)</span></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Value Weight (<span class="arithmatex">\(W_V\)</span>)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\([d_{\text{hidden}}, N_{kv} \cdot d_{\text{head}}]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([8192, 1024]\)</span></td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(16.8 \text{ MB per layer (8x smaller!)}\)</span></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Output Weight (<span class="arithmatex">\(W_O\)</span>)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\([d_{\text{hidden}}, d_{\text{hidden}}]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([8192, 8192]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(134.2 \text{ MB per layer}\)</span></td>
+</tr>
+</tbody>
+</table>
+<h4 id="1-static-weights-vs-dynamic-vectors-crucial-conceptual-boundary">1. Static Weights vs. Dynamic Vectors (<code>Crucial Conceptual Boundary</code>)<a class="headerlink" href="#1-static-weights-vs-dynamic-vectors-crucial-conceptual-boundary" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>W_Q</code>, <code>W_K</code>, <code>W_V</code>, and <code>W_O</code> (<code>[8192, 8192]</code> and <code>[8192, 1024]</code>) are <strong>static model parameters</strong>. They remain fixed in GPU memory (<code>HBM</code>) after training and act as universal projection linear operators.</li>
+<li><code>Q</code>, <code>K</code>, and <code>V</code> (<code>[64, 64, 1000, 128]</code> and <code>[64, 8, 1000, 128]</code>) are <strong>dynamically generated activation vectors</strong>. They are computed in real time for every specific token across all active input sequences.</li>
+</ul>
+<h4 id="2-why-is-num_heads-placed-before-seq_len-after-reshaping">2. Why is <code>num_heads</code> Placed Before <code>seq_len</code> After Reshaping?<a class="headerlink" href="#2-why-is-num_heads-placed-before-seq_len-after-reshaping" title="Permanent link">&para;</a></h4>
+<p>When <code>Q = X @ W_Q</code> is initially computed, its shape is <code>[batch_size, seq_len, hidden_dim]</code> (<code>[64, 1000, 8192]</code>). Rather than leaving the shape after splitting <code>hidden_dim</code> as <code>[batch_size, seq_len, num_q_heads, head_dim]</code>, modern architectures universally transpose the tensor to <code>[batch_size, num_q_heads, seq_len, head_dim]</code>.
+This transposition stems from the execution mechanics of GPU <strong>Batched Matrix Multiplication (<code>BMM</code>)</strong> operations (<code>torch.matmul</code> or <code>A @ B</code>):</p>
+<ol>
+<li><strong>The <code>BMM</code> Rule</strong>: In high-performance linear algebra libraries (<code>cuBLAS, PyTorch</code>), a matrix multiplication <code>A @ B</code> across multi-dimensional tensors <strong>only operates on the last two dimensions (<code>[-2, -1]</code>)</strong>. All preceding leading dimensions (<code>[:-2]</code>) are treated as independent parallel batch indices.</li>
+<li><strong>Required Dot-Product Pairing</strong>: For every individual attention head <code>h</code>, Head <code>h</code>'s Query matrix (<code>[seq_len, head_dim]</code>) must multiply against Head <code>h</code>'s transposed Key matrix (<code>[head_dim, seq_len]</code>).</li>
+<li><strong>Why Transposition is Mandatory</strong>:</li>
+<li>By transposing <code>seq_len</code> and <code>num_heads</code> to yield <code>[batch_size, num_heads, seq_len, head_dim]</code>, the last two dimensions become <code>[seq_len, head_dim]</code>. Consequently, <code>torch.matmul(Q, K^T)</code> treats <code>[batch_size, num_heads]</code> (<code>[64, 64]</code>) as independent parallel batch indices, enabling the GPU to execute <code>64 * 64 = 4,096</code> independent <code>[1000, 128] @ [128, 1000]</code> matrix multiplications concurrently across the Tensor Cores.</li>
+</ol>
+<h4 id="3-physical-and-semantic-interpretation-of-individual-cell-values-across-q-k-and-v">3. Physical and Semantic Interpretation of Individual Cell Values Across <code>Q</code>, <code>K</code>, and <code>V</code><a class="headerlink" href="#3-physical-and-semantic-interpretation-of-individual-cell-values-across-q-k-and-v" title="Permanent link">&para;</a></h4>
+<p>To master the inner mechanics of attention, we must examine the exact mathematical meaning of <strong>individual cell values (<code>floating-point numbers</code>)</strong> across these tensors (omitting <code>axis = 0</code>, the independent <code>batch_size</code> index <code>b</code>):</p>
+<h5 id="a-before-head-reshaping-seq_len-hidden_dim-1000-8192">A. Before Head Reshaping (<code>[seq_len, hidden_dim]</code> -&gt; <code>[1000, 8192]</code>)<a class="headerlink" href="#a-before-head-reshaping-seq_len-hidden_dim-1000-8192" title="Permanent link">&para;</a></h5>
+<p>Consider a single cell <code>Q[s, d]</code>, <code>K[s, d]</code>, or <code>V[s, d]</code>, where <code>s</code> (<code>seq_len</code>) denotes the token position (<code>e.g., Token 5 = "Apple"</code>) and <code>d</code> denotes the hidden dimension coordinate (<code>from 0 to 8,191</code>):</p>
+<ul>
+<li><strong><code>Q[s, d]</code> (<code>e.g., Q[5, 120] = 0.42</code>)</strong>:</li>
+<li><strong>Physical Meaning</strong>: The floating-point activation intensity of the 120th coordinate of Token 5's <strong>Query vector</strong>.</li>
+<li><strong>Semantic Meaning</strong>: Quantifies <strong>how strongly Token 5 (<code>"Apple"</code>) queries about feature concept #120 across the entire 8,192-dimensional space</strong> (<code>e.g., if dimension #120 encodes "technological corporate context", a positive value 0.42 indicates active seeking of adjacent tokens discussing technology or corporations</code>).</li>
+<li><strong><code>K[s, d]</code> (<code>e.g., K[2, 120] = 1.15</code>)</strong>:</li>
+<li><strong>Physical Meaning</strong>: The floating-point activation intensity of the 120th coordinate of Token 2's <strong>Key vector</strong>.</li>
+<li><strong>Semantic Meaning</strong>: Quantifies <strong>how strongly Token 2 (<code>e.g., "introduced"</code>) advertises itself as possessing feature concept #120</strong> (<code>e.g., "I am a verb denoting a corporate product launch"</code>).</li>
+<li><strong><code>V[s, d]</code> (<code>e.g., V[2, 120] = -0.31</code>)</strong>:</li>
+<li><strong>Physical Meaning</strong>: The floating-point payload intensity of the 120th coordinate of Token 2's <strong>Value vector</strong>.</li>
+<li><strong>Semantic Meaning</strong>: Represents <strong>the exact semantic delta that will be extracted and injected into Token 5's representation if Token 5 attends to Token 2</strong> (<code>e.g., "if attended to, adjust coordinate #120 by -0.31 to orient toward a hardware technology entity"</code>).</li>
+</ul>
+<h5 id="b-after-head-reshaping-num_q_heads-seq_len-head_dim-64-1000-128">B. After Head Reshaping (<code>[num_q_heads, seq_len, head_dim]</code> -&gt; <code>[64, 1000, 128]</code>)<a class="headerlink" href="#b-after-head-reshaping-num_q_heads-seq_len-head_dim-64-1000-128" title="Permanent link">&para;</a></h5>
+<p>When transposing from <code>[1000, 8192]</code> into <code>[64, 1000, 128]</code>, rather than maintaining a single monolithic 8,192-dimensional vector attempting to track syntax, grammar, logic, and factual context simultaneously, the architecture decomposes the <code>8,192</code> features into <strong><code>64</code> orthogonal, specialized semantic subspaces of <code>128</code> dimensions each (<code>head_dim = 128</code>)</strong>.</p>
+<ul>
+<li><strong>What Each Axis Represents</strong>:</li>
+<li><strong>Axis 1 (<code>h = 0..63</code>)</strong>: The <strong>Specialized Attention Head / Subspace Index</strong>. Each head specializes in tracking a distinct linguistic or logical relationship (<code>e.g., Head 0 tracks subject-verb agreement, Head 1 tracks pronoun resolution, Head 12 tracks corporate entity relations</code>).</li>
+<li><strong>Axis 2 (<code>s = 0..999</code>)</strong>: The <strong>Token Position (<code>seq_len</code>)</strong>.</li>
+<li><strong>Axis 3 (<code>m = 0..127</code>)</strong>: The <strong>Local Feature Coordinate inside Head <code>h</code>'s 128-dimensional subspace (<code>head_dim</code>)</strong>.</li>
+<li><strong>Interpretation of <code>Q[h, s, m]</code> (<code>e.g., Q[12, 5, 14] = -0.88</code>)</strong>: Represents the magnitude of the 14th coordinate of Token 5 (<code>"Apple"</code>) <strong>strictly within Head 12's specialized subspace</strong> (<code>e.g., within the "corporate entity relations" head #12, how strongly Token 5 queries coordinate #14</code>). Correspondingly, <code>K[12, 2, 14]</code> represents Token 2's key advertisement across that exact same 14th coordinate of Head 12's subspace.</li>
+</ul>
+<hr />
+<h3 id="16-head-by-head-attention-computation-and-score-normalization">1.6 Head-by-Head Attention Computation and Score Normalization<a class="headerlink" href="#16-head-by-head-attention-computation-and-score-normalization" title="Permanent link">&para;</a></h3>
+<p>With <code>Q</code>, <code>K</code>, and <code>V</code> reshaped into distinct subspaces, the attention layer evaluates pairwise similarity and extracts contextual representations across three sequential steps:</p>
+<h4 id="step-1-calculating-similarity-scores-raw-attention-logits-matrix">Step 1: Calculating Similarity Scores (Raw Attention Logits Matrix)<a class="headerlink" href="#step-1-calculating-similarity-scores-raw-attention-logits-matrix" title="Permanent link">&para;</a></h4>
+<p>To quantify the attention weight between query head <code>i</code> and historical keys, each Query vector computes an inner product against its assigned Key vector (<span class="arithmatex">\(\text{Score} = \frac{Q K^T}{\sqrt{d_{\text{head}}}}\)</span>).</p>
+<p>In <strong>Grouped-Query Attention (<code>GQA 8:1</code>)</strong>, each Key matrix is shared by a group of 8 Query heads:</p>
+<ul>
+<li><strong>Query Heads 0 through 7</strong> compute inner products against <strong>Key Head 0</strong> (<code>[1000, 128] @ [128, 1000]</code>).</li>
+<li><strong>Query Heads 8 through 15</strong> compute inner products against <strong>Key Head 1</strong>.</li>
+<li>... up to <strong>Query Heads 56 through 63</strong> computing against <strong>Key Head 7</strong>.</li>
+</ul>
+<p>Consequently, for every sequence request across <code>batch_size = 64</code>, exactly <strong>64 distinct <code>Score</code> matrices</strong> are generated, where each <code>Score</code> matrix has dimensions <code>[seq_len, seq_len]</code> (<code>[1000, 1000]</code>):</p>
+<div class="arithmatex">\[
+\text{Score Matrix Shape} = [\text{batch_size}, \text{num_q_heads}, \text{seq_len}, \text{seq_len}] \implies [64, 64, 1000, 1000]
+\]</div>
+<h5 id="physical-and-semantic-interpretation-of-individual-cells-across-the-score-matrix">Physical and Semantic Interpretation of Individual Cells Across the <code>Score</code> Matrix<a class="headerlink" href="#physical-and-semantic-interpretation-of-individual-cells-across-the-score-matrix" title="Permanent link">&para;</a></h5>
+<p>When evaluating <span class="arithmatex">\(\text{Score} = \frac{Q K^T}{\sqrt{d_{\text{head}}}}\)</span>, what does each cell <code>Score[h, i, j]</code> (<code>where h is head index, i is query token position, and j is key token position</code>) denote before and after normalization?</p>
+<ul>
+<li><strong>Before <code>Softmax</code> (<code>Raw Logit Score[h, i, j]</code>, e.g., <code>Score[12, 5, 2] = 14.2</code>)</strong>:</li>
+<li><strong>Physical Math</strong>: The direct 128-element inner product between Query Token <span class="arithmatex">\(i\)</span> (<span class="arithmatex">\(s_Q = 5\)</span>) and Key Token <span class="arithmatex">\(j\)</span> (<span class="arithmatex">\(s_K = 2\)</span>) within Head <span class="arithmatex">\(h\)</span> (<span class="arithmatex">\(12\)</span>), scaled by <span class="arithmatex">\(\sqrt{128} \approx 11.31\)</span>:</li>
+</ul>
+<div class="arithmatex">\[
+\text{Raw_Score}_{h, i, j} = \frac{\sum_{m=0}^{127} Q_{h, i, m} \cdot K_{h, j, m}}{\sqrt{128}}
+\]</div>
+<ul>
+<li><strong>Semantic Meaning</strong>: Measures the <strong>unbounded geometric alignment (cosine similarity magnitude)</strong> between Token <code>i</code> (<code>"Apple"</code>)'s query and Token <code>j</code> (<code>"introduced"</code>)'s key inside Head <code>h</code>'s subspace. A high positive value (<code>14.2</code>) indicates strong semantic resonance; a negative value (<code>-3.1</code>) indicates semantic divergence or irrelevance.</li>
+<li><strong>After <code>Softmax</code> (<code>Attention Probability Weight[h, i, j]</code>, e.g., <code>Attention_Weight[12, 5, 2] = 0.65</code>)</strong>:</li>
+<li><strong>Physical Math</strong>: The normalized probability after evaluating <code>Softmax</code> across the <code>seq_len_Key</code> axis (<code>axis = -1</code>):</li>
+</ul>
+<div class="arithmatex">\[
+\text{Attention_Weight}_{h, i, j} = \text{Softmax}\left(\text{Raw_Score}_{h, i, :}\right)_j
+\]</div>
+<ul>
+<li><strong>Semantic Meaning</strong>: Quantifies <strong>the exact probability share (<code>65%</code>) of Token <code>i</code> (<code>Token 5 = "Apple"</code>)'s attention budget allocated to extracting information from Token <code>j</code> (<code>Token 2 = "introduced"</code>) within Head <code>12</code>'s subspace</strong>. During the final weighted summation <code>Attention_Weight @ V</code>, Token 5 extracts precisely <code>65%</code> (<code>0.65</code>) of Token 2's Value vector (<code>V[12, 2, :]</code>) into its own representation across Head 12.</li>
+</ul>
+<h4 id="step-2-scale-and-probability-normalization-softmax">Step 2: Scale and Probability Normalization (<code>Softmax</code>)<a class="headerlink" href="#step-2-scale-and-probability-normalization-softmax" title="Permanent link">&para;</a></h4>
+<p>Because raw inner products can assume arbitrary unbounded magnitudes (<code>e.g., -15.2, 0.4, 8.9, 24.1</code>), they do not sum to <code>1.0</code> (<code>100%</code>), and negative or extreme magnitudes distort weighted summation.
+<code>Softmax</code> converts any raw vector of real numbers into a <strong>probability distribution where every weight is strictly bounded between <code>0.0</code> and <code>1.0</code>, and their total sum is exactly <code>1.0</code> (<code>100%</code>)</strong>:</p>
+<div class="arithmatex">\[
+\text{Softmax}(z_i) = \frac{e^{z_i}}{\sum_{j} e^{z_j}}
+\]</div>
+<h5 id="why-do-we-apply-softmax-across-the-last-seq_len-dimension-axis-1-only">Why Do We Apply <code>Softmax</code> Across the Last <code>seq_len</code> Dimension (<code>axis = -1</code>) Only?<a class="headerlink" href="#why-do-we-apply-softmax-across-the-last-seq_len-dimension-axis-1-only" title="Permanent link">&para;</a></h5>
+<p>As <code>head_dim</code> (<code>128</code>) increases, inner products scale in magnitude, causing gradients to saturate or vanish within <code>Softmax</code>. To counteract this variance growth, every element is first scaled by <span class="arithmatex">\(\sqrt{d_{\text{head}}} = \sqrt{128} \approx 11.31\)</span>, after which <code>Softmax</code> is applied along <strong><code>axis = -1</code></strong>.</p>
+<ul>
+<li><strong>Rows (<code>axis = -2</code>, the <code>seq_len_Query</code> axis)</strong>: Represent the <strong>Queries (<code>Q</code>)</strong> of each token position (<code>Row 0</code> corresponds to Token 0's Query, <code>Row 1</code> to Token 1's Query, ..., <code>Row 999</code> to Token 999's Query).</li>
+<li><strong>Columns (<code>axis = -1</code>, the <code>seq_len_Key</code> axis)</strong>: Represent the <strong>Keys (<code>K</code>)</strong> of all historical token positions (<code>Col 0</code> corresponds to Key 0, <code>Col 1</code> to Key 1, ..., <code>Col 999</code> to Key 999).</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Query Token Row (<span class="arithmatex">\(i\)</span>)</th>
+<th style="text-align: left;">Key Col 0 (<code>Token 0</code>)</th>
+<th style="text-align: left;">Key Col 1 (<code>Token 1</code>)</th>
+<th style="text-align: left;">Key Col 2 (<code>Token 2</code>)</th>
+<th style="text-align: left;"><span class="arithmatex">\(\dots\)</span></th>
+<th style="text-align: left;">Key Col 999 (<code>Token 999</code>)</th>
+<th style="text-align: left;">Softmax Axis (<span class="arithmatex">\(=-1\)</span>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Row 0 (Query 0)</strong></td>
+<td style="text-align: left;"><code>12.4</code></td>
+<td style="text-align: left;"><code>0.0 (masked)</code></td>
+<td style="text-align: left;"><code>0.0 (masked)</code></td>
+<td style="text-align: left;"><span class="arithmatex">\(\dots\)</span></td>
+<td style="text-align: left;"><code>0.0 (masked)</code></td>
+<td style="text-align: left;">Normalizes across active Row 0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Row 1 (Query 1)</strong></td>
+<td style="text-align: left;"><code>8.2</code></td>
+<td style="text-align: left;"><code>15.1</code></td>
+<td style="text-align: left;"><code>0.0 (masked)</code></td>
+<td style="text-align: left;"><span class="arithmatex">\(\dots\)</span></td>
+<td style="text-align: left;"><code>0.0 (masked)</code></td>
+<td style="text-align: left;">Normalizes across active Row 1</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Row 2 (Query 2)</strong></td>
+<td style="text-align: left;"><code>-2.1</code></td>
+<td style="text-align: left;"><code>4.6</code></td>
+<td style="text-align: left;"><code>9.8</code></td>
+<td style="text-align: left;"><span class="arithmatex">\(\dots\)</span></td>
+<td style="text-align: left;"><code>0.0 (masked)</code></td>
+<td style="text-align: left;">Normalizes across active Row 2</td>
+</tr>
+</tbody>
+</table>
+<div class="arithmatex">\[
+\text{Attention_Weights} = \text{Softmax}\left(\frac{Q K^T}{\sqrt{d_{\text{head}}}}, \ \text{axis}=-1\right) \quad (\text{Shape: } [64, 64, 1000, 1000])
+\]</div>
+<h4 id="step-3-information-extraction-and-output-projection-w_o">Step 3: Information Extraction and Output Projection (<code>W_O</code>)<a class="headerlink" href="#step-3-information-extraction-and-output-projection-w_o" title="Permanent link">&para;</a></h4>
+<p>Finally, we multiply the probability matrix by the historical Value vectors <span class="arithmatex">\(V\)</span> (<code>[seq_len, head_dim]</code>) to synthesize the contextualized representation for each head:</p>
+<div class="arithmatex">\[
+\text{Head_Output} = \text{Attention_Weights} @ V \quad (\text{Shape: } [64, 64, 1000, 128])
+\]</div>
+<p>The 64 heads are then concatenated and flattened back into <code>[batch_size, seq_len, hidden_dim]</code> (<code>[64, 1000, 8192]</code>). To blend and synthesize these multi-head features into a unified semantic representation, the concatenated vector multiplies against the <strong>Output Projection Matrix (<code>W_O</code>, shape <code>[8192, 8192]</code>)</strong>:</p>
+<div class="arithmatex">\[
+\text{Final Layer Output} = \text{Concatenated_Heads} @ W_O \quad (\text{Shape: } [64, 1000, 8192])
+\]</div>
+<hr />
+<h3 id="17-feed-forward-networks-ffns-swiglu-architecture-and-multiplicative-gating">1.7 Feed-Forward Networks (FFNs): SwiGLU Architecture and Multiplicative Gating<a class="headerlink" href="#17-feed-forward-networks-ffns-swiglu-architecture-and-multiplicative-gating" title="Permanent link">&para;</a></h3>
+<p>After self-attention finishes information exchange <em>between</em> words, the contextualized vector enters the <strong>Feed-Forward Network (<code>FFN</code>)</strong>. If self-attention is responsible for "finding relationships across the sentence," the <code>FFN</code> is responsible for each token's <strong>"closed-door knowledge processing."</strong></p>
+<pre class="mermaid"><code>flowchart TD
+    X["Input Activation Vector X [b, s, d]"] --&gt; NORM1["RMSNorm"]
+    NORM1 --&gt; ATT["Multi-Head Attention (MHA / GQA)&lt;br&gt;Q = X @ W_Q | K = X @ W_K | V = X @ W_V"]
+    ATT --&gt; ADD1(("➕ Residual Add"))
+    X --&gt; ADD1
+
+    ADD1 --&gt; NORM2["RMSNorm"]
+    NORM2 --&gt; FFN["SwiGLU Feed-Forward Network&lt;br&gt;(Gate and Up Projection -&gt; SiLU -&gt; Down Projection)"]
+    FFN --&gt; ADD2(("➕ Residual Add"))
+    ADD1 --&gt; ADD2
+
+    ADD2 --&gt; OUT["Transformer Block Output H [b, s, d]"]</code></pre>
+<h4 id="1-static-nature-and-associative-memory-role-w_1-vs-w_2">1. Static Nature and Associative Memory Role (<code>W_1</code> vs <code>W_2</code>)<a class="headerlink" href="#1-static-nature-and-associative-memory-role-w_1-vs-w_2" title="Permanent link">&para;</a></h4>
+<p>While Self-Attention (<code>W_Q, W_K, W_V</code>) acts as the <strong>"Information Broker"</strong> routing contextual relationships across token positions, the <code>FFN</code> (<code>W_1, W_2</code>) acts as an <strong>"Associative Factual Memory Bank."</strong></p>
+<ul>
+<li><code>W_1</code> (<code>the up-projection table</code>) functions as a <strong>Key-Detector</strong> for abstract patterns and factual concepts (<code>e.g., "The capital of France"</code>, <code>"Python syntax for loops"</code>). When <code>H @ W_1</code> executes, rows in <code>W_1</code> whose patterns align with <code>H</code> activate strongly (<code>SiLU activation &gt; 0</code>).</li>
+<li><code>W_2</code> (<code>the down-projection table</code>) functions as the corresponding <strong>Value-Generator</strong>, mapping firing neurons from <code>W_1</code> into vocabulary adjustments (<code>e.g., injecting probability mass into the token representation for "Paris"</code>).</li>
+</ul>
+<h4 id="2-exact-tensor-dimensions-and-why-ffn-takes-80-of-model-parameters-swiglu-anatomy">2. Exact Tensor Dimensions and Why FFN Takes &gt; 80% of Model Parameters (<code>SwiGLU</code> Anatomy)<a class="headerlink" href="#2-exact-tensor-dimensions-and-why-ffn-takes-80-of-model-parameters-swiglu-anatomy" title="Permanent link">&para;</a></h4>
+<p>In modern LLM architectures (<code>Llama 3 70B, Mistral</code>), standard <code>ReLU</code> FFNs are replaced by <strong><code>SwiGLU</code> (<code>Swish-Gated Linear Unit</code>)</strong> activation, requiring three static weight matrices per layer: <code>W_Gate</code>, <code>W_Up</code> (<code>W_1</code>), and <code>W_Down</code> (<code>W_2</code>).</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Component / Matrix</th>
+<th style="text-align: left;">Shape Dimensionality</th>
+<th style="text-align: left;">Parameter Count per Layer</th>
+<th style="text-align: left;">Percentage of Layer Math</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Gate Projection (<span class="arithmatex">\(W_{\text{Gate}}\)</span>)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\([8192, 28672]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(234.8 \text{ Million weights}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 26.7\%\)</span> of layer FLOPs</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Up Projection (<span class="arithmatex">\(W_{\text{Up}}\)</span>)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\([8192, 28672]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(234.8 \text{ Million weights}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 26.7\%\)</span> of layer FLOPs</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Down Projection (<span class="arithmatex">\(W_{\text{Down}}\)</span>)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\([28672, 8192]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(234.8 \text{ Million weights}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 26.7\%\)</span> of layer FLOPs</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Total FFN vs Attention</strong></td>
+<td style="text-align: left;"><strong>FFN: 704.6M vs Attention: 150.9M</strong></td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(704.6 \text{M parameters}\)</span></strong></td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(&gt; 80\%\)</span> of total model compute!</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Because <code>W_Gate</code>, <code>W_Up</code>, and <code>W_Down</code> account for <strong>over 80% of the entire 70B model's static <code>HBM</code> footprint (<code>~56.3 Billion</code> weights)</strong>, reading these massive <code>[8192, 28672]</code> FFN tables across the memory bus on every token generation step constitutes the primary driver of the <strong>memory-bandwidth bottleneck</strong> during batch-1 decoding.</p>
+<h4 id="3-step-by-step-data-flow-through-swiglu-and-residual-highway">3. Step-by-Step Data Flow Through <code>SwiGLU</code> and Residual Highway<a class="headerlink" href="#3-step-by-step-data-flow-through-swiglu-and-residual-highway" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Residual Connection (Element-Wise Cell Addition)</strong>: In <span class="arithmatex">\(H = \text{Attention}(X) + X\)</span>, both terms share dimensions <code>[batch_size, seq_len, hidden_dim]</code>. The addition operator executes element-wise summation across matching indices (<span class="arithmatex">\(H_{b, s, d} = \text{Attention}(X)_{b, s, d} + X_{b, s, d}\)</span>). This establishes a <strong>Residual Highway (<span class="arithmatex">\(+\)</span>)</strong> that prevents gradient vanishing across 80 layers while infusing contextual nuances (<span class="arithmatex">\(\text{Attention}(X)\)</span>) into the base token identity (<span class="arithmatex">\(X\)</span>).</li>
+<li><strong>Up and Gate Projections</strong>: <span class="arithmatex">\(H\)</span> multiplies against <span class="arithmatex">\(W_{\text{Gate}}\)</span> and <span class="arithmatex">\(W_{\text{Up}}\)</span> in parallel, expanding dimensions from <code>8,192</code> up to <code>28,672</code>:</li>
+</ul>
+<div class="arithmatex">\[
+\text{Gate_Tensor} = H @ W_{\text{Gate}}, \quad \text{Up_Tensor} = H @ W_{\text{Up}} \quad (\text{Shape: } [64, 1000, 28672])
+\]</div>
+<ul>
+<li><strong>Non-Linear Gating (<code>SiLU</code>) and Multiplicative Synthesis (<span class="arithmatex">\(\odot\)</span>)</strong>: <code>Gate_Tensor</code> passes through <span class="arithmatex">\(\text{SiLU}(x) = x \cdot \sigma(x) = \frac{x}{1 + e^{-x}}\)</span> and is <strong>element-wise multiplied (<span class="arithmatex">\(\odot\)</span>)</strong> against <code>Up_Tensor</code>:</li>
+</ul>
+<div class="arithmatex">\[
+\text{Activated_Tensor} = \text{SiLU}(\text{Gate_Tensor}) \odot \text{Up_Tensor} \quad (\text{Shape: } [64, 1000, 28672])
+\]</div>
+<ul>
+<li><strong>Down-Projection (Compression)</strong>: The activated vector multiplies against <span class="arithmatex">\(W_{\text{Down}}\)</span> (<span class="arithmatex">\(W_2\)</span>), compressing the <code>28,672</code> dimensions back down to <code>8,192</code>:</li>
+</ul>
+<div class="arithmatex">\[
+\text{FFN_Output} = \text{Activated_Tensor} @ W_{\text{Down}} \quad (\text{Shape: } [64, 1000, 8192])
+\]</div>
+<h4 id="4-architectural-rationale-for-swiglu-over-classic-relu">4. Architectural Rationale for <code>SwiGLU</code> Over Classic <code>ReLU</code><a class="headerlink" href="#4-architectural-rationale-for-swiglu-over-classic-relu" title="Permanent link">&para;</a></h4>
+<p>Why did modern frontier architectures replace the classic <code>ReLU</code> feed-forward layer:</p>
+<div class="arithmatex">\[
+\text{FFN_Output} = \text{ReLU}(X @ W_1) @ W_2
+\]</div>
+<p>with the decoupled three-matrix <code>SwiGLU</code> architecture (<span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}\)</span>)?</p>
+<ol>
+<li>
+<p><strong>Resolving <code>ReLU</code> Dead Neurons and Coupled Projections</strong>:
+   In classic architectures, <span class="arithmatex">\(\text{ReLU}(x) = \max(0, x)\)</span> enforces a sharp threshold. If a dot-product is even slightly negative (<code>-0.001</code>), <code>ReLU</code> truncates it completely to <code>0.0</code>. This eliminates gradient propagation across backpropagation, creating the <strong>Dead Neuron Problem</strong>.
+   Furthermore, utilizing a single up-projection <span class="arithmatex">\(W_1\)</span> forces each row in <span class="arithmatex">\(W_1\)</span> to simultaneously regulate two coupled behaviors: feature activation (the gating decision) and feature magnitude (the content generation).</p>
+</li>
+<li>
+<p><strong>Decoupling Gating from Content Generation</strong>:
+   <code>SwiGLU</code> resolves this bottleneck by decoupling these operations across two independent projection matrices:</p>
+</li>
+<li>
+<p><span class="arithmatex">\(W_{\text{Gate}}\)</span> functions as a feature-selective gating mechanism that regulates activation thresholds.</p>
+</li>
+<li>
+<p><span class="arithmatex">\(W_{\text{Up}}\)</span> functions as the primary feature generator that produces candidate content payloads.</p>
+</li>
+<li>
+<p><strong>Precise Multiplicative Modulation (<span class="arithmatex">\(\odot\)</span>)</strong>:
+   The activation expression <span class="arithmatex">\(\text{SiLU}(\text{Gate_Tensor})\)</span> acts as a continuous 28,672-channel gating modulation curve, ranging from <code>0.0</code> for suppressed features up to <code>&gt; 1.0</code> for actively amplified features.
+   Executing element-wise multiplication on a dedicated operational layer:</p>
+</li>
+</ol>
+<div class="arithmatex">\[
+\text{Modulation} \odot \text{Content}
+\]</div>
+<p>enables precise, selective amplification and suppression across individual dimensions. For example, if Neuron 500 in the Gate evaluates to <code>0.0</code>, multiplying by <code>Up[500]</code> cleanly suppresses feature 500. Conversely, if Neuron 1200 evaluates to <code>1.2</code>, multiplying by <code>Up[1200]</code> actively amplifies feature 1200.</p>
+<hr />
+<h3 id="18-attention-structural-variations-mha-mqa-and-grouped-query-attention-gqa">1.8 Attention Structural Variations: MHA, MQA, and Grouped-Query Attention (<code>GQA</code>)<a class="headerlink" href="#18-attention-structural-variations-mha-mqa-and-grouped-query-attention-gqa" title="Permanent link">&para;</a></h3>
+<p>To optimize memory and compute capacity during autoregressive decoding, modern attention architectures implement key structural evolutions:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Architecture</th>
+<th style="text-align: left;">Full Name</th>
+<th style="text-align: left;">How KV Heads are Allocated</th>
+<th style="text-align: left;">Memory Footprint and Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong><code>MHA</code></strong></td>
+<td style="text-align: left;">Multi-Head Attention</td>
+<td style="text-align: left;">Every Query head (<span class="arithmatex">\(h_q\)</span>) has its own unique Key (<span class="arithmatex">\(h_k\)</span>) and Value (<span class="arithmatex">\(h_v\)</span>) head (<span class="arithmatex">\(h_q = h_{kv}\)</span>).</td>
+<td style="text-align: left;">Standard original design. Heavy memory consumption during long-context decoding due to massive KV cache.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>MQA</code></strong></td>
+<td style="text-align: left;">Multi-Query Attention</td>
+<td style="text-align: left;">All Query heads share <strong>one single Key and Value head</strong> (<span class="arithmatex">\(h_{kv} = 1\)</span>).</td>
+<td style="text-align: left;">Drastically compresses KV cache (<span class="arithmatex">\(h_q : 1\)</span> reduction), but can cause mild quality degradation on complex reasoning.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>GQA</code></strong></td>
+<td style="text-align: left;">Grouped-Query Attention</td>
+<td style="text-align: left;">Query heads are grouped (<code>e.g., 8 Query heads share 1 KV head, h_q : h_kv = 8 : 1</code>).</td>
+<td style="text-align: left;"><strong>The modern industry standard</strong> (<code>Llama 3, Mistral</code>). Balances near-<code>MHA</code> model quality with an <span class="arithmatex">\(8\times\)</span> reduction in KV cache memory.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>MoE</code></strong></td>
+<td style="text-align: left;">Mixture of Experts</td>
+<td style="text-align: left;">Replaces dense <code>FFN</code> layers with multiple parallel expert <code>FFNs</code> governed by a <strong>Router (Gating Network)</strong>.</td>
+<td style="text-align: left;">Activates only a sparse subset of experts per token (<code>e.g., 2 out of 8 experts in Mixtral 8x7B</code>), achieving 70B-level model capacity with only 14B active compute <code>FLOPs</code>.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="architectural-rationale-behind-grouped-query-attention-gqa-vs-mhamqa">Architectural Rationale Behind Grouped-Query Attention (<code>GQA</code>) vs. <code>MHA</code>/<code>MQA</code><a class="headerlink" href="#architectural-rationale-behind-grouped-query-attention-gqa-vs-mhamqa" title="Permanent link">&para;</a></h4>
+<p>Why does <code>GQA</code> (<code>8 Query heads sharing 1 Key/Value head</code>) preserve the reasoning capabilities and evaluation quality of full <code>MHA</code> (<code>64 Query heads paired with 64 Key/Value heads</code>), whereas <code>MQA</code> (<code>all 64 Query heads sharing 1 single Key/Value head</code>) suffers from quality degradation on complex reasoning tasks?</p>
+<p>This architectural capability stems from four structural properties of attention matrices (<code>demonstrated by Ainslie et al., 2023, GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints</code>):</p>
+<ol>
+<li>
+<p><strong>Low-Rank Redundancy of Historical Key/Value Projections (<code>Why MHA is Overkill</code>)</strong>:
+   While a generating token's <strong>Query (<code>Q</code>) heads</strong> require high diversity (<code>64 distinct queries across syntax, entity tracking, logical coherence, and grammar</code>), historical token <strong>Key (<code>K</code>) and Value (<code>V</code>) representations</strong> exhibit strong inter-head correlation (<code>low-rank subspace structure</code>). Specifically, what Token 2 (<code>"introduced"</code>) advertises about its syntactic verb role (<code>Key Head 0</code>) and what it advertises about its semantic action (<code>Key Head 1</code>) overlap substantially. Allocating 64 independent 128-dimensional Key/Value heads (<code>8,192 numbers per token</code>) stores redundant representations, wasting <code>&gt; 85%</code> of <code>KV</code> cache memory (<code>HBM</code>) without proportional informational gain.
+   By grouping 8 diverse Query heads to share <strong>1 unified Key/Value projection head</strong>, the shared <code>KV</code> head acts as a comprehensive semantic reference domain. Each of the 8 specialized Query heads reads from that shared domain using its own distinct inner-product weights (<span class="arithmatex">\(Q_0 @ K_{\text{shared}}^T, \ Q_1 @ K_{\text{shared}}^T\)</span>), extracting targeted facets without requiring 8 duplicate copies of the underlying Key/Value projection.</p>
+</li>
+<li>
+<p><strong>Representation Collision in <code>MQA</code> (<code>Why h_kv = 1 Degrades Quality</code>)</strong>:
+   If Key/Value projections are redundant, why not implement <strong>Multi-Query Attention (<code>MQA</code>)</strong> where all 64 Query heads share <strong>just 1 single Key/Value head (<span class="arithmatex">\(h_{kv} = 1\)</span>)</strong>?
+   When all 64 Query heads share a single 128-dimensional vector per token, that single vector is forced to encode every syntactic, factual, and logical property of the word simultaneously. Forcing 64 orthogonal queries through a single 128-dimensional bottleneck induces <strong>representation collision and capacity saturation</strong>, degrading fidelity on complex multi-hop mathematical reasoning and dense code generation.</p>
+</li>
+<li>
+<p><strong>The <code>GQA</code> Subspace Partition (<code>The Pareto Frontier of h_kv = 8</code>)</strong>:
+   By allocating <code>8</code> distinct Key/Value heads (<code>1,024 total KV dimensions per token</code>), <code>GQA</code> establishes 8 orthogonal semantic reference domains (<code>e.g., Domain 0: Syntactic/Grammar, Domain 1: Entity/Factual, Domain 2: Logical/Math</code>). Each domain is shared by 8 local specialized Query heads (<code>8 * 8 = 64 Q heads total</code>), completely avoiding representation collision while compressing the <code>KV</code> cache footprint by <strong><code>8x</code> (<code>100% -&gt; 12.5%</code>)</strong>.</p>
+</li>
+<li>
+<p><strong>Mean-Pooling Initialization and Up-Training</strong>:
+   When converting an <code>MHA</code> checkpoint into <code>GQA</code> (<code>or initializing GQA pre-training</code>), each shared <code>KV</code> head is initialized via <strong>Mean-Pooling across the 8 corresponding <code>MHA</code> Key/Value projection heads</strong>:</p>
+</li>
+</ol>
+<div class="arithmatex">\[
+W_{K, \text{shared_group_0}} = \frac{W_{K, \text{head_0}} + W_{K, \text{head_1}} + \dots + W_{K, \text{head_7}}}{8}
+\]</div>
+<p>Because grouped <code>MHA</code> heads naturally capture correlated principal components (<code>Low-Rank Approximation</code>), mean-pooling preserves the foundational semantic signal. Subsequent pre-training fine-tunes the 8 Query heads to co-adapt to the shared projection, achieving evaluation perplexity statistically indistinguishable from full <code>MHA</code>.</p>
+<hr />
+<h3 id="19-sparse-architecture-evolution-mixture-of-experts-moe-routing-mechanics">1.9 Sparse Architecture Evolution: Mixture of Experts (<code>MoE</code>) Routing Mechanics<a class="headerlink" href="#19-sparse-architecture-evolution-mixture-of-experts-moe-routing-mechanics" title="Permanent link">&para;</a></h3>
+<p>In a traditional <strong>Dense</strong> Transformer (<code>e.g., Llama 3 70B</code>), every single token must pass through and activate 100% of the model's 70 Billion parameters on every generation step (<code>70B active compute FLOPs</code>). While scaling up dense parameters increases model intelligence, it inevitably causes inference latency and memory bandwidth requirements to explode.</p>
+<p><strong>Mixture of Experts (<code>MoE</code>)</strong> (<code>popularized by Mixtral 8x7B, DeepSeek-V3/R1, and GPT-4</code>) shatters this trade-off by decoupling <strong>Total Parameter Capacity</strong> (<code>model knowledge base</code>) from <strong>Active Compute Parameters</strong> (<code>inference latency cost</code>).</p>
+<pre class="mermaid"><code>flowchart TD
+    IN["Input Vector H [batch_size, seq_len, 4096]"] --&gt; ROUTER["Router / Gating Network (W_Router [4096, 8])&lt;br&gt;Calculates Top-2 Expert Probabilities"]
+
+    ROUTER --&gt;|"Weight: 0.65"| E0["Expert 0 (Code and Logic)"]
+    ROUTER --&gt;|"Inactive (0.00)"| E1["Expert 1..3 (Skipped / No Compute)"]
+    ROUTER --&gt;|"Weight: 0.35"| E4["Expert 4 (Math and Reasoning)"]
+    ROUTER --&gt;|"Inactive (0.00)"| E5["Expert 5..7 (Skipped / No Compute)"]
+
+    E0 --&gt; COMBINE["MoE_Output = 0.65 * Expert_0(H) + 0.35 * Expert_4(H)"]
+    E4 --&gt; COMBINE</code></pre>
+<h4 id="1-how-sparse-routing-works-top-k-softmax-and-swiglu-anatomy-per-expert">1. How Sparse Routing Works (<code>Top-K Softmax</code> and <code>SwiGLU</code> Anatomy per Expert)<a class="headerlink" href="#1-how-sparse-routing-works-top-k-softmax-and-swiglu-anatomy-per-expert" title="Permanent link">&para;</a></h4>
+<p>Instead of a single dense <code>FFN</code> block, an <code>MoE</code> layer contains <span class="arithmatex">\(N\)</span> independent, parallel expert <code>FFN</code> blocks (<code>e.g., 8 Experts in Mixtral</code>), governed by a lightweight linear <strong>Router matrix (<span class="arithmatex">\(W_{\text{Router}}\)</span>, shape <code>[hidden_dim, num_experts]</code>)</strong>. Every single expert (<code>Expert 0</code> through <code>Expert 7</code>) is a completely independent <code>SwiGLU FFN</code> block possessing its own private set of three weight matrices (<span class="arithmatex">\(W_{\text{Gate_i}}, W_{\text{Up_i}}, W_{\text{Down_i}}\)</span>). Inside one Mixtral 8x7B <code>MoE</code> layer, the GPU <code>HBM</code> stores <strong><code>1 Router Matrix + (8 experts * 3 matrices) = 25 distinct weight matrices</code> per layer!</strong></p>
+<ol>
+<li>
+<p><strong>Router Logit Calculation</strong>:
+   For each token vector <span class="arithmatex">\(H\)</span> (<code>[1, 4096]</code>), the Router computes similarity scores against each of the <span class="arithmatex">\(N\)</span> experts (<span class="arithmatex">\(\text{Router_Logits} = H @ W_{\text{Router}}\)</span>).</p>
+</li>
+<li>
+<p><strong><code>Top-K</code> Selection and Normalization</strong>:
+   To preserve sparsity, the Router selects only the highest <span class="arithmatex">\(K\)</span> logits (<code>e.g., Top-2: Expert 4 at 14.8 and Expert 0 at 12.1</code>), zeroes out all other 6 experts (<code>-infinity</code>), and applies <code>Softmax</code> over just the selected <span class="arithmatex">\(K\)</span> logits so their gating weights sum to <code>1.0</code> (<code>100%</code>).</p>
+</li>
+<li>
+<p><strong>Expert Dispatch and Weighted Synthesis</strong>:
+   The token vector <span class="arithmatex">\(H\)</span> is dispatched <strong>only</strong> to Expert 4 and Expert 0, where it runs through their private <code>SwiGLU</code> transformations (<span class="arithmatex">\(H @ W_{\text{Gate_i}}\)</span>, etc.). Their outputs are scaled by the router weights and summed:</p>
+</li>
+</ol>
+<div class="arithmatex">\[
+\text{Expert_4_Output} = \left(\text{SiLU}(H @ W_{\text{Gate_4}}) \odot (H @ W_{\text{Up_4}})\right) @ W_{\text{Down_4}}
+\]</div>
+<div class="arithmatex">\[
+\text{Expert_0_Output} = \left(\text{SiLU}(H @ W_{\text{Gate_0}}) \odot (H @ W_{\text{Up_0}})\right) @ W_{\text{Down_0}}
+\]</div>
+<div class="arithmatex">\[
+\text{MoE_Output} = 0.65 \cdot \text{Expert_4_Output} + 0.35 \cdot \text{Expert_0_Output} \quad (\text{Shape: } [1, 4096])
+\]</div>
+<h4 id="2-why-serving-moe-models-is-challenging-for-production-engines">2. Why Serving <code>MoE</code> Models is Challenging for Production Engines<a class="headerlink" href="#2-why-serving-moe-models-is-challenging-for-production-engines" title="Permanent link">&para;</a></h4>
+<p>While <code>MoE</code> delivers 70B-level intelligence at 13B-level compute latency (<code>FLOPs</code>), it introduces severe physical bottlenecks for production inference servers:</p>
+<ul>
+<li><strong>The Memory Footprint Paradox</strong>: Even though each token only executes compute across <code>12.9B active weights</code>, <strong>ALL 46.7 Billion parameters across all 8 experts MUST reside permanently inside GPU <code>HBM</code> memory!</strong> Allocating the VRAM capacity of a ~50B dense model is required solely to run a 13B active compute load, exacerbating the memory-bandwidth wall during batch-1 decoding.</li>
+<li>
+<p><strong>Expert Hotspotting and Load Imbalance (<code>Multi-GPU vs. Single-GPU Hardware Dynamics</code>)</strong>:</p>
+</li>
+<li>
+<p><strong>Multi-GPU Regime (<code>Expert Parallelism - EP</code>) – Physical GPUs Get Fixed Experts Assigned</strong>:
+     When serving massive <code>MoE</code> models (<code>e.g., DeepSeek-V3 or Mixtral 8x22B</code>) across multi-GPU clusters, experts are partitioned across distinct physical GPUs (<code>e.g., GPU 0 stores Expert 0, GPU 7 stores Expert 7 in their respective HBM pools</code>).
+     If 50 sequence tokens in a batch (<code>b = 64</code>) route to <code>Expert 0</code> ("Python/Code") while only 2 tokens route to <code>Expert 7</code> ("Poetry"), <strong><code>GPU 0</code> becomes a severe compute bottleneck (<code>Hotspotting</code>)</strong>, executing 50 heavy <code>SwiGLU</code> operations while <code>GPU 7</code> sits completely idle waiting at the <code>All-to-All</code> network synchronization barrier.</p>
+</li>
+<li>
+<p><strong>Single-GPU Regime (<code>SM Execution and Batch Shattering</code>) – No Fixed SM Assignment, but Severe Cache Thrashing</strong>:
+     If an <code>MoE</code> model fits inside a single GPU (<code>e.g., Mixtral 8x7B on an H100 80GB</code>), SMs (<code>Streaming Multiprocessors</code>) do <strong>not</strong> have fixed experts permanently assigned; all 8 expert tables reside inside the same global <code>HBM</code> pool, and CUDA thread blocks dynamically schedule across all available SMs.
+     However, dynamic expert routing shatters the batched matrix multiplication (<code>[64, 4096] @ [4096, 14336]</code>) into tiny, fragmented sub-batches (<code>e.g., 30 tokens for Expert 0, 1 token for Expert 2, 0 tokens for Expert 3</code>). Launching small matrix multiplication kernels degrades Tensor Core utilization, plunging execution deep into the memory-bandwidth-bound regime and causing severe <strong><code>L2</code> cache thrashing</strong> as unpredictable expert tables are repeatedly fetched from <code>HBM</code> on the fly.</p>
+</li>
+</ul>
+<h4 id="3-gpu-memory-hierarchy-l2-vs-hbm-and-why-tiny-sub-batches-destroy-compute-efficiency">3. GPU Memory Hierarchy (<code>L2 vs. HBM</code>) and Why Tiny Sub-Batches Destroy Compute Efficiency<a class="headerlink" href="#3-gpu-memory-hierarchy-l2-vs-hbm-and-why-tiny-sub-batches-destroy-compute-efficiency" title="Permanent link">&para;</a></h4>
+<p>To analyze why <code>MoE</code> batch shattering degrades performance on a single GPU, we examine two structural properties of modern AI accelerators (<code>e.g., NVIDIA H100 SXM5</code>):</p>
+<h5 id="a-what-is-the-l2-cache-vs-hbm-the-physical-memory-pyramid">A. What is the <code>L2</code> Cache vs. <code>HBM</code>? (The Physical Memory Pyramid)<a class="headerlink" href="#a-what-is-the-l2-cache-vs-hbm-the-physical-memory-pyramid" title="Permanent link">&para;</a></h5>
+<p><strong>The <code>L2</code> cache is on-chip Static Random-Access Memory (<code>SRAM</code>) located directly on the GPU silicon die adjacent to the Streaming Multiprocessors (<code>SMs</code>). This architectural placement yields significantly higher bandwidth and lower latency compared to off-chip High-Bandwidth Memory (<code>HBM</code>).</strong></p>
+<pre class="mermaid"><code>flowchart TD
+    L1["1. SM Registers and L1 SRAM Cache (~33 MB Total On-Chip)&lt;br&gt;&lt;b&gt;Bandwidth:&lt;/b&gt; ~30 to 50+ TB/sec | &lt;b&gt;Speed:&lt;/b&gt; Near-Instant&lt;br&gt;*(Holds exact floating-point numbers currently executing inside Tensor Cores)*"]
+
+    L2["2. L2 SRAM Cache (50 MB to 192 MB On-Chip Shared Buffer)&lt;br&gt;&lt;b&gt;Bandwidth:&lt;/b&gt; ~12 to 15 TB/sec | &lt;b&gt;Speed:&lt;/b&gt; Very Fast&lt;br&gt;*(High-speed staging buffer across all 132 SMs)*"]
+
+    HBM["3. High-Bandwidth Memory / HBM3 (80 GB to 192 GB Off-Chip DRAM)&lt;br&gt;&lt;b&gt;Bandwidth:&lt;/b&gt; 3.35 to 5.30 TB/sec | &lt;b&gt;Speed:&lt;/b&gt; Slow Off-Chip Bus&lt;br&gt;*(Permanent storage pool holding 70B/405B model weights and KV Cache)*"]
+
+    L1 ==&gt;|"Ultra-Fast On-Chip Data Path"| L2
+    L2 ==&gt;|"Off-Chip Memory Bus Bottleneck - Roofline Wall"| HBM</code></pre>
+<ul>
+<li><strong>Why <code>MoE</code> Causes <code>L2</code> Cache Thrashing</strong>: In a dense architecture (<code>e.g., Llama 3 70B</code>), all tokens in a batch read identical layer weights sequentially. Once <code>W_1</code> is transferred from <code>HBM</code> into <code>L2</code> cache, subsequent SM reads hit the high-speed <code>L2</code> cache (<code>~15 TB/sec</code>).
+  In <code>MoE</code>, token routing splits across distinct experts (<code>Token 1 -&gt; Expert 0</code>, <code>Token 2 -&gt; Expert 5</code>). Because the <code>L2</code> cache is <code>50 MB</code> on an H100, and a single expert's <code>SwiGLU</code> tables (<code>[4096, 14336] * 3</code>) occupy over <code>350 MB</code>, the GPU cannot retain unpredictable expert tables in <code>L2</code>. Each new sub-batch evicts prior expert data (<code>Cache Thrashing</code>), forcing SMs to repeatedly load weight tables across the slower <code>HBM</code> memory bus (<code>3.35 TB/sec</code>).</li>
+</ul>
+<h5 id="b-why-tiny-sub-batches-destroy-compute-efficiency-tile-starvation-and-roofline-plunge">B. Why Tiny Sub-Batches Destroy Compute Efficiency (Tile Starvation and Roofline Plunge)<a class="headerlink" href="#b-why-tiny-sub-batches-destroy-compute-efficiency-tile-starvation-and-roofline-plunge" title="Permanent link">&para;</a></h5>
+<p>The degradation in compute efficiency from near-peak throughput (<code>~1,000 TFLOPs/sec</code>) for large batches (<code>[64, 4096] @ [4096, 14336]</code>) down to below 5% for fragmented sub-batches (<code>[2, 4096] @ [4096, 14336]</code> for <code>Expert 2</code>) stems from two hardware constraints:</p>
+<ol>
+<li>
+<p><strong>Hardware Tile Under-Utilization (<code>SM Starvation</code>)</strong>:
+   An NVIDIA H100 features <strong>132 Streaming Multiprocessors (<code>SMs</code>)</strong>. To evaluate <code>A @ B</code>, CUDA partitions the output matrix into square <strong>Thread Block Tiles</strong> (<code>e.g., 128x128 tiles</code>), dispatching each tile to an independent <code>SM</code>.
+   When batch size is large (<code>b = 64</code>), the output matrix yields hundreds of <code>128x128</code> tiles, keeping all 132 SMs operating at 100% occupancy (<code>Full Wave Saturation</code>). Conversely, when <code>Expert 2</code> receives only <strong>2 tokens</strong> (<code>b = 2</code>), the output matrix <code>[2, 14336]</code> yields only partial tiles (<code>2x128</code> rows). Launching this kernel leaves <strong>most of the 132 SMs completely idle (<code>SM Starvation</code>)</strong> due to insufficient tile parallelism, while active SMs waste <code>&gt; 95%</code> of their Tensor Core math lanes.</p>
+</li>
+<li>
+<p><strong>Plunging Arithmetic Intensity (<code>FLOPs / Byte</code>)</strong>:
+   According to the GPU Roofline formula (<span class="arithmatex">\(I = \frac{\text{FLOPs Performed}}{\text{Bytes Read from HBM}}\)</span>), executing <code>[2, 4096] @ [4096, 14336]</code> for <code>Expert 2</code> requires <span class="arithmatex">\(2 \text{ tokens} \times 2 \text{ FLOPs/weight} \times 4096 \times 14336 = \mathbf{234.8 \text{ MFLOPs}}\)</span> while transferring <span class="arithmatex">\(14336 \times 4096 \times 2 \text{ bytes} = \mathbf{117.4 \text{ Megabytes}}\)</span> of <code>Expert 2</code>'s weight table from <code>HBM</code>:</p>
+</li>
+</ol>
+<div class="arithmatex">\[
+\text{Arithmetic Intensity} = \frac{234.8 \text{ MFLOPs}}{117.4 \text{ MB}} = \mathbf{2.0 \text{ FLOPs/Byte!}}
+\]</div>
+<p>Because <span class="arithmatex">\(2.0 \text{ FLOPs/Byte}\)</span> lies far below the H100's Ridge Point (<span class="arithmatex">\(I_{\text{ridge}} = 295 \text{ FLOPs/Byte}\)</span>), <strong>tiny sub-batches collapse deep into the memory-bandwidth-bound regime</strong>, where compute cores spend <span class="arithmatex">\(&gt; 99\%\)</span> of their cycles waiting for weight tables to transfer across the <code>HBM</code> bus.</p>
+<h5 id="c-industry-rule-why-moe-serving-is-strictly-multi-gpu-multi-node-in-production-ep-tp">C. Industry Rule: Why <code>MoE</code> Serving is Strictly Multi-GPU / Multi-Node in Production (<code>EP + TP</code>)<a class="headerlink" href="#c-industry-rule-why-moe-serving-is-strictly-multi-gpu-multi-node-in-production-ep-tp" title="Permanent link">&para;</a></h5>
+<p>In production serving across the AI industry (<code>e.g., DeepSeek-V3/R1, Mixtral 8x22B, Grok-1</code>), <code>MoE</code> models are almost exclusively deployed across multi-GPU or multi-node clusters using <strong>Expert Parallelism (<code>EP</code>)</strong> combined with <strong>Tensor Parallelism (<code>TP</code>)</strong> and <strong>Pipeline Parallelism (<code>PP</code>)</strong>:</p>
+<ol>
+<li>
+<p><strong>Why <code>EP</code> is Inherently Multi-GPU / Multi-Node</strong>:
+   By definition, <strong>Expert Parallelism (<code>EP</code>)</strong> assigns distinct expert tables to separate physical GPUs (<code>e.g., GPU 0 stores Expert 0, GPU 1 stores Expert 1</code>). Within a single GPU, <code>EP</code> does not exist because all tables share one physical <code>HBM</code> pool.</p>
+</li>
+<li>
+<p><strong>The Physical <code>HBM</code> Capacity Wall (<code>Why Single-GPU Fails for Frontier MoE</code>)</strong>:
+   Evaluating frontier architectures such as <strong>DeepSeek-V3 / DeepSeek-R1</strong> (<code>671 Billion weights</code> -&gt; <code>~1.34 Terabytes</code> in FP16 / BF16, or <code>~670 Gigabytes</code> in <code>FP8</code> quantization), a single NVIDIA H100 GPU provides <code>80 GB</code> of <code>HBM</code>. A single GPU cannot accommodate even <code>1/8th</code> of the parameter ensemble.
+   Serving frontier <code>MoE</code> models mandates <strong>8 to 16 physical H100/H200 GPUs across 1 or 2 server chassis (<code>Inter-Node / Intra-Node</code>)</strong> solely to store static weights in <code>HBM</code> prior to reserving space for the <code>KV</code> cache.</p>
+</li>
+<li>
+<p><strong>The Single-GPU Concurrency Mandate (<code>Compact MoE Deployments</code>)</strong>:
+   When serving a compact <code>MoE</code> model that fits within a single GPU (<code>e.g., Mixtral 8x7B in FP8</code>, <code>~47 GB</code> on an 80 GB H100), operating at low concurrency (<code>b = 16</code>) shatters the batch into <code>~2 tokens per expert</code>, triggering the exact <span class="arithmatex">\(2.0 \text{ FLOPs/Byte}\)</span> tile starvation derived above.
+   Therefore, <strong>achieving acceptable compute efficiency during Single-GPU <code>MoE</code> serving mandates high concurrency (<code>b &gt;= 256 to 512</code>)</strong> so that even after 8-way shattering, each individual expert sub-batch receives <code>32 to 64 tokens</code> (<code>256 / 8 = 32</code>), restoring square tile saturation across the 132 SMs.</p>
+</li>
+</ol>
+<hr />
+<h2 id="part-2-the-key-value-kv-cache-solution-and-memory-formalism">Part 2: The Key-Value (KV) Cache Solution and Memory Formalism<a class="headerlink" href="#part-2-the-key-value-kv-cache-solution-and-memory-formalism" title="Permanent link">&para;</a></h2>
+<p>The architectural complexity of serving Large Language Models in production stems from physical memory and compute limits during autoregressive generation. To evaluate these limits, we examine core inference metrics and trace the bottlenecks of <strong>Naive (<code>Unoptimized</code>) Inference</strong> before introducing the <code>KV</code> cache formalism.</p>
+<h3 id="21-core-performance-metrics-of-production-llm-serving">2.1 Core Performance Metrics of Production LLM Serving<a class="headerlink" href="#21-core-performance-metrics-of-production-llm-serving" title="Permanent link">&para;</a></h3>
+<p>In autoregressive token-by-token generation, system throughput and latency are evaluated across five distinct performance axes:</p>
+<ol>
+<li><strong><code>TTFT</code> (Time to First Token)</strong>: The elapsed time from when a request enters the server to when the <em>very first generated token</em> is returned. Governs the <strong>Prefill Phase</strong> and dictates initial responsiveness (<code>high TTFT makes chatbots feel frozen</code>).</li>
+<li><strong><code>TBT</code> / <code>ITL</code> (Time Between Tokens / Inter-Token Latency)</strong>: The average duration between consecutive output tokens after the first token is emitted. Governs the <strong>Decode Phase</strong> and dictates reading fluency (<code>humans read at ~5 to 8 tokens per second; an ITL above 100 ms/token feels sluggish</code>).</li>
+<li><strong><code>TPS</code> (Tokens Per Second per Request)</strong>: The generation speed of a single sequence (<code>TPS = 1 / TBT</code>).</li>
+<li><strong><code>Latency</code> (Total Request Duration)</strong>: Evaluated as <code>Total_Latency = TTFT + (Generated_Tokens - 1) * TBT</code>.</li>
+<li><strong><code>Throughput</code> (System-Wide Capacity)</strong>: The total number of tokens generated across <em>all concurrent user requests</em> per second across the GPU server. This is <strong>the primary metric governing Total Cost of Ownership (<code>TCO</code>)</strong>. High throughput means serving more concurrent users on fewer GPUs.</li>
+</ol>
+<hr />
+<h3 id="22-naive-unoptimized-inference-how-systems-operate-without-caching">2.2 Naive Unoptimized Inference: How Systems Operate Without Caching<a class="headerlink" href="#22-naive-unoptimized-inference-how-systems-operate-without-caching" title="Permanent link">&para;</a></h3>
+<p>To appreciate why vLLM and caching systems exist, let us trace how a naive engine generates text from scratch for the prompt: <code>["Large", "models", "are"]</code>.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    actor User as Client Request
+    participant M as Model Engine (No KV Cache)
+
+    User-&gt;&gt;M: Step 1: Input ["Large", "models", "are"] (3 tokens)
+    Note over M: Execute 80 Layers over 3 tokens
+    M--&gt;&gt;User: Generate Token 1: "the"
+
+    User-&gt;&gt;M: Step 2: Input ["Large", "models", "are", "the"] (4 tokens)
+    Note over M: Re-run ALL 4 tokens from Layer 1 from scratch! (Quadratic Waste)
+    M--&gt;&gt;User: Generate Token 2: "future"
+
+    User-&gt;&gt;M: Step 3: Input ["Large", "models", "are", "the", "future"] (5 tokens)
+    Note over M: Re-run ALL 5 tokens from scratch! (Cubic time degradation)
+    M--&gt;&gt;User: Generate Token 3: "."</code></pre>
+<p>Notice the fatal flaw in Naive Inference: <strong>every time a new token is generated, the entire sequence (<code>prompt + all previously generated tokens</code>) is fed back into Layer 1 to re-compute all linear projections and attention relationships from scratch!</strong></p>
+<hr />
+<h3 id="23-autoregressive-decoding-with-kv-caching-trading-hbm-space-for-time">2.3 Autoregressive Decoding with KV Caching: Trading HBM Space for Time<a class="headerlink" href="#23-autoregressive-decoding-with-kv-caching-trading-hbm-space-for-time" title="Permanent link">&para;</a></h3>
+<p>To break this computational deadlock, engineers realized: <em>Why re-compute the <code>K</code> and <code>V</code> vectors of historical tokens on every generation step when historical tokens never change?</em> This insight birthed the <strong>Key-Value (<code>KV</code>) Cache</strong>: trading high-bandwidth memory (<code>HBM</code>) storage space for exponential computational acceleration.</p>
+<p>During the autoregressive decode phase at step <span class="arithmatex">\(t\)</span>, the model only receives the single newest token vector <span class="arithmatex">\(x_t\)</span> (<span class="arithmatex">\(\text{batch_size} = 1, \text{seq_len} = 1\)</span>).</p>
+<ul>
+<li><strong>Why <code>Q</code> is NOT cached</strong>: We only project <span class="arithmatex">\(q_t = x_t @ W_Q\)</span> for the single newest token because we only need to query how token <span class="arithmatex">\(t\)</span> relates to the past. Historical queries (<span class="arithmatex">\(q_1, \dots, q_{t-1}\)</span>) are never needed again.</li>
+<li><strong>Why <code>K</code> and <code>V</code> ARE cached</strong>: To evaluate <span class="arithmatex">\(\text{Score} = q_t @ K^T\)</span>, <span class="arithmatex">\(q_t\)</span> must dot-product against all historical keys (<span class="arithmatex">\(k_1, \dots, k_{t-1}\)</span>). Then, <span class="arithmatex">\(q_t\)</span> extracts information by summing over all historical values (<span class="arithmatex">\(v_1, \dots, v_{t-1}\)</span>). </li>
+</ul>
+<p>By caching all historical <span class="arithmatex">\(k_i\)</span> and <span class="arithmatex">\(v_i\)</span> vectors in <code>HBM</code>, step <span class="arithmatex">\(t\)</span> requires <strong>zero recomputation of past layers</strong>. The step complexity drops from quadratic <span class="arithmatex">\(\mathcal{O}(N^2)\)</span> down to linear <span class="arithmatex">\(\mathcal{O}(N)\)</span>, and total generation time drops from cubic <span class="arithmatex">\(\mathcal{O}(T^3)\)</span> down to <span class="arithmatex">\(\mathcal{O}(T^2)\)</span>.</p>
+<hr />
+<h3 id="24-computational-complexity-anatomy-the-quadratic-explosion">2.4 Computational Complexity Anatomy: The Quadratic Explosion<a class="headerlink" href="#24-computational-complexity-anatomy-the-quadratic-explosion" title="Permanent link">&para;</a></h3>
+<p>Let <span class="arithmatex">\(s\)</span> (<code>seq_len</code>) be the sequence length, <span class="arithmatex">\(d\)</span> (<code>hidden_dim</code>) be the hidden dimension, <span class="arithmatex">\(L\)</span> (<code>num_layers</code>) be the number of layers, and <span class="arithmatex">\(T\)</span> be the total generated output length.</p>
+<ol>
+<li><strong>Computational Complexity per Single Generation Step</strong>:</li>
+<li><strong>Linear Layer Projections (<code>QKV</code>, <code>FFN</code>)</strong>: Requires <span class="arithmatex">\(\mathcal{O}(s \cdot d^2)\)</span> floating-point operations across <span class="arithmatex">\(L\)</span> layers (<span class="arithmatex">\(\mathcal{O}(L \cdot s \cdot d^2)\)</span> total).</li>
+<li><strong>Self-Attention Dot Products</strong>: Every token compares against all <span class="arithmatex">\(s\)</span> tokens (<span class="arithmatex">\(s \times s\)</span> interactions), demanding <span class="arithmatex">\(\mathcal{O}(s^2 \cdot d)\)</span> operations across <span class="arithmatex">\(L\)</span> layers (<span class="arithmatex">\(\mathcal{O}(L \cdot s^2 \cdot d)\)</span> total).</li>
+<li><strong>Total Step Time</strong>: <span class="arithmatex">\(\mathcal{O}(L \cdot s \cdot d^2 + L \cdot s^2 \cdot d)\)</span>.</li>
+<li><strong>Total End-to-End Generation Complexity (<span class="arithmatex">\(T\)</span> steps)</strong>:
+   Because step <span class="arithmatex">\(i\)</span> must re-compute from length <span class="arithmatex">\(1\)</span> up to <span class="arithmatex">\(P+i\)</span>, generating <span class="arithmatex">\(T\)</span> tokens requires summing over each step:</li>
+</ol>
+<div class="arithmatex">\[
+\text{Total_FLOPs} = \sum_{i=1}^{T} \mathcal{O}\left(L \cdot (P + i) \cdot d^2 + L \cdot (P + i)^2 \cdot d\right) = \mathcal{O}\left(T^2 \cdot d^2 + T^3 \cdot d\right)
+\]</div>
+<p>Without caching, generating <span class="arithmatex">\(T\)</span> tokens scales <strong>cubicly (<span class="arithmatex">\(\mathcal{O}(T^3)\)</span>)</strong> with sequence length <span class="arithmatex">\(s\)</span>!</p>
+<h4 id="1-where-do-the-constants-2-and-11-come-from">1. Where Do the Constants <code>2</code> and <code>11</code> Come From?<a class="headerlink" href="#1-where-do-the-constants-2-and-11-come-from" title="Permanent link">&para;</a></h4>
+<p>To master inference modeling, let us derive exactly where the constants <span class="arithmatex">\(2\)</span> and <span class="arithmatex">\(11\)</span> originate from first principles of linear algebra:</p>
+<ul>
+<li><strong>Where does the <span class="arithmatex">\(2\)</span> come from? (The Universal <code>2 FLOPs per Weight</code> Rule)</strong>: When multiplying a vector (<code>[1, K]</code>) against a weight matrix (<code>[K, M]</code>), computing each output number requires taking a dot-product across <span class="arithmatex">\(K\)</span> numbers (<span class="arithmatex">\(K\)</span> multiplications plus <span class="arithmatex">\(K - 1\)</span> additions <span class="arithmatex">\(\approx 2K\)</span> operations). Across all linear projections in neural networks, <strong>every parameter weight participating in a matrix multiplication contributes exactly <span class="arithmatex">\(2 \text{ FLOPs}\)</span> (<code>1 multiply + 1 add</code>) per input token!</strong></li>
+<li><strong>Where does the <span class="arithmatex">\(11\)</span> come from? (<span class="arithmatex">\(11 \cdot d^2\)</span> Parameters per Layer in Standard Transformers)</strong>: In a standard single Transformer layer (<code>MHA + classic FFN</code> where <span class="arithmatex">\(\text{intermediate_dim} = 3.5 \cdot d\)</span>), Attention projections (<span class="arithmatex">\(W_Q, W_K, W_V, W_O\)</span>) contribute <span class="arithmatex">\(4 \cdot d^2\)</span> weights, and FFN projections (<span class="arithmatex">\(W_1, W_2\)</span>) contribute <span class="arithmatex">\(3.5 \cdot d^2 + 3.5 \cdot d^2 = 7 \cdot d^2\)</span> weights (<span class="arithmatex">\(\text{Total} = 11 \cdot d^2 \text{ weights per layer}\)</span>). Multiplying by <span class="arithmatex">\(2 \text{ FLOPs/weight}\)</span> gives total <span class="arithmatex">\(\text{FLOPs}\)</span> per layer (<span class="arithmatex">\(2 \cdot L \cdot 11 \cdot s \cdot d^2\)</span>).</li>
+</ul>
+<h4 id="2-exact-derivation-for-llama-3-405b-swiglu-gqa-81-active-parameter-math">2. Exact Derivation for Llama 3 405B (<code>SwiGLU</code> + <code>GQA 8:1</code> Active Parameter Math)<a class="headerlink" href="#2-exact-derivation-for-llama-3-405b-swiglu-gqa-81-active-parameter-math" title="Permanent link">&para;</a></h4>
+<p>In modern architectures like Llama 3 405B (<span class="arithmatex">\(d = 16,384\)</span>, <span class="arithmatex">\(L = 126\)</span> layers, <span class="arithmatex">\(\text{SwiGLU intermediate_dim} = 53,248 \approx 3.25 \cdot d\)</span>, <code>GQA 8:1</code>), the ratio evolves slightly:</p>
+<ul>
+<li><strong>Attention (<code>GQA 8:1</code>)</strong>: <span class="arithmatex">\(W_Q \ (d^2) + W_K \ (0.25 \cdot d^2) + W_V \ (0.25 \cdot d^2) + W_O \ (d^2) = 2.25 \cdot d^2\)</span> (<span class="arithmatex">\(\approx 604 \text{ Million weights/layer}\)</span>).</li>
+<li><strong>SwiGLU FFN (<span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}\)</span>)</strong>: <span class="arithmatex">\(3 \times (16,384 \times 53,248) = 3 \times 3.25 \cdot d^2 = 9.75 \cdot d^2\)</span> (<span class="arithmatex">\(\approx 2.617 \text{ Billion weights/layer}\)</span>).</li>
+<li><strong>Total Active Weights per Layer</strong>: <span class="arithmatex">\(2.25 \cdot d^2 + 9.75 \cdot d^2 = \mathbf{12.0 \cdot d^2 \approx 3.221 \text{ Billion active weights per layer!}}\)</span></li>
+<li><strong>Total Active Weights Across All 126 Layers</strong>: <span class="arithmatex">\(126 \times 3.221 \text{ Billion} \approx \mathbf{405.8 \text{ Billion active weights}} \ (405\text{B})\)</span>.</li>
+<li>Applying the <span class="arithmatex">\(2 \text{ FLOPs per Weight}\)</span> rule for a prompt of <span class="arithmatex">\(s = 1,000\)</span> tokens:</li>
+</ul>
+<div class="arithmatex">\[
+\text{Single_Round_FLOPs} = 2 \text{ FLOPs/weight} \times 405.8 \times 10^9 \text{ weights} \times 1,000 \text{ tokens} \approx \mathbf{811.6 \times 10^{12} \text{ FLOPs} \ (811.6 \text{ TFLOPs})}
+\]</div>
+<p>On an NVIDIA H100 (<span class="arithmatex">\(\approx 1,000 \text{ TFLOPs/sec}\)</span>), generating just <strong>one single token</strong> under naive recomputation at <span class="arithmatex">\(s = 1,000\)</span> requires <span class="arithmatex">\(\approx 0.74 \text{ seconds}\)</span> (<span class="arithmatex">\(\approx 1.35 \text{ tokens/sec}\)</span>). At <span class="arithmatex">\(128\text{K}\)</span> context (<span class="arithmatex">\(s = 128,000\)</span>), generating a single token requires over <span class="arithmatex">\(95,000 \text{ TFLOPs}\)</span> (<span class="arithmatex">\(&gt; 95 \text{ seconds per token}\)</span>), making caching mandatory.</p>
+<hr />
+<h2 id="part-3-memory-vs-compute-paradigm-and-the-gpu-roofline-model">Part 3: Memory vs. Compute Paradigm and The GPU Roofline Model<a class="headerlink" href="#part-3-memory-vs-compute-paradigm-and-the-gpu-roofline-model" title="Permanent link">&para;</a></h2>
+<p>While the <code>KV</code> cache solves the compute bottleneck by eliminating <span class="arithmatex">\(\mathcal{O}(N^2)\)</span> recomputation, it introduces a severe physical bottleneck: <strong>a massive, rapidly expanding footprint in GPU High-Bandwidth Memory (<code>HBM</code>)</strong>.</p>
+<h3 id="31-exact-kv-cache-memory-footprint-formalism-and-llama-3-70b-case-study">3.1 Exact KV Cache Memory Footprint Formalism and Llama 3 70B Case Study<a class="headerlink" href="#31-exact-kv-cache-memory-footprint-formalism-and-llama-3-70b-case-study" title="Permanent link">&para;</a></h3>
+<p>The exact memory occupied in bytes across a model is defined by:</p>
+<div class="arithmatex">\[
+\text{KV_Bytes} = 2 \cdot \text{batch_size} \cdot \text{seq_len} \cdot \text{num_layers} \cdot \text{num_kv_heads} \cdot \text{head_dim} \cdot \text{sizeof(dtype)}
+\]</div>
+<div class="arithmatex">\[
+\text{KV_Bytes} = 2 \cdot b \cdot s \cdot L \cdot h_{kv} \cdot d_{\text{head}} \cdot \text{sizeof(dtype)}
+\]</div>
+<p>Where:</p>
+<ul>
+<li><span class="arithmatex">\(2\)</span>: Two distinct tensors per token (<span class="arithmatex">\(K\)</span> and <span class="arithmatex">\(V\)</span>).</li>
+<li><span class="arithmatex">\(b\)</span> (<code>batch_size</code>): Number of concurrent user sequences processed in parallel.</li>
+<li><span class="arithmatex">\(s\)</span> (<code>seq_len</code>): Sequence length (<span class="arithmatex">\(\text{prompt length} + \text{generated tokens so far}\)</span>).</li>
+<li><span class="arithmatex">\(L\)</span> (<code>num_layers</code>): Number of transformer blocks/layers (<code>num_hidden_layers</code>).</li>
+<li><span class="arithmatex">\(h_{kv}\)</span> (<code>num_kv_heads</code>): Number of Key-Value attention heads per layer (<code>num_key_value_heads</code>).</li>
+<li><span class="arithmatex">\(d_{\text{head}}\)</span> (<code>head_dim</code>): Dimension of each attention head (<span class="arithmatex">\(d / h_q\)</span>).</li>
+<li><code>sizeof(dtype)</code>: Bytes per element (<span class="arithmatex">\(2\)</span> for <span class="arithmatex">\(\text{FP16/BF16}\)</span>, <span class="arithmatex">\(1\)</span> for <span class="arithmatex">\(\text{FP8/INT8}\)</span>).</li>
+</ul>
+<h4 id="case-study-llama-3-70b-gqa-81-ratio">Case Study: Llama-3-70B (<code>GQA</code>, 8:1 ratio)<a class="headerlink" href="#case-study-llama-3-70b-gqa-81-ratio" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Model Parameters</strong>: <span class="arithmatex">\(L = 80\)</span> layers, <span class="arithmatex">\(h_{kv} = 8\)</span> KV heads (<code>GQA</code>), <span class="arithmatex">\(d_{\text{head}} = 128\)</span>, <span class="arithmatex">\(\text{dtype} = \text{FP16}\)</span> (<span class="arithmatex">\(2 \text{ bytes}\)</span>).</li>
+<li><strong>KV Memory per Single Token per Sequence (<span class="arithmatex">\(b = 1, s = 1\)</span>)</strong>:</li>
+</ul>
+<div class="arithmatex">\[
+\text{Bytes_per_Token} = 2 \times 1 \times 1 \times 80 \times 8 \times 128 \times 2 = \mathbf{327,680 \text{ bytes}} \ (\approx 320 \text{ KB per token})
+\]</div>
+<ul>
+<li><strong>Total Footprint at Scale</strong>:</li>
+<li><strong>Single sequence at 4,096 tokens</strong>: <span class="arithmatex">\(320 \text{ KB} \times 4,096 \approx \mathbf{1.31 \text{ GB}}\)</span>.</li>
+<li><strong>Single sequence at 128,000 tokens (max context)</strong>: <span class="arithmatex">\(320 \text{ KB} \times 128,000 \approx \mathbf{40.96 \text{ GB}}\)</span>.</li>
+<li><strong>Batch of 64 sequences at 4,096 tokens each</strong>: <span class="arithmatex">\(64 \times 1.31 \text{ GB} \approx \mathbf{83.88 \text{ GB}}\)</span>.</li>
+</ul>
+<blockquote>
+<p>[!CRITICAL]
+For a batch of 64 requests at 4K context, <strong>the KV cache alone requires ~84 GB of HBM</strong>, completely exhausting an NVIDIA H100 80GB GPU before loading the 140 GB of model weights (<code>FP16</code>) or activation buffers!</p>
+</blockquote>
+<hr />
+<h3 id="32-advanced-compression-deepseek-multi-head-latent-attention-mla-case-study">3.2 Advanced Compression: DeepSeek Multi-Head Latent Attention (<code>MLA</code>) Case Study<a class="headerlink" href="#32-advanced-compression-deepseek-multi-head-latent-attention-mla-case-study" title="Permanent link">&para;</a></h3>
+<p>To overcome this memory tsunami, DeepSeek models invented <strong>Multi-Head Latent Attention (<code>MLA</code>)</strong>. Instead of explicitly storing full <span class="arithmatex">\(K\)</span> and <span class="arithmatex">\(V\)</span> heads across layers in <code>HBM</code>, <code>MLA</code> compresses the <span class="arithmatex">\(KV\)</span> representations into a low-rank latent vector <span class="arithmatex">\(c_{kv}\)</span> of dimension <span class="arithmatex">\(d_c = 512\)</span>, plus decoupled RoPE positional keys of dimension <span class="arithmatex">\(d_{pe} = 64\)</span>.</p>
+<ul>
+<li><strong>Model Parameters</strong>: <span class="arithmatex">\(L = 61\)</span> layers, latent vector payload <span class="arithmatex">\(= 512 + 64 = 576\)</span> dimensions per token.</li>
+<li><strong>KV Memory per Single Token per Sequence</strong>:</li>
+</ul>
+<div class="arithmatex">\[
+\text{Bytes_per_Token} = 61 \times 576 \times 2 \text{ bytes} = \mathbf{70,272 \text{ bytes}} \ (\approx 68.6 \text{ KB per token})
+\]</div>
+<ul>
+<li><strong>Result</strong>: DeepSeek's <code>MLA</code> compresses the per-token <span class="arithmatex">\(KV\)</span> footprint by <strong><code>4.6x</code> compared to Llama-3-70B</strong>, enabling massive concurrent batch sizes even at <code>128K</code> context lengths.</li>
+</ul>
+<h4 id="1-joint-low-rank-compression-c_kv-and-on-the-fly-sram-restoration">1. Joint Low-Rank Compression (c_kv) and On-the-Fly SRAM Restoration<a class="headerlink" href="#1-joint-low-rank-compression-c_kv-and-on-the-fly-sram-restoration" title="Permanent link">&para;</a></h4>
+<p>In standard <code>MHA</code> or <code>GQA</code>, the model projects input vector <span class="arithmatex">\(H\)</span> directly into high-dimensional <span class="arithmatex">\(K\)</span> and <span class="arithmatex">\(V\)</span> matrices that must be written to <code>HBM</code>. In <code>MLA</code>, <span class="arithmatex">\(H\)</span> (<code>7,168 dimensions</code> in DeepSeek-V3) is down-projected into a <strong>single compressed latent vector <span class="arithmatex">\(c_{kv}\)</span> (<code>512 dimensions</code>)</strong>:</p>
+<div class="arithmatex">\[
+c_{kv} = H @ W_{DKV} \quad (\text{Shape: } [\text{batch_size}, \text{seq_len}, 512])
+\]</div>
+<ul>
+<li><strong><span class="arithmatex">\(c_{kv}\)</span> (<code>512 numbers per token</code>) is the sole content/value payload written to the <span class="arithmatex">\(KV\)</span> cache!</strong></li>
+<li>When a generating token evaluates attention, the inference engine dynamically restores the full content Key (<span class="arithmatex">\(K_{\text{content}}\)</span>) and Value (<span class="arithmatex">\(V\)</span>) heads on the fly inside ultra-fast GPU <code>SRAM</code> (<code>L1/L2 cache</code>) by multiplying the cached <span class="arithmatex">\(c_{kv}\)</span> vector against static up-projection matrices (<span class="arithmatex">\(W_{UK}\)</span> and <span class="arithmatex">\(W_{UV}\)</span>):</li>
+</ul>
+<div class="arithmatex">\[
+K_{\text{content}} = c_{kv} @ W_{UK}, \quad V = c_{kv} @ W_{UV} \quad (\text{Restored on-the-fly in SRAM during attention})
+\]</div>
+<h4 id="2-the-rope-dilemma-and-decoupled-positional-keys-k_pe">2. The <code>RoPE</code> Dilemma and Decoupled Positional Keys (k_pe)<a class="headerlink" href="#2-the-rope-dilemma-and-decoupled-positional-keys-k_pe" title="Permanent link">&para;</a></h4>
+<p>Why was joint low-rank <span class="arithmatex">\(KV\)</span> compression not implemented prior to DeepSeek? Because of <strong>Rotary Position Embeddings (<code>RoPE</code>)</strong>. If <span class="arithmatex">\(K_{\text{content}}\)</span> is rotated by <code>RoPE</code> matrix <span class="arithmatex">\(R_s\)</span> prior to compression, the rotation becomes non-linearly entangled inside the low-rank representation and <strong>cannot be factored out or absorbed during dot-product evaluation</strong> (<span class="arithmatex">\(R_s @ (c_{kv} @ W_{UK}) \ne (R_s @ c_{kv}) @ W_{UK}\)</span>).
+DeepSeek resolved this bottleneck by implementing <strong>Decoupled RoPE (<span class="arithmatex">\(k_{pe}\)</span>)</strong>:</p>
+<ul>
+<li>The Key vector is split into two decoupled sub-vectors: a <strong>Content Key (<span class="arithmatex">\(K_{\text{content}}\)</span> from <span class="arithmatex">\(c_{kv}\)</span>)</strong> that carries <em>no positional rotation</em>, plus a separate, ultra-compact <strong>Positional Key (<span class="arithmatex">\(k_{pe}\)</span>) of exactly <code>64</code> dimensions (<span class="arithmatex">\(d_{pe} = 64\)</span>)</strong> where <code>RoPE</code> rotation is applied directly.</li>
+<li>Consequently, for every sequence token across a layer, the inference engine caches exactly two compact vectors in <code>HBM</code>:</li>
+</ul>
+<div class="arithmatex">\[
+\text{Total MLA Cached Vector per Token} = c_{kv} \ (512 \text{ dims}) + k_{pe} \ (64 \text{ dims}) = \mathbf{576 \text{ parameters!}}
+\]</div>
+<h4 id="3-industry-status-did-mla-become-a-new-industry-standard">3. Industry Status: Did <code>MLA</code> Become a New Industry Standard?<a class="headerlink" href="#3-industry-status-did-mla-become-a-new-industry-standard" title="Permanent link">&para;</a></h4>
+<p>Yes, but with an important dual-track industry bifurcation between medium-scale dense models and ultra-large frontier architectures:</p>
+<ol>
+<li><strong>The Gold Standard for Frontier Massive Models (<code>&gt; 100B / MoE</code>)</strong>: For ultra-large frontier models (<code>DeepSeek-V2/V3/R1</code> at <code>671B</code>, and emerging multi-hundred-billion-parameter open architectures), <code>KV</code> cache footprint at long contexts (<code>128K+</code>) represents the primary barrier to serving concurrency and token throughput. Within this tier, <code>MLA</code> is universally recognized across the AI serving industry (<code>vLLM, SGLang, TensorRT-LLM, FlashInfer</code>) as the premier <code>KV</code> compression architecture. Production serving engines implement dedicated <strong>Matrix-Absorption kernels</strong> (<code>absorbing W_UK into W_Q on the fly during attention evaluation</code>), allowing <code>MLA</code> inference to execute with near-zero runtime decompression overhead.</li>
+<li><strong>Why <code>GQA</code> Still Dominates Compact and Dense Families (<code>&lt;= 70B</code>)</strong>: Models such as <strong>Llama 3.1 (<code>8B, 70B, 405B</code>)</strong>, <strong>Mistral / Mixtral</strong>, and <strong>Gemma 2</strong> retain <strong>Grouped-Query Attention (<code>GQA</code>)</strong>. For medium-scale models (<code>&lt;= 70B</code>), <code>GQA</code> (<code>8:1 ratio</code>) already compresses the <code>KV</code> cache sufficiently to fit within standard multi-GPU deployments (<code>4 to 8 H100s</code>) without requiring low-rank latent decompression or specialized matrix-absorption kernels.</li>
+<li><strong>The Industry Consensus</strong>: <code>GQA</code> is the established, ubiquitous standard for dense architectures up to <code>70B</code>, whereas <code>MLA</code> is the breakthrough standard for ultra-large frontier models and sparse <code>MoE</code> ecosystems.</li>
+</ol>
+<hr />
+<h3 id="33-arithmetic-intensity-and-the-gpu-roofline-model">3.3 Arithmetic Intensity and The GPU Roofline Model<a class="headerlink" href="#33-arithmetic-intensity-and-the-gpu-roofline-model" title="Permanent link">&para;</a></h3>
+<p>Why does <code>KV</code> caching transform decoding into a memory-bandwidth-bound problem? We must analyze the GPU <strong>Roofline Model</strong> using <strong>Arithmetic Intensity (<span class="arithmatex">\(I\)</span>)</strong>:</p>
+<div class="arithmatex">\[
+I = \frac{\text{Total FLOPs Performed}}{\text{Total Bytes Transferred from HBM}}
+\]</div>
+<p>Every GPU has a <strong>Ridge Point (<span class="arithmatex">\(I_{\text{ridge}}\)</span>)</strong> dividing the compute-bound regime from the memory-bound regime:</p>
+<div class="arithmatex">\[
+I_{\text{ridge}} = \frac{\text{Peak Compute Capacity } (\pi_{\text{peak}} \text{ in FLOPs/sec})}{\text{Peak HBM Bandwidth } (\beta_{\text{peak}} \text{ in Bytes/sec})}
+\]</div>
+<pre class="mermaid"><code>flowchart LR
+    MEM_BOUND["📉 Memory-Bandwidth-Bound Regime&lt;br&gt;(I &lt; 295 FLOPs/Byte)&lt;br&gt;&lt;br&gt;&lt;b&gt;Operating Point [D]: Single-Token Decode&lt;/b&gt;&lt;br&gt;I_decode =~ 1.0 to 2.0 FLOPs/Byte&lt;br&gt;*(Tensor Cores sit 99% idle waiting for HBM weights)*"]
+
+    RIDGE["⚡ Ridge Point&lt;br&gt;(I_ridge = 295 FLOPs/Byte)&lt;br&gt;&lt;br&gt;&lt;b&gt;Hardware Balance Threshold&lt;/b&gt;&lt;br&gt;*(Peak TFLOPs / Peak HBM Bandwidth)*"]
+
+    COMP_BOUND["🚀 Compute-Bound Regime&lt;br&gt;(I &gt;= 295 FLOPs/Byte)&lt;br&gt;&lt;br&gt;&lt;b&gt;Operating Point [P]: Batched Prompt Prefill&lt;/b&gt;&lt;br&gt;I_prefill &gt; 300 FLOPs/Byte&lt;br&gt;*(Running at 100% Peak Tensor Core TFLOPs)*"]
+
+    MEM_BOUND --&gt;|"Increase Batch Size b"| RIDGE --&gt;|"Full Tensor Core Saturation"| COMP_BOUND</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">GPU Architecture</th>
+<th style="text-align: left;">Peak <code>FP16</code> Compute (<code>pi</code>)</th>
+<th style="text-align: left;">Peak HBM Bandwidth (<code>beta</code>)</th>
+<th style="text-align: left;">Ridge Point (<code>I_ridge</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>NVIDIA A100 (80GB SXM4)</strong></td>
+<td style="text-align: left;">312 TFLOPs/sec</td>
+<td style="text-align: left;">2.039 TB/sec</td>
+<td style="text-align: left;"><strong>~153 FLOPs/Byte</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>NVIDIA H100 (80GB SXM5)</strong></td>
+<td style="text-align: left;">989 TFLOPs/sec</td>
+<td style="text-align: left;">3.350 TB/sec</td>
+<td style="text-align: left;"><strong>~295 FLOPs/Byte</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AMD MI300X (192GB HBM3)</strong></td>
+<td style="text-align: left;">1,300 TFLOPs/sec</td>
+<td style="text-align: left;">5.300 TB/sec</td>
+<td style="text-align: left;"><strong>~245 FLOPs/Byte</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="34-physical-mechanics-of-the-slanted-memory-slope-vs-flat-compute-ceiling">3.4 Physical Mechanics of the Slanted Memory Slope vs. Flat Compute Ceiling<a class="headerlink" href="#34-physical-mechanics-of-the-slanted-memory-slope-vs-flat-compute-ceiling" title="Permanent link">&para;</a></h3>
+<p>To master the physical laws governing GPU execution, we must examine what happens when an operation sits on the slanted left slope (<code>///</code>, Memory-Bound regime) versus the flat horizontal ceiling (<code>===</code>, Compute-Bound regime):</p>
+<ol>
+<li><strong>The Left Slanted Slope (<code>Memory-Bound Regime, I &lt; I_ridge</code>)</strong>:</li>
+<li>On the left slope (e.g., Single-Token Decode at Point <code>[D]</code>, <span class="arithmatex">\(I_{\text{decode}} = 1.0 \text{ FLOPs/Byte}\)</span>), physical execution throughput (<code>Y-axis TFLOPs/sec</code>) is <strong>strictly decided by the off-chip memory bus bandwidth (<span class="arithmatex">\(\beta_{\text{peak}}\)</span>)</strong>:</li>
+</ol>
+<div class="arithmatex">\[
+\text{Achieved_Performance } (\text{TFLOPs/sec}) = \beta_{\text{peak}} \cdot I
+\]</div>
+<ul>
+<li>On an NVIDIA H100 (<span class="arithmatex">\(\beta_{\text{peak}} = 3.35 \text{ TB/sec}\)</span>), an operation at <span class="arithmatex">\(I = 1.0 \text{ FLOPs/Byte}\)</span> hits an absolute physical ceiling of <span class="arithmatex">\(3.35 \text{ TFLOPs/sec}\)</span>.</li>
+<li>
+<p><strong>Where are the SM Tensor Cores while this happens (<code>Idle Compute Capacity</code>)?</strong> The H100's physical compute units (<code>SMs</code>) possess a maximum capacity (<span class="arithmatex">\(\pi_{\text{peak}}\)</span>) of <strong><code>989 TFLOPs/sec</code></strong> (<span class="arithmatex">\(295\times\)</span> higher than <span class="arithmatex">\(3.35 \text{ TFLOPs/sec}\)</span>). However, because the memory bus can only deliver data at <span class="arithmatex">\(3.35 \text{ TB/sec}\)</span>, the silicon Tensor Cores sit completely starved and idle for <span class="arithmatex">\(&gt; 99.6\%\)</span> of the execution time waiting for operands to arrive from <code>HBM</code>. The memory bus acts as a hard throttle, rendering the GPU's massive <span class="arithmatex">\(989 \text{ TFLOPs}\)</span> math capacity irrelevant.</p>
+</li>
+<li>
+<p><strong>The Right Flat Ceiling (<code>Compute-Bound Regime, I &gt;= I_ridge</code>)</strong>:</p>
+</li>
+<li>Once Arithmetic Intensity crosses the Ridge Point (<span class="arithmatex">\(I \ge 295 \text{ FLOPs/Byte on H100}\)</span>, such as Batched Prefill at Point <code>[P]</code>, <span class="arithmatex">\(I &gt; 300\)</span>), each byte fetched from <code>HBM</code> is reused for <span class="arithmatex">\(&gt; 295\)</span> mathematical operations inside on-chip registers and <code>SRAM</code>.</li>
+<li>At this threshold, the <code>HBM</code> bus easily keeps up with the data demand. The bottleneck shifts entirely to the physical clock frequency and thermal limits of the <strong>SM Tensor Cores (<span class="arithmatex">\(\pi_{\text{peak}}\)</span>)</strong>, capping performance on the horizontal flat ceiling (<code>===</code> at <span class="arithmatex">\(989 \text{ TFLOPs/sec}\)</span>).</li>
+</ul>
+<hr />
+<h3 id="35-comparative-gpu-evaluation-why-a-lower-ridge-point-is-superior-for-serving">3.5 Comparative GPU Evaluation: Why a Lower Ridge Point is Superior for Serving<a class="headerlink" href="#35-comparative-gpu-evaluation-why-a-lower-ridge-point-is-superior-for-serving" title="Permanent link">&para;</a></h3>
+<p>When evaluating hardware architecture specifications (<code>NVIDIA A100 vs. H100 vs. AMD MI300X</code>), a common misconception is that a higher Ridge Point (<span class="arithmatex">\(I_{\text{ridge}}\)</span>) indicates a superior GPU. <strong>For LLM autoregressive decoding (<code>which is memory-bandwidth bound at I =~ 1.0 to 2.0</code>), a LOWER Ridge Point combined with higher <code>HBM</code> bandwidth is actually far superior.</strong></p>
+<ol>
+<li>
+<p><strong>What a Higher <span class="arithmatex">\(I_{\text{ridge}}\)</span> Indicates (<code>Compute Outpacing Memory</code>)</strong>:
+   Because <span class="arithmatex">\(I_{\text{ridge}} = \frac{\pi_{\text{peak}}}{\beta_{\text{peak}}}\)</span>, a higher Ridge Point (<span class="arithmatex">\(295 \text{ FLOPs/Byte on H100 vs. 153 on A100}\)</span>) signifies that the GPU's physical compute capacity (<span class="arithmatex">\(\pi_{\text{peak}}\)</span>) scaled much faster across generational iterations than its off-chip <code>HBM</code> memory bandwidth (<span class="arithmatex">\(\beta_{\text{peak}}\)</span>). Consequently, the GPU requires <strong>more mathematical operations per byte transferred (<span class="arithmatex">\(295 \text{ dot-products per byte}\)</span>)</strong> just to escape the slanted memory slope and saturate the silicon Tensor Cores.</p>
+</li>
+<li>
+<p><strong>Why High <span class="arithmatex">\(I_{\text{ridge}}\)</span> Wastes Compute During LLM Decoding</strong>:
+   Because single-token decoding (<span class="arithmatex">\(\text{batch_size } b = 1\)</span>) operates at <span class="arithmatex">\(I \approx 1.0 \text{ FLOPs/Byte}\)</span>, execution sits far to the left of the Ridge Point on <em>every</em> hardware platform. On the slanted left slope (<span class="arithmatex">\(\text{Performance} = \beta_{\text{peak}} \cdot I\)</span>), throughput is decided <strong>strictly by <span class="arithmatex">\(\beta_{\text{peak}}\)</span> (<code>Peak HBM Bandwidth</code>)</strong>. Therefore, any extra compute TFLOPs (<span class="arithmatex">\(\pi_{\text{peak}}\)</span>) on a high-ridge-point GPU remain <span class="arithmatex">\(&gt; 99\%\)</span> idle and wasted during decoding.</p>
+</li>
+<li>
+<p><strong>Comparative Case Study: NVIDIA H100 vs. AMD MI300X</strong>:</p>
+</li>
+<li><strong>NVIDIA H100</strong>: <span class="arithmatex">\(\pi_{\text{peak}} = 989 \text{ TFLOPs/sec}\)</span>, <span class="arithmatex">\(\beta_{\text{peak}} = 3.35 \text{ TB/sec} \implies I_{\text{ridge}} \approx 295 \text{ FLOPs/Byte}\)</span>.</li>
+<li>
+<p><strong>AMD MI300X</strong>: <span class="arithmatex">\(\pi_{\text{peak}} = 1,300 \text{ TFLOPs/sec}\)</span>, <span class="arithmatex">\(\beta_{\text{peak}} = 5.30 \text{ TB/sec} \implies I_{\text{ridge}} \approx 245 \text{ FLOPs/Byte}\)</span>.
+   Notice that while AMD MI300X has massive compute (<span class="arithmatex">\(1,300 \text{ TFLOPs}\)</span>), it achieves a <strong>lower</strong> Ridge Point (<span class="arithmatex">\(245 \text{ vs. } 295\)</span>) because AMD prioritized scaling off-chip <code>HBM</code> bandwidth (<span class="arithmatex">\(5.30 \text{ TB/sec across 192 GB HBM3 vs. } 3.35 \text{ TB/sec on H100}\)</span>). For an LLM serving engine running autoregressive decoding at <span class="arithmatex">\(I = 2.0\)</span>, MI300X's <span class="arithmatex">\(5.30 \text{ TB/sec}\)</span> bandwidth delivers <strong><span class="arithmatex">\(1.58\times \text{ faster}\)</span> memory-bound throughput than H100 (<span class="arithmatex">\(3.35 \text{ TB/sec}\)</span>)</strong>, while its lower <span class="arithmatex">\(245\)</span> ridge point enables workloads to transition into compute-bound efficiency much earlier across moderate batch sizes.</p>
+</li>
+<li>
+<p><strong>The Golden Rule of GPU Evaluation for LLM Workloads</strong>:</p>
+</li>
+<li>For <strong>Training and Batched Prompt Prefill</strong> (<code>Compute-Bound</code>): Prioritize maximum <strong><span class="arithmatex">\(\pi_{\text{peak}}\)</span> (<code>Peak Compute Capacity</code>)</strong>.</li>
+<li>For <strong>Autoregressive Decoding and Serving</strong> (<code>Memory-Bound</code>): Prioritize maximum <strong><span class="arithmatex">\(\beta_{\text{peak}}\)</span> (<code>Peak HBM Bandwidth</code>)</strong> and highest <code>HBM</code> memory capacity. A lower Ridge Point (<span class="arithmatex">\(I_{\text{ridge}}\)</span>) indicates a more balanced hardware architecture for memory-intensive decoding.</li>
+</ol>
+<hr />
+<h3 id="36-single-batch-decoding-utilization-and-the-canonical-intensity-range">3.6 Single-Batch Decoding Utilization and The Canonical Intensity Range<a class="headerlink" href="#36-single-batch-decoding-utilization-and-the-canonical-intensity-range" title="Permanent link">&para;</a></h3>
+<p>Consider generating a single token (<span class="arithmatex">\(\text{batch_size } b = 1\)</span>) on a 70B model (<code>FP16</code>, <span class="arithmatex">\(140 \text{ GB}\)</span> weight footprint, <span class="arithmatex">\(N = 70,000,000,000\)</span> parameters):</p>
+<ul>
+<li><strong>FLOPs Performed</strong>: Across all 80 layers, the single-token activation vector (<span class="arithmatex">\(\text{seq_len } s = 1\)</span>) multiplies against every linear projection matrix (<span class="arithmatex">\(y = x @ W\)</span>). For any weight matrix <span class="arithmatex">\(W\)</span> of shape <span class="arithmatex">\([d_{\text{in}}, d_{\text{out}}]\)</span>, the matrix-vector multiplication (<code>GEMV</code>) requires <span class="arithmatex">\(2 \cdot d_{\text{in}} \cdot d_{\text{out}}\)</span> FLOPs (<span class="arithmatex">\(1 \text{ multiply} + 1 \text{ add per matrix element}\)</span>). Because the total number of weight elements summed across all layers in the model is <span class="arithmatex">\(N = 70,000,000,000\)</span> (<span class="arithmatex">\(70 \text{ Billion parameters}\)</span>), the total math performed across the entire forward pass is exactly:</li>
+</ul>
+<div class="arithmatex">\[
+\text{Total_FLOPs} = 2 \cdot N = 2 \times 70 \times 10^9 = \mathbf{140 \times 10^9 \text{ FLOPs}} \ (140 \text{ GFLOPs})
+\]</div>
+<ul>
+<li><strong>Bytes Transferred</strong>: The GPU must read all <span class="arithmatex">\(140 \text{ GB}\)</span> of weights (<span class="arithmatex">\(N \times 2 \text{ bytes for FP16}\)</span>) from <code>HBM</code> across the memory bus into SM registers.</li>
+<li><strong>Arithmetic Intensity</strong>:</li>
+</ul>
+<div class="arithmatex">\[
+I_{\text{decode}} = \frac{140 \text{ GFLOPs}}{140 \text{ GB}} = \mathbf{1.00 \text{ FLOP/Byte}}
+\]</div>
+<p>Because <span class="arithmatex">\(1.00 \text{ FLOP/Byte}\)</span> is vastly below the H100's ridge point of <span class="arithmatex">\(295 \text{ FLOPs/Byte}\)</span>, <strong>batch-1 decoding is trapped deep inside the memory-bandwidth-bound regime</strong>.</p>
+<ul>
+<li>Reading <span class="arithmatex">\(140 \text{ GB}\)</span> of weights at H100's <span class="arithmatex">\(3.35 \text{ TB/sec}\)</span> bandwidth takes <span class="arithmatex">\(140 \text{ GB} / 3.35 \text{ TB/sec} \approx \mathbf{41.8 \text{ milliseconds}}\)</span>.</li>
+<li>During those <span class="arithmatex">\(41.8 \text{ ms}\)</span>, the Tensor Cores execute <span class="arithmatex">\(140 \text{ GFLOPs}\)</span>. Because the H100 is capable of <span class="arithmatex">\(989 \text{ TFLOPs/sec}\)</span>, the compute cores run at <strong><span class="arithmatex">\(&lt; 0.35\%\)</span> capacity while sitting idle waiting for HBM data transfer!</strong></li>
+</ul>
+<h4 id="why-batch-1-decoding-ranged-from-10-to-20-flopsbyte-the-canonical-standard">Why Batch-1 Decoding Ranged from <code>1.0</code> to <code>2.0 FLOPs/Byte</code> (<code>The Canonical Standard</code>)<a class="headerlink" href="#why-batch-1-decoding-ranged-from-10-to-20-flopsbyte-the-canonical-standard" title="Permanent link">&para;</a></h4>
+<p>In AI systems engineering and serving literature, the operational intensity of single-batch (<span class="arithmatex">\(\text{batch_size } b = 1\)</span>) autoregressive decoding is frequently cited across a range from <span class="arithmatex">\(1.0 \text{ FLOPs/Byte}\)</span> to <span class="arithmatex">\(2.0 \text{ FLOPs/Byte}\)</span> (most commonly <span class="arithmatex">\(\sim 1.8 \text{ to } 1.9 \text{ FLOPs/Byte}\)</span>). This range reflects exact physical assumptions about quantization and sequence length:</p>
+<ol>
+<li>
+<p><strong>Pure <code>FP16</code> Weight Projection (<span class="arithmatex">\(1.0 \text{ FLOPs/Byte}\)</span>)</strong>:
+   When evaluating isolated linear projections (<code>GEMV</code>) in <code>FP16</code>, total FLOPs <span class="arithmatex">\(= 2 \cdot N\)</span> and weight memory <span class="arithmatex">\(= 2 \cdot N \text{ bytes}\)</span>, yielding an exact baseline intensity of <span class="arithmatex">\(1.0 \text{ FLOPs/Byte}\)</span>.</p>
+</li>
+<li>
+<p><strong>Pure <code>FP8</code> / <code>INT8</code> Weight Projection (<span class="arithmatex">\(2.0 \text{ FLOPs/Byte}\)</span>)</strong>:
+   When model weights are quantized to <code>FP8</code> (<span class="arithmatex">\(1 \text{ byte per parameter}\)</span>), but mathematical execution (<code>GEMV</code>) remains at <span class="arithmatex">\(2 \text{ FLOPs per weight}\)</span>, intensity doubles: <span class="arithmatex">\(\frac{2 \cdot N \text{ FLOPs}}{1 \cdot N \text{ Bytes}} = \mathbf{2.0 \text{ FLOPs/Byte}}\)</span>.</p>
+</li>
+<li>
+<p><strong>Real-World Autoregressive Decoding (<span class="arithmatex">\(\approx 1.8 \text{ to } 1.9 \text{ FLOPs/Byte}\)</span>)</strong>:
+   During end-to-end production decoding (<span class="arithmatex">\(\text{batch_size } b = 1\)</span> at active sequence length <span class="arithmatex">\(s\)</span>), the GPU reads both static model weights and dynamic <code>KV</code> cache blocks (<span class="arithmatex">\(2 \cdot s \cdot L \cdot h_{kv} \cdot d_{\text{head}} \cdot 2 \text{ bytes}\)</span>), while executing both linear projections (<span class="arithmatex">\(2 \cdot N \text{ FLOPs}\)</span>) and attention dot-products (<span class="arithmatex">\(4 \cdot s \cdot L \cdot h_q \cdot d_{\text{head}}\)</span> FLOPs).
+   Because static weight transfers (<span class="arithmatex">\(140 \text{ GB on Llama 3 70B}\)</span>) vastly dominate over single-sequence <code>KV</code> cache transfers (<span class="arithmatex">\(\sim 1.3 \text{ GB}\)</span> at <span class="arithmatex">\(4\text{K}\)</span> context), the combined end-to-end operational intensity across full <code>FP16</code> execution converges tightly between <span class="arithmatex">\(\approx 1.8\)</span> and <span class="arithmatex">\(1.9 \text{ FLOPs/Byte}\)</span>.
+   Consequently, <span class="arithmatex">\(1.0 \text{ to } 2.0 \text{ FLOPs/Byte}\)</span> (or specifically <span class="arithmatex">\(\sim 1.9 \text{ FLOPs/Byte}\)</span> on active <code>FP16</code> deployments) serves as the universal canonical standard benchmark for single-batch decoding across the industry.</p>
+</li>
+</ol>
+<hr />
+<h3 id="37-batched-matrix-multiplication-bmm-and-amortization-economics">3.7 Batched Matrix Multiplication (<code>BMM</code>) and Amortization Economics<a class="headerlink" href="#37-batched-matrix-multiplication-bmm-and-amortization-economics" title="Permanent link">&para;</a></h3>
+<p>Since model weights must be loaded from <code>HBM</code> on every step, how can we amortize that <span class="arithmatex">\(140 \text{ GB}\)</span> transfer time? By <strong>increasing the batch size (<span class="arithmatex">\(b\)</span>)</strong>.</p>
+<p>When serving <span class="arithmatex">\(b = 64\)</span> concurrent user requests simultaneously:</p>
+<ul>
+<li>The <span class="arithmatex">\(140 \text{ GB}\)</span> model weights are loaded from <code>HBM</code> <strong>once</strong> and reused across all 64 user tokens via Batched Matrix Multiplication (<code>BMM</code>).</li>
+<li><strong>FLOPs Performed</strong>: <span class="arithmatex">\(64 \times 140 \text{ GFLOPs} = \mathbf{8,960 \text{ GFLOPs}}\)</span>.</li>
+<li><strong>Arithmetic Intensity</strong>:</li>
+</ul>
+<div class="arithmatex">\[
+I_{\text{batched}} = \frac{8,960 \text{ GFLOPs}}{140 \text{ GB weights} + \text{KV Bytes}} \approx \mathbf{50 \text{ to } 60 \text{ FLOPs/Byte}}
+\]</div>
+<p>Increasing batch size pushes execution up the slanted Roofline slope toward peak TFLOPs, increasing system throughput (<code>TPS</code>). However, <strong>traditional serving engines hit a concrete memory wall attempting to scale batch sizes</strong>.</p>
+<hr />
+<h2 id="part-4-the-contiguous-memory-requirement-and-fragmentation-economics">Part 4: The Contiguous Memory Requirement and Fragmentation Economics<a class="headerlink" href="#part-4-the-contiguous-memory-requirement-and-fragmentation-economics" title="Permanent link">&para;</a></h2>
+<p>To understand why traditional engines hit a concrete memory wall attempting to scale batch sizes (<code>b &gt;= 16</code>), we examine how legacy inference architectures manage physical memory allocation in <code>HBM</code>.</p>
+<h3 id="41-the-pre-allocation-trap-why-contiguous-memory-is-required">4.1 The Pre-Allocation Trap: Why Contiguous Memory is Required<a class="headerlink" href="#41-the-pre-allocation-trap-why-contiguous-memory-is-required" title="Permanent link">&para;</a></h3>
+<p>In standard PyTorch and legacy inference servers, tensors must occupy <strong>contiguous physical memory blocks in HBM</strong>. When serving dynamic requests, this enforces three fatal patterns:</p>
+<ol>
+<li><strong>Static Batching and The Padding Tax</strong>: All requests in a batch must pad out to the longest prompt length (<code>max(prompt_lens)</code>). Compute units waste valuable TFLOPs processing useless <code>0.0</code> padding tokens.</li>
+<li><strong>Pre-Allocation up to <code>max_seq_len</code></strong>: Because a sequence might generate up to <code>max_seq_len</code> (<code>e.g., 2,048 tokens</code>), and because contiguous tensors cannot grow in-place without copying memory across <code>HBM</code>, traditional engines <strong>must pre-reserve contiguous HBM slots for <code>max_seq_len</code> tokens upon request arrival</strong>.</li>
+</ol>
+<pre class="mermaid"><code>flowchart TD
+    subgraph CONTIGUOUS_POOL ["Traditional Pre-Allocated KV Cache Pool (70% - 80% Wasted Space)"]
+        R1["Request 1 Slot [Reserved Max 2,048 Tokens]&lt;br&gt;Prompt: 300 | Gen: 50 | &lt;b&gt;Wasted Internal Fragmentation: 1,698 Slots!&lt;/b&gt;"]
+        R2["Request 2 Slot [Reserved Max 2,048 Tokens]&lt;br&gt;Prompt: 800 | Gen: 10 | &lt;b&gt;Wasted Internal Fragmentation: 1,238 Slots!&lt;/b&gt;"]
+        GAP["Freed Memory Gap [2,048 Slots Capacity]&lt;br&gt;&lt;b&gt;External Fragmentation Gap (Cannot fit large requests)&lt;/b&gt;"]
+    end</code></pre>
+<hr />
+<h3 id="42-internal-fragmentation-memory-waste-inside-allocated-boundaries">4.2 Internal Fragmentation: Memory Waste Inside Allocated Boundaries<a class="headerlink" href="#42-internal-fragmentation-memory-waste-inside-allocated-boundaries" title="Permanent link">&para;</a></h3>
+<p><strong>Internal Fragmentation</strong> is memory waste occurring <strong>INSIDE the boundary of an allocated physical memory region</strong>. It occurs when a fixed or pre-reserved allocation block size exceeds the actual data payload currently stored or ultimately generated within it. Because the unused memory resides within the allocated region's boundary, it remains locked by the owning process and cannot be re-assigned to any other request.</p>
+<p>In traditional LLM serving engines:</p>
+<ul>
+<li>Upon request arrival, the memory allocator pre-reserves a single contiguous block of physical <code>HBM</code> sized for <code>max_seq_len</code> (<code>e.g., 2,048 tokens</code>).</li>
+<li>If the user prompt is <code>300</code> tokens and the model emits an Early-End-of-Sequence (<code>EOS</code>) token after generating <code>50</code> tokens (<code>total length = 350 tokens</code>), the remaining <code>1,698</code> token slots inside its allocated chunk sit empty and locked for the entire duration of the request.</li>
+<li>Furthermore, even while the request is actively generating token <code>51</code>, the reserved slots for tokens <code>52</code> through <code>2,048</code> remain locked <em>inside</em> the allocation boundary.</li>
+<li>Empirical profiling by the vLLM team (<em>Kwon et al., SOSP 2023</em>) showed that <strong><code>60% to 80%</code> of total allocated GPU memory was wasted due to internal fragmentation</strong>.</li>
+</ul>
+<hr />
+<h3 id="43-external-fragmentation-memory-waste-outside-allocated-boundaries">4.3 External Fragmentation: Memory Waste Outside Allocated Boundaries<a class="headerlink" href="#43-external-fragmentation-memory-waste-outside-allocated-boundaries" title="Permanent link">&para;</a></h3>
+<p><strong>External Fragmentation</strong> is memory waste occurring <strong>OUTSIDE of all allocated memory regions</strong>. It occurs when total unallocated free memory exists across GPU <code>HBM</code>, but it is fragmented into non-contiguous, scattered gaps across physical address space. When a new request requires a single contiguous physical block, allocation fails with an Out-Of-Memory (<code>OOM</code>) error because no single unallocated hole is large enough, even if the total sum of all scattered free gaps vastly exceeds the requested allocation size.</p>
+<p>In traditional LLM serving engines:</p>
+<ul>
+<li>As dynamic user requests of varying sequence lengths finish generating at different times, they release their contiguous <code>HBM</code> blocks back to the allocator, creating a checkerboard pattern of non-contiguous free memory holes (<code>e.g., a 512-token hole at address 0x1000, a 1,024-token hole at address 0x8000</code>).</li>
+<li>If a new request arrives requiring a contiguous block of <code>4,096</code> tokens, the allocator cannot satisfy the request and triggers an <code>OOM</code> failure, even if total free memory across all scattered gaps equals <code>16,384</code> tokens!</li>
+<li>Empirical profiling showed that <strong><code>5% to 10%</code> of total GPU memory was lost to external fragmentation</strong>.</li>
+</ul>
+<hr />
+<h3 id="44-the-concurrency-ceiling-dilemma-and-why-we-need-vllm">4.4 The Concurrency Ceiling Dilemma and Why We Need vLLM<a class="headerlink" href="#44-the-concurrency-ceiling-dilemma-and-why-we-need-vllm" title="Permanent link">&para;</a></h3>
+<p>Because <code>70%</code> of <code>KV</code> cache memory is lost to internal and external fragmentation, <strong>traditional engines hit an artificial concurrency ceiling prematurely (<code>OOM</code>) at small batch sizes (<code>b = 16</code>)</strong>. The GPU remains starved at low arithmetic intensity, keeping token throughput low and costs high.</p>
+<p>To break through this concurrency ceiling and push autoregressive decoding toward the compute-bound regime, we must eliminate memory fragmentation entirely. This brings us directly to <strong>Module 2: Core Architecture (<code>02_vllm_core_architecture.md</code>)</strong>, where we explore how vLLM adapts the operating system's concept of <strong>Virtual Memory Paging and PagedAttention</strong> to decouple logical sequence order from physical <code>HBM</code> placement, reducing memory waste from <code>&gt; 70%</code> down to <code>&lt; 4%</code> on the exact same hardware!</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

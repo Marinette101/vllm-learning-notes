@@ -1,0 +1,1448 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An AI Engineering Textbook and Production Reference">
+      
+      
+        <meta name="author" content="linghuanym">
+      
+      
+      
+        <link rel="prev" href="../02_vllm_core_architecture/">
+      
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="en">
+        
+          <link rel="alternate" href="../zh/appendix_glossary_and_terminology/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Appendix - Master Glossary - vLLM Core Architecture & Performance Mechanics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#appendix-master-glossary-and-terminology-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-header__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            vLLM Core Architecture & Performance Mechanics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Appendix - Master Glossary
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../zh/appendix_glossary_and_terminology/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-nav__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    vLLM Core Architecture & Performance Mechanics
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Curriculum & Principles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_llm_inference_fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 1 - Inference Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_vllm_core_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 2 - vLLM Core Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix - Master Glossary
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix - Master Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-architectural-and-mathematical-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Architectural and Mathematical Terminology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Architectural and Mathematical Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rope-rotary-position-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoPE (Rotary Position Embedding)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#swiglu-swish-gated-linear-unit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SwiGLU (Swish-Gated Linear Unit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mha-multi-head-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MHA (Multi-Head Attention)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mqa-multi-query-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MQA (Multi-Query Attention)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gqa-grouped-query-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GQA (Grouped-Query Attention)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mla-multi-head-latent-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MLA (Multi-Head Latent Attention)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moe-mixture-of-experts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MoE (Mixture of Experts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-linear-algebra-and-execution-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Linear Algebra and Execution Operations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Linear Algebra and Execution Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gemm-general-matrix-matrix-multiplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GEMM (General Matrix-Matrix Multiplication)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gemv-general-matrix-vector-multiplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GEMV (General Matrix-Vector Multiplication)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bmm-batched-matrix-multiplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BMM (Batched Matrix Multiplication)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-hardware-and-memory-hierarchy-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Hardware and Memory Hierarchy Terminology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Hardware and Memory Hierarchy Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hbm-high-bandwidth-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HBM (High-Bandwidth Memory)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#l2-cache-level-2-static-ram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L2 Cache (Level 2 Static RAM)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sm-streaming-multiprocessor-and-registers-l1-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SM (Streaming Multiprocessor) and Registers / L1 Cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arithmetic-intensity-i-and-roofline-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arithmetic Intensity (I) and Roofline Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-distributed-systems-and-parallelism-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Distributed Systems and Parallelism Terminology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Distributed Systems and Parallelism Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ep-expert-parallelism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EP (Expert Parallelism)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tp-tensor-parallelism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TP (Tensor Parallelism)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pp-pipeline-parallelism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PP (Pipeline Parallelism)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-serving-engine-and-paged-memory-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Serving Engine and Paged Memory Terminology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Serving Engine and Paged Memory Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pagedattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PagedAttention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cow-copy-on-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CoW (Copy-on-Write)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apc-automatic-prefix-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APC (Automatic Prefix Caching)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#block-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Block Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#online-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Online Softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#continuous-batching-iteration-level-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Continuous Batching (Iteration-Level Scheduling)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preemption-swap-vs-recomputation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preemption (Swap vs. Recomputation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#internal-fragmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal Fragmentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#external-fragmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External Fragmentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-architectural-and-mathematical-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Architectural and Mathematical Terminology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Architectural and Mathematical Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rope-rotary-position-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoPE (Rotary Position Embedding)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#swiglu-swish-gated-linear-unit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SwiGLU (Swish-Gated Linear Unit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mha-multi-head-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MHA (Multi-Head Attention)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mqa-multi-query-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MQA (Multi-Query Attention)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gqa-grouped-query-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GQA (Grouped-Query Attention)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mla-multi-head-latent-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MLA (Multi-Head Latent Attention)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moe-mixture-of-experts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MoE (Mixture of Experts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-linear-algebra-and-execution-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Linear Algebra and Execution Operations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Linear Algebra and Execution Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gemm-general-matrix-matrix-multiplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GEMM (General Matrix-Matrix Multiplication)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gemv-general-matrix-vector-multiplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GEMV (General Matrix-Vector Multiplication)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bmm-batched-matrix-multiplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BMM (Batched Matrix Multiplication)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-hardware-and-memory-hierarchy-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Hardware and Memory Hierarchy Terminology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Hardware and Memory Hierarchy Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hbm-high-bandwidth-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HBM (High-Bandwidth Memory)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#l2-cache-level-2-static-ram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L2 Cache (Level 2 Static RAM)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sm-streaming-multiprocessor-and-registers-l1-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SM (Streaming Multiprocessor) and Registers / L1 Cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arithmetic-intensity-i-and-roofline-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arithmetic Intensity (I) and Roofline Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-distributed-systems-and-parallelism-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Distributed Systems and Parallelism Terminology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Distributed Systems and Parallelism Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ep-expert-parallelism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EP (Expert Parallelism)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tp-tensor-parallelism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TP (Tensor Parallelism)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pp-pipeline-parallelism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PP (Pipeline Parallelism)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-serving-engine-and-paged-memory-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Serving Engine and Paged Memory Terminology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Serving Engine and Paged Memory Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pagedattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PagedAttention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cow-copy-on-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CoW (Copy-on-Write)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apc-automatic-prefix-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APC (Automatic Prefix Caching)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#block-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Block Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#online-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Online Softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#continuous-batching-iteration-level-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Continuous Batching (Iteration-Level Scheduling)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preemption-swap-vs-recomputation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preemption (Swap vs. Recomputation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#internal-fragmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal Fragmentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#external-fragmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External Fragmentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="appendix-master-glossary-and-terminology-reference">Appendix: Master Glossary and Terminology Reference<a class="headerlink" href="#appendix-master-glossary-and-terminology-reference" title="Permanent link">&para;</a></h1>
+<p>This authoritative reference document compiles all mathematical, architectural, hardware, and distributed systems terminology utilized across <strong>vLLM Core Architecture (<code>Modules 1 through 6</code>)</strong>. Each entry provides exact physical definitions, mathematical formulas, and systems engineering roles.</p>
+<hr />
+<h2 id="1-architectural-and-mathematical-terminology">1. Architectural and Mathematical Terminology<a class="headerlink" href="#1-architectural-and-mathematical-terminology" title="Permanent link">&para;</a></h2>
+<h3 id="rope-rotary-position-embedding"><code>RoPE</code> (Rotary Position Embedding)<a class="headerlink" href="#rope-rotary-position-embedding" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: A positional encoding mechanism (introduced by Su et al., 2021) that injects token order information into Transformer models by applying rotation matrices directly to the Query (<code>Q</code>) and Key (<code>K</code>) vectors prior to dot-product attention evaluation.</li>
+<li><strong>Mathematical Mechanics</strong>:
+  Instead of adding an absolute position vector <span class="arithmatex">\(P_m\)</span> to the token embedding (<span class="arithmatex">\(X + P_m\)</span>), <code>RoPE</code> pairs adjacent dimensions inside the attention head vector (<code>head_dim = 128</code>) into 2D planes (<span class="arithmatex">\(64 \text{ pairs}\)</span>). For a token located at sequence index <span class="arithmatex">\(m\)</span>, each 2D plane is multiplied by a 2D rotation matrix <span class="arithmatex">\(R_{m,\theta_i}\)</span>:</li>
+</ul>
+<div class="arithmatex">\[
+R_{m, \theta_i} = \begin{bmatrix} \cos(m \cdot \theta_i) &amp; -\sin(m \cdot \theta_i) \\ \sin(m \cdot \theta_i) &amp; \cos(m \cdot \theta_i) \end{bmatrix}
+\]</div>
+<p>When evaluating the dot-product between Query at position <span class="arithmatex">\(m\)</span> (<span class="arithmatex">\(Q_m\)</span>) and Key at position <span class="arithmatex">\(n\)</span> (<span class="arithmatex">\(K_n\)</span>), orthogonal rotation algebra guarantees that the resulting inner product depends <strong>strictly on the relative distance (<span class="arithmatex">\(m - n\)</span>) between the two tokens</strong>:</p>
+<div class="arithmatex">\[
+\text{Score} = (R_m @ Q_m) @ (R_n @ K_n)^T = Q_m @ R_{m-n} @ K_n^T
+\]</div>
+<ul>
+<li><strong>Architectural Significance</strong>: Eliminates absolute position artifacts, preserves base semantic vector magnitudes, and enables seamless long-context extrapolation (<code>e.g., scaling from 8K to 128K context via NTK-aware scaling and YaRN</code>).</li>
+<li>
+<p><strong>Exact Matrix Dimensions of <span class="arithmatex">\(R_m\)</span> (<code>[128, 128]</code> Block-Diagonal)</strong>:
+  <code>RoPE</code> does not rotate across different attention heads (<code>num_kv_heads = 8</code>), because each head encodes an orthogonal semantic domain. Instead, <code>RoPE</code> operates strictly inside the <code>128</code> feature coordinates of each individual head (<code>Axis m = 0..127</code>), grouping them into sixty-four 2D pairs. Written as a single operator acting on a <code>[128]</code> head vector, <span class="arithmatex">\(R_m\)</span> is a <strong><code>[128, 128]</code> block-diagonal matrix containing sixty-four <code>2x2</code> rotation blocks along its diagonal</strong>. Consequently, all <code>64</code> Query heads and <code>8</code> Key heads undergo this <code>[128, 128]</code> rotation independently (<code>head count acts as a parallel batch index</code>). Furthermore, historical keys in the <code>KV</code> cache (<span class="arithmatex">\(k_0, k_1, \dots, k_{n-1}\)</span>) are stored already rotated (<span class="arithmatex">\(R_m @ k_m\)</span>) and are never re-rotated during step <span class="arithmatex">\(n\)</span>.</p>
+</li>
+<li>
+<p><strong>Symmetry and Determinism of <span class="arithmatex">\(R_m\)</span> (<code>Q/K Symmetry and Theta Hierarchy</code>)</strong>:</p>
+</li>
+<li><strong><code>Q/K</code> Symmetry</strong>: At sequence position <span class="arithmatex">\(m\)</span>, the exact same rotation matrix <span class="arithmatex">\(R_m\)</span> multiplies both Query (<span class="arithmatex">\(Q_m\)</span>) and Key (<span class="arithmatex">\(K_m\)</span>). This symmetry is why <span class="arithmatex">\(\text{Score} = Q_m @ K_n^T\)</span> simplifies via orthogonal identity (<span class="arithmatex">\(R_m^T @ R_m = I\)</span>) directly into <span class="arithmatex">\(Q_{\text{unrotated}} @ R_{m-n} @ K_{\text{unrotated}}^T\)</span>.</li>
+<li><strong>Universal Head Application</strong>: <span class="arithmatex">\(R_m\)</span> applies identically across every single one of the <code>64</code> Query heads and <code>8</code> Key heads.</li>
+<li><strong>Strict Determinism</strong>: <span class="arithmatex">\(R_m\)</span> is completely independent of the token's semantic text or activation value (<code>"Apple"</code> vs <code>"Dog"</code> yields the exact same <span class="arithmatex">\(R_m\)</span> at position <span class="arithmatex">\(m\)</span>). It is governed strictly by two variables: the integer sequence index <span class="arithmatex">\(m\)</span> (<code>0, 1, 2, ...</code>) and the geometric frequency hierarchy <span class="arithmatex">\(\theta_i = 10000^{-2i / d_{\text{head}}}\)</span> where <span class="arithmatex">\(i \in [0, 63]\)</span>.</li>
+<li>
+<p><strong>Chronological Execution Pipeline (<code>Embedding vs. RoPE</code>)</strong>:
+  Initial token embedding lookup (<span class="arithmatex">\(W_{\text{Embed}}\)</span>) and <code>RoPE</code> rotation operate at two distinct execution stages:</p>
+</li>
+<li>
+<p><strong>Step 0 (<code>Embedding Lookup</code>)</strong>: Converts raw token IDs into unrotated base tensor <span class="arithmatex">\(X_0\)</span> (<code>[b, s, d]</code>). Contains <strong>zero positional information</strong>.</p>
+</li>
+<li><strong>Step 1 (<code>Linear Projections</code>)</strong>: Inside every layer, <span class="arithmatex">\(X\)</span> multiplies against <span class="arithmatex">\(W_Q\)</span> and <span class="arithmatex">\(W_K\)</span> to produce unrotated <span class="arithmatex">\(Q\)</span> and <span class="arithmatex">\(K\)</span> tensors.</li>
+<li><strong>Step 2 (<code>RoPE Rotation</code>)</strong>: Strictly <strong>after</strong> <code>Q/K</code> linear projections and <strong>before</strong> dot-product attention, <code>RoPE</code> rotation matrices (<span class="arithmatex">\(R_m\)</span>) multiply against <span class="arithmatex">\(Q\)</span> and <span class="arithmatex">\(K\)</span> (<span class="arithmatex">\(Q_{\text{rotated}} = R_m @ Q_{\text{unrotated}}\)</span>), ensuring dot-products evaluate pristine relative distances without projection distortion across layers.</li>
+</ul>
+<h3 id="swiglu-swish-gated-linear-unit"><code>SwiGLU</code> (Swish-Gated Linear Unit)<a class="headerlink" href="#swiglu-swish-gated-linear-unit" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: A gated non-linear activation architecture (introduced by Noam Shazeer) replacing classic <code>ReLU</code> Feed-Forward Networks (<code>FFNs</code>) across modern frontier transformers (<code>Llama 3, Mistral, DeepSeek</code>).</li>
+<li><strong>Mathematical Mechanics</strong>:
+  Requires three projection matrices per layer (<code>W_Gate</code>, <code>W_Up</code>, <code>W_Down</code>):
+  $$
+\text{FFN_Output} = \left( \text{SiLU}(H @ W_{\text{Gate}}) \odot (H @ W_{\text{Up}}) \right) @ W_{\text{Down}}
+$$
+  Where <span class="arithmatex">\(\text{SiLU}(x) = x \cdot \sigma(x) = \frac{x}{1 + e^{-x}}\)</span> acts as a continuous, differentiable gating modulation curve, and <code>(*)</code> denotes element-wise Hadamard multiplication across matching coordinate indices.</li>
+</ul>
+<h3 id="mha-multi-head-attention"><code>MHA</code> (Multi-Head Attention)<a class="headerlink" href="#mha-multi-head-attention" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: The original standard attention architecture (<code>Vaswani et al., 2017</code>) where every Query head (<code>h_q</code>) is paired with an independent, dedicated Key (<code>h_k</code>) and Value (<code>h_v</code>) projection head (<code>h_q : h_kv = 1 : 1</code>).</li>
+<li><strong>Trade-off</strong>: Maximizes representation capacity but incurs severe memory footprint scaling during long-context autoregressive decoding due to massive <code>KV</code> cache retention.</li>
+</ul>
+<h3 id="mqa-multi-query-attention"><code>MQA</code> (Multi-Query Attention)<a class="headerlink" href="#mqa-multi-query-attention" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: An attention variant (<code>Shazeer, 2019</code>) where all <code>num_q_heads</code> (<code>e.g., 64</code>) share <strong>one single Key and Value head (<code>h_kv = 1</code>)</strong>.</li>
+<li><strong>Trade-off</strong>: Drastically compresses <code>KV</code> cache footprint (<code>h_q : 1</code> reduction) but induces representation collision and capacity saturation, causing quality degradation on complex multi-hop mathematical reasoning.</li>
+</ul>
+<h3 id="gqa-grouped-query-attention"><code>GQA</code> (Grouped-Query Attention)<a class="headerlink" href="#gqa-grouped-query-attention" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: The Pareto-optimal attention architecture (<code>Ainslie et al., 2023</code>) partitioning Query heads into distinct local groups that share a single Key/Value head (<code>e.g., Llama 3 70B uses 8 KV heads for 64 Q heads, an 8:1 ratio</code>).</li>
+<li><strong>Trade-off</strong>: Balances near-<code>MHA</code> evaluation quality against an <code>8x</code> reduction in <code>KV</code> cache memory footprint (<code>HBM</code>).</li>
+</ul>
+<h3 id="mla-multi-head-latent-attention"><code>MLA</code> (Multi-Head Latent Attention)<a class="headerlink" href="#mla-multi-head-latent-attention" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: A low-rank joint <code>KV</code> compression architecture (<code>DeepSeek-V2/V3/R1</code>) designed to compress memory footprint across ultra-large frontier models without sacrificing reasoning fidelity.</li>
+<li><strong>Mathematical Mechanics</strong>:
+  Down-projects input activation <code>H</code> into a single low-rank latent vector <code>c_kv</code> (<code>d_c = 512</code>), which serves as the sole cached content payload. To prevent positional rotation entanglement, <code>RoPE</code> is decoupled into a dedicated 64-dimensional positional key vector (<code>k_pe</code>):
+  $$
+\text{Total Cached Vector per Token} = c_{kv} \ (512 \text{ dims}) + k_{pe} \ (64 \text{ dims}) = \mathbf{576 \text{ floating-point numbers}}
+$$
+  During attention evaluation, full <code>K_content</code> and <code>V</code> vectors are restored on-the-fly inside fast GPU <code>SRAM</code> (<code>c_kv @ W_UK</code> and <code>c_kv @ W_UV</code>) or absorbed directly into Query weight matrices (<code>Matrix Absorption</code>).</li>
+</ul>
+<h3 id="moe-mixture-of-experts"><code>MoE</code> (Mixture of Experts)<a class="headerlink" href="#moe-mixture-of-experts" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: A sparse neural network architecture decoupling total parameter capacity from active inference compute (<code>FLOPs</code>) by replacing dense <code>FFN</code> layers with multiple parallel expert <code>FFNs</code> governed by a dynamic Router (<code>Gating Network</code>).</li>
+<li><strong>Mechanics</strong>: For each token, the Router evaluates similarity logits against all experts (<code>H @ W_Router</code>), selects the <code>Top-K</code> highest logits (<code>e.g., Top-2 in Mixtral 8x7B</code>), and applies <code>Softmax</code> over the selected subset to weight and synthesize the expert outputs.</li>
+</ul>
+<hr />
+<h2 id="2-linear-algebra-and-execution-operations">2. Linear Algebra and Execution Operations<a class="headerlink" href="#2-linear-algebra-and-execution-operations" title="Permanent link">&para;</a></h2>
+<h3 id="gemm-general-matrix-matrix-multiplication"><code>GEMM</code> (General Matrix-Matrix Multiplication)<a class="headerlink" href="#gemm-general-matrix-matrix-multiplication" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: The primary linear algebra operation governing compute-bound neural network layers (<code>C = A @ B + D</code>).</li>
+<li><strong>Inference Context</strong>: Dominates the <strong>Prefill Phase</strong>, where all prompt tokens (<code>s_prompt &gt; 1</code>) are processed simultaneously (<code>[batch_size * seq_len, hidden_dim] @ [hidden_dim, out_dim]</code>), saturating GPU Tensor Cores at high Arithmetic Intensity.</li>
+</ul>
+<h3 id="gemv-general-matrix-vector-multiplication"><code>GEMV</code> (General Matrix-Vector Multiplication)<a class="headerlink" href="#gemv-general-matrix-vector-multiplication" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: The linear algebra operation where a matrix multiplies against a single vector (<code>c = A @ b</code>).</li>
+<li><strong>Inference Context</strong>: Dominates the <strong>Decode Phase</strong> (<code>batch_size = 1</code>), where only a single new token (<code>seq_len = 1</code>) is evaluated per step (<code>[1, hidden_dim] @ [hidden_dim, out_dim]</code>). <code>GEMV</code> operates deep inside the memory-bandwidth-bound regime (<code>I_decode =~ 1.0 to 2.0 FLOPs/Byte</code>).</li>
+</ul>
+<h3 id="bmm-batched-matrix-multiplication"><code>BMM</code> (Batched Matrix Multiplication)<a class="headerlink" href="#bmm-batched-matrix-multiplication" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: A parallel matrix multiplication operation (<code>torch.matmul</code> or <code>A @ B</code>) across higher-dimensional tensors (<code>[b, h, m, k] @ [b, h, k, n] = [b, h, m, n]</code>).</li>
+<li><strong>Mechanics</strong>: Operates exclusively on the last two dimensions (<code>[-2, -1]</code>), treating all preceding leading dimensions (<code>[:-2]</code>) as independent parallel batch indices dispatched across GPU Streaming Multiprocessors (<code>SMs</code>).</li>
+</ul>
+<hr />
+<h2 id="3-hardware-and-memory-hierarchy-terminology">3. Hardware and Memory Hierarchy Terminology<a class="headerlink" href="#3-hardware-and-memory-hierarchy-terminology" title="Permanent link">&para;</a></h2>
+<h3 id="hbm-high-bandwidth-memory"><code>HBM</code> (High-Bandwidth Memory)<a class="headerlink" href="#hbm-high-bandwidth-memory" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: Off-chip DRAM stacks connected directly to the GPU silicon die via an ultra-wide silicon interposer (<code>e.g., 80 GB or 192 GB capacity on NVIDIA H100/H200</code>).</li>
+<li><strong>Role and Bandwidth</strong>: Serves as the primary global memory pool holding model weights and static <code>KV</code> cache blocks. Delivers <code>3.35 TB/sec</code> bandwidth on H100 SXM5 (<code>4.5x slower than on-chip L2 cache</code>).</li>
+</ul>
+<h3 id="l2-cache-level-2-static-ram"><code>L2 Cache</code> (Level 2 Static RAM)<a class="headerlink" href="#l2-cache-level-2-static-ram" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: On-chip Static Random-Access Memory (<code>SRAM</code>) physically located on the GPU silicon die, shared across all Streaming Multiprocessors (<code>50 MB</code> on H100 SXM5).</li>
+<li><strong>Role and Bandwidth</strong>: Serves as the high-speed staging buffer (<code>12 to 15 TB/sec</code> bandwidth) between off-chip <code>HBM</code> and individual SM cores.</li>
+</ul>
+<h3 id="sm-streaming-multiprocessor-and-registers-l1-cache"><code>SM</code> (Streaming Multiprocessor) and Registers / <code>L1 Cache</code><a class="headerlink" href="#sm-streaming-multiprocessor-and-registers-l1-cache" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: The individual physical compute cores inside a GPU (<code>132 SMs on NVIDIA H100</code>). Each SM contains local <code>SRAM</code> (<code>Registers and ~256 KB L1/Shared Memory</code>) delivering <code>30 to 50+ TB/sec</code> bandwidth.</li>
+<li><strong>Role</strong>: Executes square thread block tiles (<code>e.g., 128x128 tiles</code>) via specialized math execution units (<code>Tensor Cores</code>).</li>
+</ul>
+<h3 id="arithmetic-intensity-i-and-roofline-model"><code>Arithmetic Intensity</code> (<code>I</code>) and Roofline Model<a class="headerlink" href="#arithmetic-intensity-i-and-roofline-model" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: The ratio of total floating-point operations performed (<code>FLOPs</code>) divided by the total physical memory bytes transferred from <code>HBM</code> (<code>Bytes</code>):
+  $$
+I = \frac{\text{Total_FLOPs_Performed}}{\text{Total_Bytes_Transferred_from_HBM}}
+$$</li>
+<li><strong>Ridge Point (<code>I_ridge</code>)</strong>: The exact threshold (<code>I_ridge = Peak_FLOPs / Peak_HBM_Bandwidth</code>, <code>~295 FLOPs/Byte on H100</code>) separating compute-bound execution from memory-bandwidth-bound execution.</li>
+<li><strong>Comparative Evaluation Rule</strong>: When comparing GPUs (<code>A100 vs. H100 vs. MI300X</code>), a higher <code>I_ridge</code> does <strong>not</strong> indicate a better GPU for serving. Because LLM autoregressive decoding operates deep inside the memory-bound slope (<code>I =~ 1.0 to 2.0 FLOPs/Byte</code>), throughput is decided strictly by <code>Peak_HBM_Bandwidth (beta)</code>. Therefore, a <strong>LOWER <code>I_ridge</code> combined with higher <code>HBM</code> bandwidth</strong> (<code>e.g., AMD MI300X at 245 FLOPs/Byte and 5.3 TB/sec</code>) is far superior for decoding, whereas high <code>I_ridge</code> is advantageous only for compute-bound training and large-batch prompt prefill.</li>
+<li><strong>Canonical Batch-1 Decoding Range (<code>~1.0 to 2.0 FLOPs/Byte</code>)</strong>: In systems engineering literature, single-batch decoding is universally cited between <code>1.0</code> and <code>2.0 FLOPs/Byte</code> (<code>most frequently ~1.8 to 1.9 FLOPs/Byte</code>). This reflects exact physical assumptions: isolated <code>FP16</code> projection math yields <code>1.0 FLOPs/Byte</code>, isolated <code>FP8/INT8</code> projection math yields <code>2.0 FLOPs/Byte</code>, and end-to-end <code>FP16</code> decoding (<code>incorporating both weight transfers and dynamic KV cache/attention dot-product FLOPs across sequence length s</code>) converges tightly between <code>~1.8 and 1.9 FLOPs/Byte</code>.</li>
+</ul>
+<hr />
+<h2 id="4-distributed-systems-and-parallelism-terminology">4. Distributed Systems and Parallelism Terminology<a class="headerlink" href="#4-distributed-systems-and-parallelism-terminology" title="Permanent link">&para;</a></h2>
+<h3 id="ep-expert-parallelism"><code>EP</code> (Expert Parallelism)<a class="headerlink" href="#ep-expert-parallelism" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: A distributed partitioning strategy for <code>MoE</code> architectures where different physical GPU nodes or devices store disjoint subsets of expert weight tables (<code>e.g., GPU 0 stores Expert 0, GPU 7 stores Expert 7</code>).</li>
+<li><strong>Execution Mechanics</strong>: Requires <code>All-to-All</code> collective communication across high-speed interconnects (<code>NVLink</code> or <code>RDMA</code>) to dispatch token activation vectors (<code>H</code>) to their designated expert GPUs and return the computed transformations.</li>
+</ul>
+<h3 id="tp-tensor-parallelism"><code>TP</code> (Tensor Parallelism)<a class="headerlink" href="#tp-tensor-parallelism" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: An intra-node distributed partitioning strategy (<code>Megatron-LM</code>) slicing individual linear weight matrices (<code>W_Q, W_K, W_V, W_1, W_2</code>) across multiple physical GPUs within the same server node.</li>
+<li><strong>Execution Mechanics</strong>: Executes column-parallel or row-parallel matrix transformations, requiring sub-millisecond <code>AllReduce</code> synchronization across <code>NVLink / NVSwitch</code> after every transformer layer.</li>
+</ul>
+<h3 id="pp-pipeline-parallelism"><code>PP</code> (Pipeline Parallelism)<a class="headerlink" href="#pp-pipeline-parallelism" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: An inter-node distributed partitioning strategy dividing consecutive transformer layers across sequential physical server nodes (<code>e.g., Node 0 runs Layers 1-20, Node 1 runs Layers 21-40</code>).</li>
+<li><strong>Execution Mechanics</strong>: Utilizes micro-batching (<code>1F1B schedule</code>) to overlap compute across stages while mitigating pipeline bubble latency.</li>
+</ul>
+<hr />
+<h2 id="5-serving-engine-and-paged-memory-terminology">5. Serving Engine and Paged Memory Terminology<a class="headerlink" href="#5-serving-engine-and-paged-memory-terminology" title="Permanent link">&para;</a></h2>
+<h3 id="pagedattention"><code>PagedAttention</code><a class="headerlink" href="#pagedattention" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: The foundational attention kernel of vLLM adapted from operating system virtual memory paging. It decouples logical token sequence order from physical contiguous <code>HBM</code> locations, enabling attention scores to be evaluated across non-contiguous <code>16-token</code> physical blocks in <span class="arithmatex">\(\mathcal{O}(1)\)</span> lookup time without memory fragmentation.</li>
+</ul>
+<h3 id="cow-copy-on-write"><code>CoW</code> (Copy-on-Write)<a class="headerlink" href="#cow-copy-on-write" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: A block management mechanism inside vLLM where multiple logical requests (<code>e.g., shared system prompts, beam search branches, or parallel best_of_n sampling</code>) point to the exact same physical <code>KV</code> cache blocks with reference counting (<code>ref_count &gt; 1</code>). Physical duplication occurs strictly when a specific request diverges during generation.</li>
+</ul>
+<h3 id="apc-automatic-prefix-caching"><code>APC</code> (Automatic Prefix Caching)<a class="headerlink" href="#apc-automatic-prefix-caching" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: A hash-based block management algorithm inside vLLM that calculates cryptographic hashes across token sequences to identify and retain reusable prefix blocks across independent, asynchronous user requests.</li>
+</ul>
+<h3 id="block-table"><code>Block Table</code><a class="headerlink" href="#block-table" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: A per-sequence metadata lookup table in vLLM that translates logical block indices (<code>e.g., Logical Block 1</code>) to physical <code>HBM</code> block pointers (<code>e.g., Physical Block 28</code>) in <span class="arithmatex">\(\mathcal{O}(1)\)</span> time. Also tracks <code>num_filled_tokens</code> and block reference counts (<code>ref_count</code>).</li>
+</ul>
+<h3 id="online-softmax"><code>Online Softmax</code><a class="headerlink" href="#online-softmax" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: The mathematical algorithm (<code>Milakov and Gimelshein, 2018</code>) utilized inside PagedAttention kernels that maintains running maximum <code>m_i</code> and running exponent sum <code>l_i</code> across block iterations, allowing exact <code>Softmax</code> and Value accumulation to be computed in on-chip <code>SRAM</code> registers across non-contiguous physical blocks without intermediate <code>HBM</code> round-trips.</li>
+</ul>
+<h3 id="continuous-batching-iteration-level-scheduling"><code>Continuous Batching</code> (<code>Iteration-Level Scheduling</code>)<a class="headerlink" href="#continuous-batching-iteration-level-scheduling" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: A dynamic scheduling paradigm (<code>Orca, Yu et al., 2022</code>) where the inference server inspects the request queue on every single token generation tick (<code>iteration</code>), ejecting completed sequences (<code>EOS</code>) and admitting new requests (<code>Waiting -&gt; Running</code>) immediately, eliminating the up to 90% GPU idle waste of static request-level batching.</li>
+</ul>
+<h3 id="preemption-swap-vs-recomputation"><code>Preemption</code> (<code>Swap vs. Recomputation</code>)<a class="headerlink" href="#preemption-swap-vs-recomputation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Definition</strong>: The recovery mechanism triggered when the <code>HBM</code> free block pool is exhausted during autoregressive decoding. Low-priority <code>Running</code> sequences are demoted to <code>Swapped</code> (<code>evicting physical KV blocks over PCIe to host CPU RAM</code>) or <code>Waiting</code> (<code>discarding KV blocks entirely for later recomputation</code>), freeing physical blocks for active generation.</li>
+</ul>
+<h3 id="internal-fragmentation"><code>Internal Fragmentation</code><a class="headerlink" href="#internal-fragmentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Systems Engineering Definition</strong>: Memory waste occurring <strong>INSIDE</strong> the boundary of an allocated physical memory region because the allocated block size exceeds the payload currently stored within it.</li>
+<li><strong>LLM Serving Impact</strong>: Under contiguous pre-allocation (<code>max_seq_len</code>), unused reserved slots inside a sequence's allocated chunk remain locked, wasting 60%-80% of <code>HBM</code>. In vLLM, internal fragmentation is eliminated for all full physical blocks and isolated strictly to the active tail block (<code>&lt; 4%</code> average waste).</li>
+</ul>
+<h3 id="external-fragmentation"><code>External Fragmentation</code><a class="headerlink" href="#external-fragmentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Systems Engineering Definition</strong>: Memory waste occurring <strong>OUTSIDE</strong> of all allocated memory regions when total unallocated free memory exists across physical address space, but is fragmented into non-contiguous gaps, causing contiguous allocation requests to fail with Out-Of-Memory (<code>OOM</code>).</li>
+<li><strong>LLM Serving Impact</strong>: Legacy serving engines suffer 5%-10% external fragmentation gridlock due to physical contiguity rules. vLLM reduces external fragmentation to <strong>exactly 0%</strong> by evaluating attention across non-contiguous fixed-size blocks via PagedAttention.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
