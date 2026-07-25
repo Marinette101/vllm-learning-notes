@@ -2365,15 +2365,18 @@ O_i = O_{i-1} \cdot e^{m_{i-1} - m_i} + \sum_{j \in \text{block } i} \left( e^{z
     BLK --&gt; KEY_REGION
     BLK --&gt; VALUE_REGION</code></pre>
 <h5 id="4-detailed-byte-offset-arithmetic-for-token-p-25-logical-block-1-token-offset-t-9">4. Detailed Byte Offset Arithmetic for Token p = 25 (Logical Block 1, Token Offset t = 9)<a class="headerlink" href="#4-detailed-byte-offset-arithmetic-for-token-p-25-logical-block-1-token-offset-t-9" title="Permanent link">&para;</a></h5>
-<p>Suppose the kernel needs to read Key element <span class="arithmatex">\(d\)</span> (<span class="arithmatex">\(d \in [0, 127]\)</span>) of Token <span class="arithmatex">\(p = 25\)</span> for Head <span class="arithmatex">\(h = 2\)</span>.</p>
+<p>Suppose the kernel needs to read a specific scalar element at dimension index <span class="arithmatex">\(d\)</span> (<span class="arithmatex">\(d \in [0, 127]\)</span>) inside the <span class="arithmatex">\(d_{\text{head}} = 128\)</span>-dimensional Key vector of Token <span class="arithmatex">\(p = 25\)</span> for Head <span class="arithmatex">\(h = 2\)</span>.</p>
 <ul>
 <li><code>Block_Table[1] = 104</code> (<code>Physical Block ID</code>).</li>
 <li>Token offset inside block: <code>t = 25 % 16 = 9</code>.</li>
-<li>Stride dimensions:<ul>
-<li><code>Stride_Block = 65,536 bytes</code> (<code>64 KB</code>).</li>
+<li>
+<p>Stride dimensions:</p>
+<ul>
+<li><code>Stride_Block = 65,536 bytes</code> (<code>64 KB per block</code>).</li>
 <li><code>Stride_KV    = 32,768 bytes</code> (<code>Key region = 0, Value region = 1</code>).</li>
 <li><code>Stride_Head  = 4,096 bytes</code> (<code>16 tokens * 128 dim * 2 bytes</code>).</li>
 <li><code>Stride_Token = 256 bytes</code> (<code>128 dim * 2 bytes per token</code>).</li>
+<li><code>Element_Size = 2 bytes</code> (<code>FP16 / BF16 precision = 2 bytes per scalar element</code>).</li>
 </ul>
 </li>
 </ul>
@@ -2384,6 +2387,12 @@ O_i = O_{i-1} \cdot e^{m_{i-1} - m_i} + \sum_{j \in \text{block } i} \left( e^{z
 <div class="arithmatex">\[
 \text{Flat_Byte_Addr} = 0\text{x7FFF00680000} + 0\text{x2000} + 0\text{x0900} + (d \times 2) = \mathbf{0\text{x7FFF00682900} + (d \times 2)}
 \]</div>
+<p>Where:
+- <span class="arithmatex">\(104 \times 65,536\)</span>: Physical Block offset (<span class="arithmatex">\(P \times \text{Stride_Block}\)</span>).
+- <span class="arithmatex">\(0 \times 32,768\)</span>: Key vs. Value region selector (<span class="arithmatex">\(0\)</span> for Key matrix, <span class="arithmatex">\(1\)</span> for Value matrix).
+- <span class="arithmatex">\(2 \times 4,096\)</span>: Attention Head offset (<span class="arithmatex">\(h \times \text{Stride_Head}\)</span>).
+- <span class="arithmatex">\(9 \times 256\)</span>: Token offset within block (<span class="arithmatex">\(t \times \text{Stride_Token}\)</span>).
+- <span class="arithmatex">\(d \times 2\)</span>: <strong>Element coordinate offset</strong> (<span class="arithmatex">\(d \times \text{Element_Size}\)</span>), where <span class="arithmatex">\(d\)</span> is the element index inside the <span class="arithmatex">\(128\)</span>-dim Key vector (<span class="arithmatex">\(d \in [0, 127]\)</span>) and <span class="arithmatex">\(2\)</span> is the bytes per FP16/BF16 element.</p>
 <p>This formula demonstrates how multi-dimensional tensor indexing seamlessly maps to flat physical <code>HBM</code> byte addresses during PagedAttention execution!</p>
 <hr />
 <h3 id="33-copy-on-write-cow-mechanics-for-shared-prompts-and-parallel-sampling">3.3 Copy-on-Write (<code>CoW</code>) Mechanics for Shared Prompts and Parallel Sampling<a class="headerlink" href="#33-copy-on-write-cow-mechanics-for-shared-prompts-and-parallel-sampling" title="Permanent link">&para;</a></h3>
