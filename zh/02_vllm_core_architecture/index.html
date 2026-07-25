@@ -2144,20 +2144,20 @@ O_{\text{running}, h} \leftarrow O_{\text{running}, h} + P_{\text{tile}, h} @ V_
    For any given token <code>m</code>, its Key vector <code>k_m</code> and Value vector <code>v_m</code> are generated together during the forward pass, cached together, shared together (via Copy-on-Write <code>CoW</code> or Automatic Prefix Caching <code>APC</code>), and freed/evicted together when the sequence completes. Because <code>k_m</code> and <code>v_m</code> share an identical lifecycle, separating their physical allocation into independent block IDs would double Block Table metadata size, double pointer translation overhead, and double reference counting complexity with zero engineering benefit.</p>
 </li>
 <li>
-<p><strong>GPU HBM Tensor Indexing Layout (<code>key_cache</code> and <code>value_cache</code> Tensors)</strong>:
+<p><strong>GPU HBM Tensor Indexing Layout (<code>key_cache_pool</code> and <code>value_cache_pool</code> Tensors)</strong>:
    In GPU memory (<code>HBM</code>), vLLM allocates the KV cache pool as two large, pre-reserved global tensors (or one unified fused tensor):</p>
 <ul>
-<li><strong>Key Cache Pool Tensor</strong>: <span class="arithmatex">\(\text{key\_cache\_pool}\)</span> shape is <span class="arithmatex">\([N_{\text{blocks}}, N_{\text{kv\_heads}}, \text{block\_size}, d_{\text{head}}]\)</span>.</li>
-</ul>
-</li>
-<li><strong>Value Cache Pool Tensor</strong>: <span class="arithmatex">\(\text{value\_cache\_pool}\)</span> shape is <span class="arithmatex">\([N_{\text{blocks}}, N_{\text{kv\_heads}}, \text{block\_size}, d_{\text{head}}]\)</span>.<ul>
-<li>When the Block Manager assigns <code>physical_block_id = P</code> (<code>e.g., Physical Block 104</code>) to <code>Logical Block j</code>, that single integer <code>P</code> acts as the <strong>exact matching 0th-dimension index</strong> into both GPU tensors:</li>
+<li><strong>Key Cache Pool Tensor</strong>: <code>key_cache_pool</code> shape is <span class="arithmatex">\([N_{\text{blocks}}, N_{\text{kv_heads}}, \text{block_size}, d_{\text{head}}]\)</span>.</li>
+<li><strong>Value Cache Pool Tensor</strong>: <code>value_cache_pool</code> shape is <span class="arithmatex">\([N_{\text{blocks}}, N_{\text{kv_heads}}, \text{block_size}, d_{\text{head}}]\)</span>.</li>
+<li>When the Block Manager assigns <code>physical_block_id = P</code> (<code>e.g., Physical Block 104</code>) to <code>Logical Block j</code>, that single integer <code>P</code> acts as the <strong>exact matching 0th-dimension index</strong> into both GPU tensors:<ul>
 <li><code>K_tile = key_cache_pool[104]</code> (holds the 16 Key vectors for tokens 0..15).</li>
 <li><code>V_tile = value_cache_pool[104]</code> (holds the 16 Value vectors for tokens 0..15).</li>
 </ul>
 </li>
 <li><strong>Single Pointer Translation Overhead</strong>:
    During PagedAttention CUDA kernel execution, reading <code>Block_Table[j]</code> returns <code>P = 104</code>. The thread block uses <code>P = 104</code> to compute the physical base address for <code>K_tile</code> during Step 2, and reuses that exact same index <code>P = 104</code> to compute the physical base address for <code>V_tile</code> during Step 4. This ensures that address translation executes in <span class="arithmatex">\(\mathcal{O}(1)\)</span> time with minimal register pressure.</li>
+</ul>
+</li>
 </ol>
 <hr />
 <h3 id="23-sram-tiling-and-block-level-parallelism">2.3 SRAM Tiling and Block-Level Parallelism<a class="headerlink" href="#23-sram-tiling-and-block-level-parallelism" title="Permanent link">&para;</a></h3>
