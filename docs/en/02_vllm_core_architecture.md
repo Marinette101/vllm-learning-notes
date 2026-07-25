@@ -255,13 +255,14 @@ In vLLM's memory architecture, **`K` and `V` vectors for token `m` are ALWAYS co
 1. **Identical Co-Lifecycle**:
    For any given token `m`, its Key vector `k_m` and Value vector `v_m` are generated together during the forward pass, cached together, shared together (via Copy-on-Write `CoW` or Automatic Prefix Caching `APC`), and freed/evicted together when the sequence completes. Because `k_m` and `v_m` share an identical lifecycle, separating their physical allocation into independent block IDs would double Block Table metadata size, double pointer translation overhead, and double reference counting complexity with zero engineering benefit.
 
-2. **GPU HBM Tensor Indexing Layout (`key_cache` and `value_cache` Tensors)**:
+2. **GPU HBM Tensor Indexing Layout (`key_cache_pool` and `value_cache_pool` Tensors)**:
    In GPU memory (`HBM`), vLLM allocates the KV cache pool as two large, pre-reserved global tensors (or one unified fused tensor):
-    - **Key Cache Pool Tensor**: $\text{key\_cache\_pool}$ shape is $[N_{\text{blocks}}, N_{\text{kv\_heads}}, \text{block\_size}, d_{\text{head}}]$.
-- **Value Cache Pool Tensor**: $\text{value\_cache\_pool}$ shape is $[N_{\text{blocks}}, N_{\text{kv\_heads}}, \text{block\_size}, d_{\text{head}}]$.
+
+    - **Key Cache Pool Tensor**: `key_cache_pool` shape is $[N_{\text{blocks}}, N_{\text{kv_heads}}, \text{block_size}, d_{\text{head}}]$.
+    - **Value Cache Pool Tensor**: `value_cache_pool` shape is $[N_{\text{blocks}}, N_{\text{kv_heads}}, \text{block_size}, d_{\text{head}}]$.
     - When the Block Manager assigns `physical_block_id = P` (`e.g., Physical Block 104`) to `Logical Block j`, that single integer `P` acts as the **exact matching 0th-dimension index** into both GPU tensors:
-     - `K_tile = key_cache_pool[104]` (holds the 16 Key vectors for tokens 0..15).
-     - `V_tile = value_cache_pool[104]` (holds the 16 Value vectors for tokens 0..15).
+        - `K_tile = key_cache_pool[104]` (holds the 16 Key vectors for tokens 0..15).
+        - `V_tile = value_cache_pool[104]` (holds the 16 Value vectors for tokens 0..15).
 3. **Single Pointer Translation Overhead**:
    During PagedAttention CUDA kernel execution, reading `Block_Table[j]` returns `P = 104`. The thread block uses `P = 104` to compute the physical base address for `K_tile` during Step 2, and reuses that exact same index `P = 104` to compute the physical base address for `V_tile` during Step 4. This ensures that address translation executes in $\mathcal{O}(1)$ time with minimal register pressure.
 
