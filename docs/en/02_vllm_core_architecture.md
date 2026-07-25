@@ -483,15 +483,17 @@ flowchart TD
 
 ##### 4. Detailed Byte Offset Arithmetic for Token p = 25 (Logical Block 1, Token Offset t = 9)
 
-Suppose the kernel needs to read Key element $d$ ($d \in [0, 127]$) of Token $p = 25$ for Head $h = 2$.
+Suppose the kernel needs to read a specific scalar element at dimension index $d$ ($d \in [0, 127]$) inside the $d_{\text{head}} = 128$-dimensional Key vector of Token $p = 25$ for Head $h = 2$.
 
 - `Block_Table[1] = 104` (`Physical Block ID`).
 - Token offset inside block: `t = 25 % 16 = 9`.
 - Stride dimensions:
-    - `Stride_Block = 65,536 bytes` (`64 KB`).
+
+    - `Stride_Block = 65,536 bytes` (`64 KB per block`).
     - `Stride_KV    = 32,768 bytes` (`Key region = 0, Value region = 1`).
     - `Stride_Head  = 4,096 bytes` (`16 tokens * 128 dim * 2 bytes`).
     - `Stride_Token = 256 bytes` (`128 dim * 2 bytes per token`).
+    - `Element_Size = 2 bytes` (`FP16 / BF16 precision = 2 bytes per scalar element`).
 
 The CUDA kernel evaluates the exact flat `HBM` byte pointer in $\mathcal{O}(1)$ time:
 
@@ -502,6 +504,13 @@ $$
 $$
 \text{Flat_Byte_Addr} = 0\text{x7FFF00680000} + 0\text{x2000} + 0\text{x0900} + (d \times 2) = \mathbf{0\text{x7FFF00682900} + (d \times 2)}
 $$
+
+Where:
+- $104 \times 65,536$: Physical Block offset ($P \times \text{Stride_Block}$).
+- $0 \times 32,768$: Key vs. Value region selector ($0$ for Key matrix, $1$ for Value matrix).
+- $2 \times 4,096$: Attention Head offset ($h \times \text{Stride_Head}$).
+- $9 \times 256$: Token offset within block ($t \times \text{Stride_Token}$).
+- $d \times 2$: **Element coordinate offset** ($d \times \text{Element_Size}$), where $d$ is the element index inside the $128$-dim Key vector ($d \in [0, 127]$) and $2$ is the bytes per FP16/BF16 element.
 
 This formula demonstrates how multi-dimensional tensor indexing seamlessly maps to flat physical `HBM` byte addresses during PagedAttention execution!
 
