@@ -83,116 +83,116 @@ This learning folder (`vLLM/`) is organized into 6 comprehensive, self-contained
 
 ### [Module 1] LLM Inference Fundamentals and The Bottlenecks (`01_llm_inference_fundamentals.md`)
 1. **The Anatomy of Transformer Generation**
-   - **Prefill (Prompt Phase)**: Compute-bound, parallel processing of all input tokens simultaneously. Generates the initial KV cache and the first generated token.
-   - **Decode (Generation Phase)**: Memory-bandwidth bound, sequential processing generating one token at a time while reading the entire historical KV cache from HBM for every step.
+    - **Prefill (Prompt Phase)**: Compute-bound, parallel processing of all input tokens simultaneously. Generates the initial KV cache and the first generated token.
+    - **Decode (Generation Phase)**: Memory-bandwidth bound, sequential processing generating one token at a time while reading the entire historical KV cache from HBM for every step.
 2. **The Key-Value (KV) Cache Mathematical Formalism**
-   - Why caching `K` and `V` projections is mandatory to avoid $\mathcal{O}(N^2)$ recomputation.
-   - Calculating the exact memory footprint:
+    - Why caching `K` and `V` projections is mandatory to avoid $\mathcal{O}(N^2)$ recomputation.
+    - Calculating the exact memory footprint:
 
 $$
 \text{KV_Bytes} = 2 \cdot \text{batch_size} \cdot \text{seq_len} \cdot \text{num_layers} \cdot \text{num_kv_heads} \cdot \text{head_dim} \cdot \text{sizeof(dtype)}
 $$
 
-   - Real-world example: Why a 70B model with 4K context instantly consumes tens of gigabytes just for KV memory before model weights are even considered.
+    - Real-world example: Why a 70B model with 4K context instantly consumes tens of gigabytes just for KV memory before model weights are even considered.
 3. **The Memory vs. Compute Bound Paradigm**
-   - Roofline Model and **Operational Intensity (Arithmetic Intensity)**: `FLOPs / Byte`.
-   - Why doubling GPU TFLOPs does not speed up single-batch decoding without increasing HBM bandwidth (`GB/s`).
+    - Roofline Model and **Operational Intensity (Arithmetic Intensity)**: `FLOPs / Byte`.
+    - Why doubling GPU TFLOPs does not speed up single-batch decoding without increasing HBM bandwidth (`GB/s`).
 4. **Traditional Serving Failures**
-   - Static batching and the padding tax.
-   - The contiguous memory requirement: Why pre-allocating `max_seq_len` causes **Internal Fragmentation** (wasted capacity) and **External Fragmentation** (checkerboard memory preventing new request admission).
+    - Static batching and the padding tax.
+    - The contiguous memory requirement: Why pre-allocating `max_seq_len` causes **Internal Fragmentation** (wasted capacity) and **External Fragmentation** (checkerboard memory preventing new request admission).
 
 ---
 
 ### [Module 2] vLLM Core Architecture and PagedAttention (`02_vllm_core_architecture.md`)
 1. **The Operating System Analogy: Paging in LLMs**
-   - Logical Token Blocks vs. Physical KV Blocks.
-   - The **Block Table**: Translating logical sequence offsets to physical block indices in HBM in $\mathcal{O}(1)$ time.
+    - Logical Token Blocks vs. Physical KV Blocks.
+    - The **Block Table**: Translating logical sequence offsets to physical block indices in HBM in $\mathcal{O}(1)$ time.
 2. **PagedAttention Deep Dive**
-   - Architectural difference between standard FlashAttention and PagedAttention.
-   - How the attention kernel performs on-the-fly block table lookups inside registers/SRAM to compute attention scores across fragmented physical HBM locations without copying data.
+    - Architectural difference between standard FlashAttention and PagedAttention.
+    - How the attention kernel performs on-the-fly block table lookups inside registers/SRAM to compute attention scores across fragmented physical HBM locations without copying data.
 3. **The Block Manager and Memory Allocator**
-   - Block Size selection (e.g., 16 tokens): balancing internal fragmentation (at most `block_size - 1` tokens wasted per sequence) vs. lookup overhead.
-   - **Copy-on-Write (CoW)** mechanism: How shared system prompts, parallel sampling (`best_of_n`), and beam search share physical blocks with reference counting (`ref_count > 1`) until a sequence diverges.
-   - **Automatic Prefix Caching (APC)**: Hash-based identification and retention of reusable prefix blocks across independent API requests.
+    - Block Size selection (e.g., 16 tokens): balancing internal fragmentation (at most `block_size - 1` tokens wasted per sequence) vs. lookup overhead.
+    - **Copy-on-Write (CoW)** mechanism: How shared system prompts, parallel sampling (`best_of_n`), and beam search share physical blocks with reference counting (`ref_count > 1`) until a sequence diverges.
+    - **Automatic Prefix Caching (APC)**: Hash-based identification and retention of reusable prefix blocks across independent API requests.
 4. **Continuous Batching and The Iteration Scheduler**
-   - The step-by-step lifecycle of a request in vLLM: `Waiting` -> `Running` -> `Swapped` / `Finished`.
-   - Preemption mechanics: When HBM KV space runs out, how vLLM chooses whether to **Swap** blocks to CPU host RAM over PCIe or **Recompute** them later.
+    - The step-by-step lifecycle of a request in vLLM: `Waiting` -> `Running` -> `Swapped` / `Finished`.
+    - Preemption mechanics: When HBM KV space runs out, how vLLM chooses whether to **Swap** blocks to CPU host RAM over PCIe or **Recompute** them later.
 
 ---
 
 ### [Module 3] Performance, Quality and Engine Enhancements (`03_performance_and_quality.md`)
 1. **Inference Metrics and Trade-Offs**
-   - **Time To First Token (TTFT)**: The responsiveness metric (governed by prefill speed and queue wait time).
-   - **Inter-Token Latency (ITL / TBT)**: The smoothness metric (governed by decode step duration).
-   - **Throughput vs. Latency Trade-off**: How larger batch sizes increase total tokens/second while modestly increasing single-request ITL.
+    - **Time To First Token (TTFT)**: The responsiveness metric (governed by prefill speed and queue wait time).
+    - **Inter-Token Latency (ITL / TBT)**: The smoothness metric (governed by decode step duration).
+    - **Throughput vs. Latency Trade-off**: How larger batch sizes increase total tokens/second while modestly increasing single-request ITL.
 2. **Advanced Scheduling: Chunked Prefill**
-   - The Head-of-Line (HoL) blocking problem when a massive 32K prompt arrives while 50 users are actively generating tokens.
-   - How Chunked Prefill divides the prompt into budget-bounded segments (`max_num_batched_tokens`) and co-schedules them with decode steps to maintain strict ITL SLAs.
+    - The Head-of-Line (HoL) blocking problem when a massive 32K prompt arrives while 50 users are actively generating tokens.
+    - How Chunked Prefill divides the prompt into budget-bounded segments (`max_num_batched_tokens`) and co-schedules them with decode steps to maintain strict ITL SLAs.
 3. **Execution Overhead Minimization: CUDA Graphs and `torch.compile`**
-   - Why Python interpreter and CUDA kernel launch overhead dominate latency at small batch sizes.
-   - How vLLM captures static computation graphs for fixed batch sizes and replays them with microsecond-level CPU overhead.
+    - Why Python interpreter and CUDA kernel launch overhead dominate latency at small batch sizes.
+    - How vLLM captures static computation graphs for fixed batch sizes and replays them with microsecond-level CPU overhead.
 4. **Speculative Decoding inside vLLM**
-   - Draft model + Target verification pipeline.
-   - Multi-token prediction architectures: Medusa, EAGLE, and n-gram speculative lookup.
-   - Tree-based attention verification kernels: Verifying `K` candidate tokens across multiple branches in a single target model pass.
+    - Draft model + Target verification pipeline.
+    - Multi-token prediction architectures: Medusa, EAGLE, and n-gram speculative lookup.
+    - Tree-based attention verification kernels: Verifying `K` candidate tokens across multiple branches in a single target model pass.
 5. **Quantization and Precision Impact**
-   - Weight-Only Quantization (AWQ, GPTQ, Marlin kernels) vs. Weight-and-Activation Quantization (FP8 `e4m3fn`, W8A8 INT8 smoothquant).
-   - Impact on quality (Perplexity / downstream accuracy) and performance (memory bandwidth reduction vs. dequantization compute overhead). KV Cache quantization (FP8/INT8 KV blocks).
+    - Weight-Only Quantization (AWQ, GPTQ, Marlin kernels) vs. Weight-and-Activation Quantization (FP8 `e4m3fn`, W8A8 INT8 smoothquant).
+    - Impact on quality (Perplexity / downstream accuracy) and performance (memory bandwidth reduction vs. dequantization compute overhead). KV Cache quantization (FP8/INT8 KV blocks).
 
 ---
 
 ### [Module 4] Hardware Interaction and Kernel Co-Design (`04_hardware_and_kernel_optimization.md`)
 1. **GPU Memory Hierarchy and Bandwidth Realities**
-   - Anatomy of modern AI hardware: HBM3/HBM3e (up to 3-8 TB/s), L2 Cache (50-100 MB), and SRAM / Shared Memory per SM (192-256 KB).
-   - Inter-GPU interconnects: NVLink 4/5 (900-1800 GB/s bidirectional) vs. PCIe Gen5 (64 GB/s).
+    - Anatomy of modern AI hardware: HBM3/HBM3e (up to 3-8 TB/s), L2 Cache (50-100 MB), and SRAM / Shared Memory per SM (192-256 KB).
+    - Inter-GPU interconnects: NVLink 4/5 (900-1800 GB/s bidirectional) vs. PCIe Gen5 (64 GB/s).
 2. **Inside the PagedAttention Kernel**
-   - Tiling strategy: Loading `Q`, `K`, and `V` block tiles from HBM into SRAM (`__shared__` memory).
-   - Software pipelining (`cp.async` on Ampere/Hopper and Tensor Memory Accelerator - TMA on Hopper/Blackwell) to overlap HBM memory loads with Tensor Core math.
+    - Tiling strategy: Loading `Q`, `K`, and `V` block tiles from HBM into SRAM (`__shared__` memory).
+    - Software pipelining (`cp.async` on Ampere/Hopper and Tensor Memory Accelerator - TMA on Hopper/Blackwell) to overlap HBM memory loads with Tensor Core math.
 3. **The Async Engine Architecture (V1 vs. V2 Engine)**
-   - Asynchronous background loops, multi-stream execution, and zero-copy IPC tensors.
-   - Overlapped CPU scheduling while the GPU is executing the previous CUDA Graph iteration.
+    - Asynchronous background loops, multi-stream execution, and zero-copy IPC tensors.
+    - Overlapped CPU scheduling while the GPU is executing the previous CUDA Graph iteration.
 4. **Cross-Hardware Ecosystem Abstraction**
-   - **AMD ROCm**: Tuning custom kernels (`vllm._C` / HIP) for CDNA wavefront sizes (64 vs 32) and Matrix Core engines.
-   - **Google TPUs**: Integrating PagedAttention into XLA compiler graphs via `torch-xla` and `vllm-tpu` backends.
-   - **AWS Neuron**: Adaptations for Inferentia2 and Trainium architectures.
+    - **AMD ROCm**: Tuning custom kernels (`vllm._C` / HIP) for CDNA wavefront sizes (64 vs 32) and Matrix Core engines.
+    - **Google TPUs**: Integrating PagedAttention into XLA compiler graphs via `torch-xla` and `vllm-tpu` backends.
+    - **AWS Neuron**: Adaptations for Inferentia2 and Trainium architectures.
 
 ---
 
 ### [Module 5] Distributed Inference and Parallelism Strategies (`05_distributed_parallelism.md`)
 1. **Tensor Parallelism (TP)**
-   - Column-Parallel and Row-Parallel Linear layer splitting (Megatron-LM pattern).
-   - All-Reduce collective communication over NVLink after every transformer MLP and Attention block.
-   - Overlapping communication with computation using custom fused kernels.
+    - Column-Parallel and Row-Parallel Linear layer splitting (Megatron-LM pattern).
+    - All-Reduce collective communication over NVLink after every transformer MLP and Attention block.
+    - Overlapping communication with computation using custom fused kernels.
 2. **Pipeline Parallelism (PP)**
-   - Partitioning transformer layers sequentially across multiple GPUs or physical nodes.
-   - Micro-batching strategies and minimizing the "Pipeline Bubble" during long generation sessions.
+    - Partitioning transformer layers sequentially across multiple GPUs or physical nodes.
+    - Micro-batching strategies and minimizing the "Pipeline Bubble" during long generation sessions.
 3. **Context / Sequence Parallelism (CP / SP)**
-   - Scaling single sequences beyond the memory of a single GPU (e.g., 1M+ token contexts).
-   - **Ring-Attention** and FlashAttention-based sequence partitioning across NVLink rings without quadratic communication overhead.
+    - Scaling single sequences beyond the memory of a single GPU (e.g., 1M+ token contexts).
+    - **Ring-Attention** and FlashAttention-based sequence partitioning across NVLink rings without quadratic communication overhead.
 4. **Expert Parallelism (EP) for Mixture-of-Experts (MoE)**
-   - The MoE routing challenge: Why models like Mixtral 8x22B or DeepSeek-V3/R1 require specialized token distribution.
-   - All-To-All communication patterns, expert load balancing, and hybrid TP + EP + DP topologies.
+    - The MoE routing challenge: Why models like Mixtral 8x22B or DeepSeek-V3/R1 require specialized token distribution.
+    - All-To-All communication patterns, expert load balancing, and hybrid TP + EP + DP topologies.
 5. **Data Parallelism (DP) and Multi-Replica Scaling**
-   - When to use TP within a node vs. DP across nodes.
-   - Prefix-aware request routing across DP replicas to maximize automatic prefix cache hit rates.
+    - When to use TP within a node vs. DP across nodes.
+    - Prefix-aware request routing across DP replicas to maximize automatic prefix cache hit rates.
 
 ---
 
 ### [Module 6] Production Deployment and Cloud Orchestration (`06_deployment_and_orchestration.md`)
 1. **vLLM Engine and API Gateway Architecture**
-   - `AsyncLLMEngine` vs `LLMEngine`: Event loop architecture, FastAPI integration, and OpenAI-compatible endpoint compatibility (`/v1/completions`, `/v1/chat/completions`).
-   - Token streaming mechanisms via Server-Sent Events (SSE) and gRPC for inter-service communication.
+    - `AsyncLLMEngine` vs `LLMEngine`: Event loop architecture, FastAPI integration, and OpenAI-compatible endpoint compatibility (`/v1/completions`, `/v1/chat/completions`).
+    - Token streaming mechanisms via Server-Sent Events (SSE) and gRPC for inter-service communication.
 2. **Multi-Host Distributed Orchestration with Ray**
-   - How `vllm` uses **Ray Core** (`ray.remote`, Ray Actor handles, and Placement Groups) to spin up worker processes across multiple physical bare-metal servers or cloud instances.
-   - IPC and NCCL initialization lifecycle within Ray clusters.
+    - How `vllm` uses **Ray Core** (`ray.remote`, Ray Actor handles, and Placement Groups) to spin up worker processes across multiple physical bare-metal servers or cloud instances.
+    - IPC and NCCL initialization lifecycle within Ray clusters.
 3. **Kubernetes (K8s) Production Deployment Patterns**
-   - **Containerization Requirements**: NVIDIA GPU Operator, CUDA compatibility matrices, and crucial shared memory configuration (`--shm-size=10g` or `/dev/shm` volume mounts to prevent NCCL IPC crashes).
-   - **Resource Allocation and Topology**: Setting `resources.limits.nvidia.com/gpu`, NUMA node pinning, and Topology Manager policies (`single-numa-node`) for maximum NVLink/PCIe throughput.
-   - **Autoscaling with KEDA**: Why CPU/Memory utilization are terrible metrics for LLM autoscaling. Configuring custom Prometheus metrics (`vllm:num_requests_waiting`, `vllm:gpu_cache_usage_perc`) to trigger **KEDA (Kubernetes Event-driven Autoscaling)** horizontal pod scaling.
+    - **Containerization Requirements**: NVIDIA GPU Operator, CUDA compatibility matrices, and crucial shared memory configuration (`--shm-size=10g` or `/dev/shm` volume mounts to prevent NCCL IPC crashes).
+    - **Resource Allocation and Topology**: Setting `resources.limits.nvidia.com/gpu`, NUMA node pinning, and Topology Manager policies (`single-numa-node`) for maximum NVLink/PCIe throughput.
+    - **Autoscaling with KEDA**: Why CPU/Memory utilization are terrible metrics for LLM autoscaling. Configuring custom Prometheus metrics (`vllm:num_requests_waiting`, `vllm:gpu_cache_usage_perc`) to trigger **KEDA (Kubernetes Event-driven Autoscaling)** horizontal pod scaling.
 4. **Serving Framework and Gateway Integrations**
-   - **Triton Inference Server**: Using the `vllm_backend` for multi-model serving, dynamic model loading/unloading, and unified enterprise monitoring.
-   - **KServe / Knative**: Serverless inference patterns and scale-to-zero configurations for bursty workloads.
-   - **Intelligent LLM Gateways/Routers**: Implementing semantic routing, prompt caching layer gateways, and fallback policies in front of vLLM replica pools.
+    - **Triton Inference Server**: Using the `vllm_backend` for multi-model serving, dynamic model loading/unloading, and unified enterprise monitoring.
+    - **KServe / Knative**: Serverless inference patterns and scale-to-zero configurations for bursty workloads.
+    - **Intelligent LLM Gateways/Routers**: Implementing semantic routing, prompt caching layer gateways, and fallback policies in front of vLLM replica pools.
 
 ---
 

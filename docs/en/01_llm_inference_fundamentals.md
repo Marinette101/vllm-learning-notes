@@ -30,12 +30,12 @@ flowchart TD
 We can compare this dual-tower design to **simultaneous interpretation**:
 
 1. **Left Tower: The Encoder ("Listening and Comprehending")**
-   - **Input**: The complete source text (`e.g., "The cat is black"`).
-   - **Core Mechanism**: **Bidirectional Unmasked Self-Attention**. Every word can attend to every other word simultaneously (`past and future`). This bidirectional view extracts holistic context and semantic relationships.
-   - **Output**: High-dimensional hidden state vectors rich in deep contextual understanding.
+    - **Input**: The complete source text (`e.g., "The cat is black"`).
+    - **Core Mechanism**: **Bidirectional Unmasked Self-Attention**. Every word can attend to every other word simultaneously (`past and future`). This bidirectional view extracts holistic context and semantic relationships.
+    - **Output**: High-dimensional hidden state vectors rich in deep contextual understanding.
 2. **Right Tower: The Decoder ("Translating and Expressing")**
-   - **Input**: The previously generated words (`"<bos> Le chat est"`) combined with the Encoder's context.
-   - **Core Mechanism**: 
+    - **Input**: The previously generated words (`"<bos> Le chat est"`) combined with the Encoder's context.
+    - **Core Mechanism**: 
      - **Masked Self-Attention**: Restricts the model to attend *only to preceding tokens*, preventing it from "peeking at the future." This maintains causality: during inference, future tokens do not exist yet.
      - **Cross-Attention**: Uses the Decoder's current query to search and extract matching facts from the Encoder's bidirectional hidden states.
 
@@ -66,8 +66,8 @@ This reflects a fundamental paradigm shift:
 1. **Translation vs. Continuation**: Transformers originally served translation (`distinct source vs. target sequences`). Modern AI unified all natural language tasks (`reasoning, coding, QA, chat`) into a single "next-token completion" game.
 2. **Structural Simplicity**: By concatenating the user Prompt and model Response into a single unified sequence, the separate Encoder and Cross-Attention modules are eliminated.
 3. **Prefill vs. Decode Synergy in Decoder-Only Blocks**:
-   - During the **Prefill Phase** (`when processing the user prompt`), all prompt tokens are available at once. Even though the attention mask is strictly causal (`lower-triangular`), processing all tokens in parallel allows every prompt token to attend across all its historical context—achieving the comprehensive understanding of an Encoder.
-   - During the **Decode Phase** (`when emitting new tokens step-by-step`), the causal mask guarantees that new tokens seamlessly attend to the cached prompt history without structural discontinuity.
+    - During the **Prefill Phase** (`when processing the user prompt`), all prompt tokens are available at once. Even though the attention mask is strictly causal (`lower-triangular`), processing all tokens in parallel allows every prompt token to attend across all its historical context—achieving the comprehensive understanding of an Encoder.
+    - During the **Decode Phase** (`when emitting new tokens step-by-step`), the causal mask guarantees that new tokens seamlessly attend to the cached prompt history without structural discontinuity.
 
 ---
 
@@ -94,11 +94,11 @@ When the model processes the token `"Apple"`:
 
 1. **Dynamic Query Generation (`Q`)**: `"Apple"` generates its query vector, effectively querying surrounding tokens to determine whether its semantic context relates to technology or agriculture.
 2. **Dot-Product Matching (`Q @ K^T`)**:
-   - In **Sentence A**, the query (`Q`) for `"Apple"` yields high similarity against the keys (`K`) of `"product launch"` and `"introduced"`.
-   - In **Sentence B**, the query yields high similarity against `"supermarket"` and `"box"`.
+    - In **Sentence A**, the query (`Q`) for `"Apple"` yields high similarity against the keys (`K`) of `"product launch"` and `"introduced"`.
+    - In **Sentence B**, the query yields high similarity against `"supermarket"` and `"box"`.
 3. **Value Extraction (`Weights @ V`)**:
-   - In **Sentence A**, the high attention weights on `"product launch"` pull the resulting representation of `"Apple"` toward a technology corporation.
-   - In **Sentence B**, the high attention weights on `"supermarket"` orient the representation toward fruit.
+    - In **Sentence A**, the high attention weights on `"product launch"` pull the resulting representation of `"Apple"` toward a technology corporation.
+    - In **Sentence B**, the high attention weights on `"supermarket"` orient the representation toward fruit.
 
 ---
 
@@ -214,7 +214,7 @@ This transposition stems from the execution mechanics of GPU **Batched Matrix Mu
 1. **The `BMM` Rule**: In high-performance linear algebra libraries (`cuBLAS, PyTorch`), a matrix multiplication `A @ B` across multi-dimensional tensors **only operates on the last two dimensions (`[-2, -1]`)**. All preceding leading dimensions (`[:-2]`) are treated as independent parallel batch indices.
 2. **Required Dot-Product Pairing**: For every individual attention head `h`, Head `h`'s Query matrix (`[seq_len, head_dim]`) must multiply against Head `h`'s transposed Key matrix (`[head_dim, seq_len]`).
 3. **Why Transposition is Mandatory**:
-   - By transposing `seq_len` and `num_heads` to yield `[batch_size, num_heads, seq_len, head_dim]`, the last two dimensions become `[seq_len, head_dim]`. Consequently, `torch.matmul(Q, K^T)` treats `[batch_size, num_heads]` (`[64, 64]`) as independent parallel batch indices, enabling the GPU to execute `64 * 64 = 4,096` independent `[1000, 128] @ [128, 1000]` matrix multiplications concurrently across the Tensor Cores.
+    - By transposing `seq_len` and `num_heads` to yield `[batch_size, num_heads, seq_len, head_dim]`, the last two dimensions become `[seq_len, head_dim]`. Consequently, `torch.matmul(Q, K^T)` treats `[batch_size, num_heads]` (`[64, 64]`) as independent parallel batch indices, enabling the GPU to execute `64 * 64 = 4,096` independent `[1000, 128] @ [128, 1000]` matrix multiplications concurrently across the Tensor Cores.
 
 #### 3. Physical and Semantic Interpretation of Individual Cell Values Across `Q`, `K`, and `V`
 To master the inner mechanics of attention, we must examine the exact mathematical meaning of **individual cell values (`floating-point numbers`)** across these tensors (omitting `axis = 0`, the independent `batch_size` index `b`):
@@ -223,22 +223,22 @@ To master the inner mechanics of attention, we must examine the exact mathematic
 Consider a single cell `Q[s, d]`, `K[s, d]`, or `V[s, d]`, where `s` (`seq_len`) denotes the token position (`e.g., Token 5 = "Apple"`) and `d` denotes the hidden dimension coordinate (`from 0 to 8,191`):
 
 - **`Q[s, d]` (`e.g., Q[5, 120] = 0.42`)**:
-  - **Physical Meaning**: The floating-point activation intensity of the 120th coordinate of Token 5's **Query vector**.
-  - **Semantic Meaning**: Quantifies **how strongly Token 5 (`"Apple"`) queries about feature concept #120 across the entire 8,192-dimensional space** (`e.g., if dimension #120 encodes "technological corporate context", a positive value 0.42 indicates active seeking of adjacent tokens discussing technology or corporations`).
+    - **Physical Meaning**: The floating-point activation intensity of the 120th coordinate of Token 5's **Query vector**.
+    - **Semantic Meaning**: Quantifies **how strongly Token 5 (`"Apple"`) queries about feature concept #120 across the entire 8,192-dimensional space** (`e.g., if dimension #120 encodes "technological corporate context", a positive value 0.42 indicates active seeking of adjacent tokens discussing technology or corporations`).
 - **`K[s, d]` (`e.g., K[2, 120] = 1.15`)**:
-  - **Physical Meaning**: The floating-point activation intensity of the 120th coordinate of Token 2's **Key vector**.
-  - **Semantic Meaning**: Quantifies **how strongly Token 2 (`e.g., "introduced"`) advertises itself as possessing feature concept #120** (`e.g., "I am a verb denoting a corporate product launch"`).
+    - **Physical Meaning**: The floating-point activation intensity of the 120th coordinate of Token 2's **Key vector**.
+    - **Semantic Meaning**: Quantifies **how strongly Token 2 (`e.g., "introduced"`) advertises itself as possessing feature concept #120** (`e.g., "I am a verb denoting a corporate product launch"`).
 - **`V[s, d]` (`e.g., V[2, 120] = -0.31`)**:
-  - **Physical Meaning**: The floating-point payload intensity of the 120th coordinate of Token 2's **Value vector**.
-  - **Semantic Meaning**: Represents **the exact semantic delta that will be extracted and injected into Token 5's representation if Token 5 attends to Token 2** (`e.g., "if attended to, adjust coordinate #120 by -0.31 to orient toward a hardware technology entity"`).
+    - **Physical Meaning**: The floating-point payload intensity of the 120th coordinate of Token 2's **Value vector**.
+    - **Semantic Meaning**: Represents **the exact semantic delta that will be extracted and injected into Token 5's representation if Token 5 attends to Token 2** (`e.g., "if attended to, adjust coordinate #120 by -0.31 to orient toward a hardware technology entity"`).
 
 ##### B. After Head Reshaping (`[num_q_heads, seq_len, head_dim]` -> `[64, 1000, 128]`)
 When transposing from `[1000, 8192]` into `[64, 1000, 128]`, rather than maintaining a single monolithic 8,192-dimensional vector attempting to track syntax, grammar, logic, and factual context simultaneously, the architecture decomposes the `8,192` features into **`64` orthogonal, specialized semantic subspaces of `128` dimensions each (`head_dim = 128`)**.
 
 - **What Each Axis Represents**:
-  - **Axis 1 (`h = 0..63`)**: The **Specialized Attention Head / Subspace Index**. Each head specializes in tracking a distinct linguistic or logical relationship (`e.g., Head 0 tracks subject-verb agreement, Head 1 tracks pronoun resolution, Head 12 tracks corporate entity relations`).
-  - **Axis 2 (`s = 0..999`)**: The **Token Position (`seq_len`)**.
-  - **Axis 3 (`m = 0..127`)**: The **Local Feature Coordinate inside Head `h`'s 128-dimensional subspace (`head_dim`)**.
+    - **Axis 1 (`h = 0..63`)**: The **Specialized Attention Head / Subspace Index**. Each head specializes in tracking a distinct linguistic or logical relationship (`e.g., Head 0 tracks subject-verb agreement, Head 1 tracks pronoun resolution, Head 12 tracks corporate entity relations`).
+    - **Axis 2 (`s = 0..999`)**: The **Token Position (`seq_len`)**.
+    - **Axis 3 (`m = 0..127`)**: The **Local Feature Coordinate inside Head `h`'s 128-dimensional subspace (`head_dim`)**.
 - **Interpretation of `Q[h, s, m]` (`e.g., Q[12, 5, 14] = -0.88`)**: Represents the magnitude of the 14th coordinate of Token 5 (`"Apple"`) **strictly within Head 12's specialized subspace** (`e.g., within the "corporate entity relations" head #12, how strongly Token 5 queries coordinate #14`). Correspondingly, `K[12, 2, 14]` represents Token 2's key advertisement across that exact same 14th coordinate of Head 12's subspace.
 
 ---
@@ -266,21 +266,21 @@ $$
 When evaluating $\text{Score} = \frac{Q K^T}{\sqrt{d_{\text{head}}}}$, what does each cell `Score[h, i, j]` (`where h is head index, i is query token position, and j is key token position`) denote before and after normalization?
 
 - **Before `Softmax` (`Raw Logit Score[h, i, j]`, e.g., `Score[12, 5, 2] = 14.2`)**:
-  - **Physical Math**: The direct 128-element inner product between Query Token $i$ ($s_Q = 5$) and Key Token $j$ ($s_K = 2$) within Head $h$ ($12$), scaled by $\sqrt{128} \approx 11.31$:
+    - **Physical Math**: The direct 128-element inner product between Query Token $i$ ($s_Q = 5$) and Key Token $j$ ($s_K = 2$) within Head $h$ ($12$), scaled by $\sqrt{128} \approx 11.31$:
 
 $$
 \text{Raw_Score}_{h, i, j} = \frac{\sum_{m=0}^{127} Q_{h, i, m} \cdot K_{h, j, m}}{\sqrt{128}}
 $$
 
-  - **Semantic Meaning**: Measures the **unbounded geometric alignment (cosine similarity magnitude)** between Token `i` (`"Apple"`)'s query and Token `j` (`"introduced"`)'s key inside Head `h`'s subspace. A high positive value (`14.2`) indicates strong semantic resonance; a negative value (`-3.1`) indicates semantic divergence or irrelevance.
+    - **Semantic Meaning**: Measures the **unbounded geometric alignment (cosine similarity magnitude)** between Token `i` (`"Apple"`)'s query and Token `j` (`"introduced"`)'s key inside Head `h`'s subspace. A high positive value (`14.2`) indicates strong semantic resonance; a negative value (`-3.1`) indicates semantic divergence or irrelevance.
 - **After `Softmax` (`Attention Probability Weight[h, i, j]`, e.g., `Attention_Weight[12, 5, 2] = 0.65`)**:
-  - **Physical Math**: The normalized probability after evaluating `Softmax` across the `seq_len_Key` axis (`axis = -1`):
+    - **Physical Math**: The normalized probability after evaluating `Softmax` across the `seq_len_Key` axis (`axis = -1`):
 
 $$
 \text{Attention_Weight}_{h, i, j} = \text{Softmax}\left(\text{Raw_Score}_{h, i, :}\right)_j
 $$
 
-  - **Semantic Meaning**: Quantifies **the exact probability share (`65%`) of Token `i` (`Token 5 = "Apple"`)'s attention budget allocated to extracting information from Token `j` (`Token 2 = "introduced"`) within Head `12`'s subspace**. During the final weighted summation `Attention_Weight @ V`, Token 5 extracts precisely `65%` (`0.65`) of Token 2's Value vector (`V[12, 2, :]`) into its own representation across Head 12.
+    - **Semantic Meaning**: Quantifies **the exact probability share (`65%`) of Token `i` (`Token 5 = "Apple"`)'s attention budget allocated to extracting information from Token `j` (`Token 2 = "introduced"`) within Head `12`'s subspace**. During the final weighted summation `Attention_Weight @ V`, Token 5 extracts precisely `65%` (`0.65`) of Token 2's Value vector (`V[12, 2, :]`) into its own representation across Head 12.
 
 #### Step 2: Scale and Probability Normalization (`Softmax`)
 Because raw inner products can assume arbitrary unbounded magnitudes (`e.g., -15.2, 0.4, 8.9, 24.1`), they do not sum to `1.0` (`100%`), and negative or extreme magnitudes distort weighted summation.
@@ -394,8 +394,8 @@ with the decoupled three-matrix `SwiGLU` architecture ($W_{\text{Gate}}, W_{\tex
 2. **Decoupling Gating from Content Generation**:
    `SwiGLU` resolves this bottleneck by decoupling these operations across two independent projection matrices:
 
-   - $W_{\text{Gate}}$ functions as a feature-selective gating mechanism that regulates activation thresholds.
-   - $W_{\text{Up}}$ functions as the primary feature generator that produces candidate content payloads.
+    - $W_{\text{Gate}}$ functions as a feature-selective gating mechanism that regulates activation thresholds.
+    - $W_{\text{Up}}$ functions as the primary feature generator that produces candidate content payloads.
 
 3. **Precise Multiplicative Modulation ($\odot$)**:
    The activation expression $\text{SiLU}(\text{Gate_Tensor})$ acts as a continuous 28,672-channel gating modulation curve, ranging from `0.0` for suppressed features up to `> 1.0` for actively amplified features.
@@ -497,11 +497,11 @@ While `MoE` delivers 70B-level intelligence at 13B-level compute latency (`FLOPs
 - **The Memory Footprint Paradox**: Even though each token only executes compute across `12.9B active weights`, **ALL 46.7 Billion parameters across all 8 experts MUST reside permanently inside GPU `HBM` memory!** Allocating the VRAM capacity of a ~50B dense model is required solely to run a 13B active compute load, exacerbating the memory-bandwidth wall during batch-1 decoding.
 - **Expert Hotspotting and Load Imbalance (`Multi-GPU vs. Single-GPU Hardware Dynamics`)**:
 
-  1. **Multi-GPU Regime (`Expert Parallelism - EP`) – Physical GPUs Get Fixed Experts Assigned**:
+    1. **Multi-GPU Regime (`Expert Parallelism - EP`) – Physical GPUs Get Fixed Experts Assigned**:
      When serving massive `MoE` models (`e.g., DeepSeek-V3 or Mixtral 8x22B`) across multi-GPU clusters, experts are partitioned across distinct physical GPUs (`e.g., GPU 0 stores Expert 0, GPU 7 stores Expert 7 in their respective HBM pools`).
      If 50 sequence tokens in a batch (`b = 64`) route to `Expert 0` ("Python/Code") while only 2 tokens route to `Expert 7` ("Poetry"), **`GPU 0` becomes a severe compute bottleneck (`Hotspotting`)**, executing 50 heavy `SwiGLU` operations while `GPU 7` sits completely idle waiting at the `All-to-All` network synchronization barrier.
 
-  2. **Single-GPU Regime (`SM Execution and Batch Shattering`) – No Fixed SM Assignment, but Severe Cache Thrashing**:
+    2. **Single-GPU Regime (`SM Execution and Batch Shattering`) – No Fixed SM Assignment, but Severe Cache Thrashing**:
      If an `MoE` model fits inside a single GPU (`e.g., Mixtral 8x7B on an H100 80GB`), SMs (`Streaming Multiprocessors`) do **not** have fixed experts permanently assigned; all 8 expert tables reside inside the same global `HBM` pool, and CUDA thread blocks dynamically schedule across all available SMs.
      However, dynamic expert routing shatters the batched matrix multiplication (`[64, 4096] @ [4096, 14336]`) into tiny, fragmented sub-batches (`e.g., 30 tokens for Expert 0, 1 token for Expert 2, 0 tokens for Expert 3`). Launching small matrix multiplication kernels degrades Tensor Core utilization, plunging execution deep into the memory-bandwidth-bound regime and causing severe **`L2` cache thrashing** as unpredictable expert tables are repeatedly fetched from `HBM` on the fly.
 
@@ -620,9 +620,9 @@ By caching all historical $k_i$ and $v_i$ vectors in `HBM`, step $t$ requires **
 Let $s$ (`seq_len`) be the sequence length, $d$ (`hidden_dim`) be the hidden dimension, $L$ (`num_layers`) be the number of layers, and $T$ be the total generated output length.
 
 1. **Computational Complexity per Single Generation Step**:
-   - **Linear Layer Projections (`QKV`, `FFN`)**: Requires $\mathcal{O}(s \cdot d^2)$ floating-point operations across $L$ layers ($\mathcal{O}(L \cdot s \cdot d^2)$ total).
-   - **Self-Attention Dot Products**: Every token compares against all $s$ tokens ($s \times s$ interactions), demanding $\mathcal{O}(s^2 \cdot d)$ operations across $L$ layers ($\mathcal{O}(L \cdot s^2 \cdot d)$ total).
-   - **Total Step Time**: $\mathcal{O}(L \cdot s \cdot d^2 + L \cdot s^2 \cdot d)$.
+    - **Linear Layer Projections (`QKV`, `FFN`)**: Requires $\mathcal{O}(s \cdot d^2)$ floating-point operations across $L$ layers ($\mathcal{O}(L \cdot s \cdot d^2)$ total).
+    - **Self-Attention Dot Products**: Every token compares against all $s$ tokens ($s \times s$ interactions), demanding $\mathcal{O}(s^2 \cdot d)$ operations across $L$ layers ($\mathcal{O}(L \cdot s^2 \cdot d)$ total).
+    - **Total Step Time**: $\mathcal{O}(L \cdot s \cdot d^2 + L \cdot s^2 \cdot d)$.
 2. **Total End-to-End Generation Complexity ($T$ steps)**:
    Because step $i$ must re-compute from length $1$ up to $P+i$, generating $T$ tokens requires summing over each step:
 
@@ -690,9 +690,9 @@ $$
 $$
 
 - **Total Footprint at Scale**:
-  - **Single sequence at 4,096 tokens**: $320 \text{ KB} \times 4,096 \approx \mathbf{1.31 \text{ GB}}$.
-  - **Single sequence at 128,000 tokens (max context)**: $320 \text{ KB} \times 128,000 \approx \mathbf{40.96 \text{ GB}}$.
-  - **Batch of 64 sequences at 4,096 tokens each**: $64 \times 1.31 \text{ GB} \approx \mathbf{83.88 \text{ GB}}$.
+    - **Single sequence at 4,096 tokens**: $320 \text{ KB} \times 4,096 \approx \mathbf{1.31 \text{ GB}}$.
+    - **Single sequence at 128,000 tokens (max context)**: $320 \text{ KB} \times 128,000 \approx \mathbf{40.96 \text{ GB}}$.
+    - **Batch of 64 sequences at 4,096 tokens each**: $64 \times 1.31 \text{ GB} \approx \mathbf{83.88 \text{ GB}}$.
 
 > [!CRITICAL]
 > For a batch of 64 requests at 4K context, **the KV cache alone requires ~84 GB of HBM**, completely exhausting an NVIDIA H100 80GB GPU before loading the 140 GB of model weights (`FP16`) or activation buffers!
@@ -784,18 +784,18 @@ flowchart LR
 To master the physical laws governing GPU execution, we must examine what happens when an operation sits on the slanted left slope (`///`, Memory-Bound regime) versus the flat horizontal ceiling (`===`, Compute-Bound regime):
 
 1. **The Left Slanted Slope (`Memory-Bound Regime, I < I_ridge`)**:
-   - On the left slope (e.g., Single-Token Decode at Point `[D]`, $I_{\text{decode}} = 1.0 \text{ FLOPs/Byte}$), physical execution throughput (`Y-axis TFLOPs/sec`) is **strictly decided by the off-chip memory bus bandwidth ($\beta_{\text{peak}}$)**:
+    - On the left slope (e.g., Single-Token Decode at Point `[D]`, $I_{\text{decode}} = 1.0 \text{ FLOPs/Byte}$), physical execution throughput (`Y-axis TFLOPs/sec`) is **strictly decided by the off-chip memory bus bandwidth ($\beta_{\text{peak}}$)**:
 
 $$
 \text{Achieved_Performance } (\text{TFLOPs/sec}) = \beta_{\text{peak}} \cdot I
 $$
 
-   - On an NVIDIA H100 ($\beta_{\text{peak}} = 3.35 \text{ TB/sec}$), an operation at $I = 1.0 \text{ FLOPs/Byte}$ hits an absolute physical ceiling of $3.35 \text{ TFLOPs/sec}$.
-   - **Where are the SM Tensor Cores while this happens (`Idle Compute Capacity`)?** The H100's physical compute units (`SMs`) possess a maximum capacity ($\pi_{\text{peak}}$) of **`989 TFLOPs/sec`** ($295\times$ higher than $3.35 \text{ TFLOPs/sec}$). However, because the memory bus can only deliver data at $3.35 \text{ TB/sec}$, the silicon Tensor Cores sit completely starved and idle for $> 99.6\%$ of the execution time waiting for operands to arrive from `HBM`. The memory bus acts as a hard throttle, rendering the GPU's massive $989 \text{ TFLOPs}$ math capacity irrelevant.
+    - On an NVIDIA H100 ($\beta_{\text{peak}} = 3.35 \text{ TB/sec}$), an operation at $I = 1.0 \text{ FLOPs/Byte}$ hits an absolute physical ceiling of $3.35 \text{ TFLOPs/sec}$.
+    - **Where are the SM Tensor Cores while this happens (`Idle Compute Capacity`)?** The H100's physical compute units (`SMs`) possess a maximum capacity ($\pi_{\text{peak}}$) of **`989 TFLOPs/sec`** ($295\times$ higher than $3.35 \text{ TFLOPs/sec}$). However, because the memory bus can only deliver data at $3.35 \text{ TB/sec}$, the silicon Tensor Cores sit completely starved and idle for $> 99.6\%$ of the execution time waiting for operands to arrive from `HBM`. The memory bus acts as a hard throttle, rendering the GPU's massive $989 \text{ TFLOPs}$ math capacity irrelevant.
 
 2. **The Right Flat Ceiling (`Compute-Bound Regime, I >= I_ridge`)**:
-   - Once Arithmetic Intensity crosses the Ridge Point ($I \ge 295 \text{ FLOPs/Byte on H100}$, such as Batched Prefill at Point `[P]`, $I > 300$), each byte fetched from `HBM` is reused for $> 295$ mathematical operations inside on-chip registers and `SRAM`.
-   - At this threshold, the `HBM` bus easily keeps up with the data demand. The bottleneck shifts entirely to the physical clock frequency and thermal limits of the **SM Tensor Cores ($\pi_{\text{peak}}$)**, capping performance on the horizontal flat ceiling (`===` at $989 \text{ TFLOPs/sec}$).
+    - Once Arithmetic Intensity crosses the Ridge Point ($I \ge 295 \text{ FLOPs/Byte on H100}$, such as Batched Prefill at Point `[P]`, $I > 300$), each byte fetched from `HBM` is reused for $> 295$ mathematical operations inside on-chip registers and `SRAM`.
+    - At this threshold, the `HBM` bus easily keeps up with the data demand. The bottleneck shifts entirely to the physical clock frequency and thermal limits of the **SM Tensor Cores ($\pi_{\text{peak}}$)**, capping performance on the horizontal flat ceiling (`===` at $989 \text{ TFLOPs/sec}$).
 
 ---
 
@@ -810,13 +810,13 @@ When evaluating hardware architecture specifications (`NVIDIA A100 vs. H100 vs. 
    Because single-token decoding ($\text{batch_size } b = 1$) operates at $I \approx 1.0 \text{ FLOPs/Byte}$, execution sits far to the left of the Ridge Point on *every* hardware platform. On the slanted left slope ($\text{Performance} = \beta_{\text{peak}} \cdot I$), throughput is decided **strictly by $\beta_{\text{peak}}$ (`Peak HBM Bandwidth`)**. Therefore, any extra compute TFLOPs ($\pi_{\text{peak}}$) on a high-ridge-point GPU remain $> 99\%$ idle and wasted during decoding.
 
 3. **Comparative Case Study: NVIDIA H100 vs. AMD MI300X**:
-   - **NVIDIA H100**: $\pi_{\text{peak}} = 989 \text{ TFLOPs/sec}$, $\beta_{\text{peak}} = 3.35 \text{ TB/sec} \implies I_{\text{ridge}} \approx 295 \text{ FLOPs/Byte}$.
-   - **AMD MI300X**: $\pi_{\text{peak}} = 1,300 \text{ TFLOPs/sec}$, $\beta_{\text{peak}} = 5.30 \text{ TB/sec} \implies I_{\text{ridge}} \approx 245 \text{ FLOPs/Byte}$.
+    - **NVIDIA H100**: $\pi_{\text{peak}} = 989 \text{ TFLOPs/sec}$, $\beta_{\text{peak}} = 3.35 \text{ TB/sec} \implies I_{\text{ridge}} \approx 295 \text{ FLOPs/Byte}$.
+    - **AMD MI300X**: $\pi_{\text{peak}} = 1,300 \text{ TFLOPs/sec}$, $\beta_{\text{peak}} = 5.30 \text{ TB/sec} \implies I_{\text{ridge}} \approx 245 \text{ FLOPs/Byte}$.
    Notice that while AMD MI300X has massive compute ($1,300 \text{ TFLOPs}$), it achieves a **lower** Ridge Point ($245 \text{ vs. } 295$) because AMD prioritized scaling off-chip `HBM` bandwidth ($5.30 \text{ TB/sec across 192 GB HBM3 vs. } 3.35 \text{ TB/sec on H100}$). For an LLM serving engine running autoregressive decoding at $I = 2.0$, MI300X's $5.30 \text{ TB/sec}$ bandwidth delivers **$1.58\times \text{ faster}$ memory-bound throughput than H100 ($3.35 \text{ TB/sec}$)**, while its lower $245$ ridge point enables workloads to transition into compute-bound efficiency much earlier across moderate batch sizes.
 
 4. **The Golden Rule of GPU Evaluation for LLM Workloads**:
-   - For **Training and Batched Prompt Prefill** (`Compute-Bound`): Prioritize maximum **$\pi_{\text{peak}}$ (`Peak Compute Capacity`)**.
-   - For **Autoregressive Decoding and Serving** (`Memory-Bound`): Prioritize maximum **$\beta_{\text{peak}}$ (`Peak HBM Bandwidth`)** and highest `HBM` memory capacity. A lower Ridge Point ($I_{\text{ridge}}$) indicates a more balanced hardware architecture for memory-intensive decoding.
+    - For **Training and Batched Prompt Prefill** (`Compute-Bound`): Prioritize maximum **$\pi_{\text{peak}}$ (`Peak Compute Capacity`)**.
+    - For **Autoregressive Decoding and Serving** (`Memory-Bound`): Prioritize maximum **$\beta_{\text{peak}}$ (`Peak HBM Bandwidth`)** and highest `HBM` memory capacity. A lower Ridge Point ($I_{\text{ridge}}$) indicates a more balanced hardware architecture for memory-intensive decoding.
 
 ---
 

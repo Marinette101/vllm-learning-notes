@@ -26,15 +26,15 @@ $$
   `RoPE` does not rotate across different attention heads (`num_kv_heads = 8`), because each head encodes an orthogonal semantic domain. Instead, `RoPE` operates strictly inside the `128` feature coordinates of each individual head (`Axis m = 0..127`), grouping them into sixty-four 2D pairs. Written as a single operator acting on a `[128]` head vector, $R_m$ is a **`[128, 128]` block-diagonal matrix containing sixty-four `2x2` rotation blocks along its diagonal**. Consequently, all `64` Query heads and `8` Key heads undergo this `[128, 128]` rotation independently (`head count acts as a parallel batch index`). Furthermore, historical keys in the `KV` cache ($k_0, k_1, \dots, k_{n-1}$) are stored already rotated ($R_m @ k_m$) and are never re-rotated during step $n$.
 
 - **Symmetry and Determinism of $R_m$ (`Q/K Symmetry and Theta Hierarchy`)**:
-  1. **`Q/K` Symmetry**: At sequence position $m$, the exact same rotation matrix $R_m$ multiplies both Query ($Q_m$) and Key ($K_m$). This symmetry is why $\text{Score} = Q_m @ K_n^T$ simplifies via orthogonal identity ($R_m^T @ R_m = I$) directly into $Q_{\text{unrotated}} @ R_{m-n} @ K_{\text{unrotated}}^T$.
-  2. **Universal Head Application**: $R_m$ applies identically across every single one of the `64` Query heads and `8` Key heads.
-  3. **Strict Determinism**: $R_m$ is completely independent of the token's semantic text or activation value (`"Apple"` vs `"Dog"` yields the exact same $R_m$ at position $m$). It is governed strictly by two variables: the integer sequence index $m$ (`0, 1, 2, ...`) and the geometric frequency hierarchy $\theta_i = 10000^{-2i / d_{\text{head}}}$ where $i \in [0, 63]$.
+    1. **`Q/K` Symmetry**: At sequence position $m$, the exact same rotation matrix $R_m$ multiplies both Query ($Q_m$) and Key ($K_m$). This symmetry is why $\text{Score} = Q_m @ K_n^T$ simplifies via orthogonal identity ($R_m^T @ R_m = I$) directly into $Q_{\text{unrotated}} @ R_{m-n} @ K_{\text{unrotated}}^T$.
+    2. **Universal Head Application**: $R_m$ applies identically across every single one of the `64` Query heads and `8` Key heads.
+    3. **Strict Determinism**: $R_m$ is completely independent of the token's semantic text or activation value (`"Apple"` vs `"Dog"` yields the exact same $R_m$ at position $m$). It is governed strictly by two variables: the integer sequence index $m$ (`0, 1, 2, ...`) and the geometric frequency hierarchy $\theta_i = 10000^{-2i / d_{\text{head}}}$ where $i \in [0, 63]$.
 - **Chronological Execution Pipeline (`Embedding vs. RoPE`)**:
   Initial token embedding lookup ($W_{\text{Embed}}$) and `RoPE` rotation operate at two distinct execution stages:
 
-  1. **Step 0 (`Embedding Lookup`)**: Converts raw token IDs into unrotated base tensor $X_0$ (`[b, s, d]`). Contains **zero positional information**.
-  2. **Step 1 (`Linear Projections`)**: Inside every layer, $X$ multiplies against $W_Q$ and $W_K$ to produce unrotated $Q$ and $K$ tensors.
-  3. **Step 2 (`RoPE Rotation`)**: Strictly **after** `Q/K` linear projections and **before** dot-product attention, `RoPE` rotation matrices ($R_m$) multiply against $Q$ and $K$ ($Q_{\text{rotated}} = R_m @ Q_{\text{unrotated}}$), ensuring dot-products evaluate pristine relative distances without projection distortion across layers.
+    1. **Step 0 (`Embedding Lookup`)**: Converts raw token IDs into unrotated base tensor $X_0$ (`[b, s, d]`). Contains **zero positional information**.
+    2. **Step 1 (`Linear Projections`)**: Inside every layer, $X$ multiplies against $W_Q$ and $W_K$ to produce unrotated $Q$ and $K$ tensors.
+    3. **Step 2 (`RoPE Rotation`)**: Strictly **after** `Q/K` linear projections and **before** dot-product attention, `RoPE` rotation matrices ($R_m$) multiply against $Q$ and $K$ ($Q_{\text{rotated}} = R_m @ Q_{\text{unrotated}}$), ensuring dot-products evaluate pristine relative distances without projection distortion across layers.
 
 ### `SwiGLU` (Swish-Gated Linear Unit)
 - **Definition**: A gated non-linear activation architecture (introduced by Noam Shazeer) replacing classic `ReLU` Feed-Forward Networks (`FFNs`) across modern frontier transformers (`Llama 3, Mistral, DeepSeek`).

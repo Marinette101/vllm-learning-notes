@@ -98,17 +98,18 @@ flowchart TD
 - **Layer 2: The Logical KV Cache View (`100% Contiguous Virtual Address Space`)**:
   This is **how the sequence and the attention formula (`Q @ K^T`) view their Key and Value representations**.
 
-  - Within the sequence's virtual view, its `KV` cache is partitioned into sequential, contiguous chunks of `block_size` tokens (`typically block_size = 16`), called **Logical Token/KV Blocks**.
-  - `Logical Block 0` holds the logical `KV` vectors for tokens `0..15`.
-  - `Logical Block 1` holds the logical `KV` vectors for tokens `16..31`.
-  - `Logical Block 2` holds the logical `KV` vectors for tokens `32..47`.
-  - From the perspective of the attention algorithm and the application, `Logical Block 0` is immediately adjacent to `Logical Block 1`, forming a seamless, continuous logical `KV` sequence across both input prompt tokens (`Logical Blocks 0 and 1`) and generated decode tokens (`Logical Block 2`).
+    - Within the sequence's virtual view, its `KV` cache is partitioned into sequential, contiguous chunks of `block_size` tokens (`typically block_size = 16`), called **Logical Token/KV Blocks**.
+    - `Logical Block 0` holds the logical `KV` vectors for tokens `0..15`.
+    - `Logical Block 1` holds the logical `KV` vectors for tokens `16..31`.
+    - `Logical Block 2` holds the logical `KV` vectors for tokens `32..47`.
+    - From the perspective of the attention algorithm and the application, `Logical Block 0` is immediately adjacent to `Logical Block 1`, forming a seamless, continuous logical `KV` sequence across both input prompt tokens (`Logical Blocks 0 and 1`) and generated decode tokens (`Logical Block 2`).
+
 - **Layer 3: The Physical KV Cache Pool (`Scattered Physical Blocks in GPU HBM`)**:
   This represents the physical reality inside GPU `HBM` memory. A **Physical KV Block** is a fixed-size chunk of physical GPU memory allocated from vLLM's pre-reserved memory pool (`e.g., 5.24 MB per physical block on Llama 3 70B`).
 
-  - When the GPU calculates the `KV` vectors for `Logical Block 0` (`Tokens 0..15`), where do those numbers get stored in physical memory? They get written directly into an assigned physical slot from the free pool (`e.g., Physical Block 104`).
-  - When `Logical Block 1` (`Tokens 16..31`) is processed, its `KV` vectors are written into another arbitrary physical slot (`e.g., Physical Block 28`).
-  - Physical blocks `104` and `28` sit scattered across completely different, non-contiguous physical `HBM` memory addresses!
+    - When the GPU calculates the `KV` vectors for `Logical Block 0` (`Tokens 0..15`), where do those numbers get stored in physical memory? They get written directly into an assigned physical slot from the free pool (`e.g., Physical Block 104`).
+    - When `Logical Block 1` (`Tokens 16..31`) is processed, its `KV` vectors are written into another arbitrary physical slot (`e.g., Physical Block 28`).
+    - Physical blocks `104` and `28` sit scattered across completely different, non-contiguous physical `HBM` memory addresses!
 
 #### 2. Critical Clarification: Unified Mapping Across Prompt and Generated Tokens
 A common conceptual pitfall is assuming that "logical blocks are for prompt tokens while physical blocks are for the KV cache," or that prompt tokens and generated tokens map differently across logical versus physical structures. **There is zero structural difference; both prompt tokens and generated tokens utilize both Logical Blocks and Physical KV Blocks identically!**
@@ -117,8 +118,8 @@ A common conceptual pitfall is assuming that "logical blocks are for prompt toke
    Every token in the entire sequence (`whether it is a prompt token or a newly generated token`) resides inside a **Logical Block** in the sequence's contiguous virtual address space (`e.g., Tokens 0..15 in Logical Block 0, Tokens 48..63 in Logical Block 3`). For every logical block (`prompt or generated`), vLLM assigns exactly one **Physical KV Block** in `HBM` to permanently store its calculated Key and Value vectors.
 
 2. **The Only Difference is Allocation Timing (`Prefill vs. Decode Lifecycle`)**:
-   - **For Prompt Tokens (`Prefill Phase`)**: Because all prompt tokens (`e.g., 48 tokens`) arrive simultaneously at request admission, the Block Manager partitions them across `3` logical blocks (`Logical Blocks 0, 1, and 2`), allocates `3` physical blocks (`e.g., Physical Blocks 104, 28, and 45`) from the free pool simultaneously, and populates all 48 `KV` vectors inside them during the single prefill forward pass.
-   - **For Generated Tokens (`Decode Phase`)**: As new tokens are emitted one by one (`Token 48, Token 49...`), they enter new logical blocks (`e.g., Logical Block 3`). When `Token 48` (`the very first token of Logical Block 3`) is generated, the Block Manager allocates `1` new physical block (`e.g., Physical Block 512`) on the fly, and fills it slot by slot (`num_filled_tokens = 1, 2, ..., 16`) across the next 16 generation steps. Once completely filled at Token `63`, generating Token `64` (`the first token of Logical Block 4`) triggers the allocation of the next physical block.
+    - **For Prompt Tokens (`Prefill Phase`)**: Because all prompt tokens (`e.g., 48 tokens`) arrive simultaneously at request admission, the Block Manager partitions them across `3` logical blocks (`Logical Blocks 0, 1, and 2`), allocates `3` physical blocks (`e.g., Physical Blocks 104, 28, and 45`) from the free pool simultaneously, and populates all 48 `KV` vectors inside them during the single prefill forward pass.
+    - **For Generated Tokens (`Decode Phase`)**: As new tokens are emitted one by one (`Token 48, Token 49...`), they enter new logical blocks (`e.g., Logical Block 3`). When `Token 48` (`the very first token of Logical Block 3`) is generated, the Block Manager allocates `1` new physical block (`e.g., Physical Block 512`) on the fly, and fills it slot by slot (`num_filled_tokens = 1, 2, ..., 16`) across the next 16 generation steps. Once completely filled at Token `63`, generating Token `64` (`the first token of Logical Block 4`) triggers the allocation of the next physical block.
 
 ---
 
@@ -157,8 +158,8 @@ By shifting from contiguous pre-allocation (`max_seq_len`) to on-demand physical
 2. **Strictly Bounded Internal Fragmentation (`< 4% waste`)**:
    Because physical blocks are allocated dynamically only when a sequence spills into a new logical block, internal fragmentation is eliminated for all full physical blocks and isolated strictly to the **very last physical block (the active tail block)** of each sequence.
 
-   - For any active sequence, at most `block_size - 1` token slots (`16 - 1 = 15 slots`) can sit unfilled inside the active tail block.
-   - Across a sequence of average length $s = 512$ tokens, wasting an average of $7.5$ token slots ($15 / 2$) yields an internal fragmentation rate of:
+    - For any active sequence, at most `block_size - 1` token slots (`16 - 1 = 15 slots`) can sit unfilled inside the active tail block.
+    - Across a sequence of average length $s = 512$ tokens, wasting an average of $7.5$ token slots ($15 / 2$) yields an internal fragmentation rate of:
 
 $$
 \text{Average Internal Fragmentation} = \frac{7.5 \text{ wasted slots}}{512 \text{ total slots}} \approx \mathbf{1.46\%} \text{ waste!}
@@ -256,9 +257,9 @@ In vLLM's memory architecture, **`K` and `V` vectors for token `m` are ALWAYS co
 
 2. **GPU HBM Tensor Indexing Layout (`key_cache` and `value_cache` Tensors)**:
    In GPU memory (`HBM`), vLLM allocates the KV cache pool as two large, pre-reserved global tensors (or one unified fused tensor):
-   - **Key Cache Pool Tensor**: $\text{key\_cache\_pool}$ shape is $[N_{\text{blocks}}, N_{\text{kv\_heads}}, \text{block\_size}, d_{\text{head}}]$.
+    - **Key Cache Pool Tensor**: $\text{key\_cache\_pool}$ shape is $[N_{\text{blocks}}, N_{\text{kv\_heads}}, \text{block\_size}, d_{\text{head}}]$.
 - **Value Cache Pool Tensor**: $\text{value\_cache\_pool}$ shape is $[N_{\text{blocks}}, N_{\text{kv\_heads}}, \text{block\_size}, d_{\text{head}}]$.
-   - When the Block Manager assigns `physical_block_id = P` (`e.g., Physical Block 104`) to `Logical Block j`, that single integer `P` acts as the **exact matching 0th-dimension index** into both GPU tensors:
+    - When the Block Manager assigns `physical_block_id = P` (`e.g., Physical Block 104`) to `Logical Block j`, that single integer `P` acts as the **exact matching 0th-dimension index** into both GPU tensors:
      - `K_tile = key_cache_pool[104]` (holds the 16 Key vectors for tokens 0..15).
      - `V_tile = value_cache_pool[104]` (holds the 16 Value vectors for tokens 0..15).
 3. **Single Pointer Translation Overhead**:
@@ -278,7 +279,7 @@ This decision reflects exact alignment with GPU **hardware micro-architecture ru
 2. **HBM Memory Coalescing Rules (`128-Byte Cache Lines`)**:
    When GPU threads request data from global `HBM`, the memory controller does not read individual bytes; it reads memory in contiguous **`128-byte` cache lines**.
 
-   - By setting `block_size = 16`, every physical block contains `16 * 256 bytes = 4,096 bytes` (`4 KB`) per attention head. When a warp requests `4 KB` of contiguous data inside a physical block, the memory controller coalesces the reads into exactly `32` consecutive `128-byte` transactions, achieving **`100%` memory bus efficiency (`Peak Bandwidth Saturation`)** while keeping pointer lookup overhead near zero.
+    - By setting `block_size = 16`, every physical block contains `16 * 256 bytes = 4,096 bytes` (`4 KB`) per attention head. When a warp requests `4 KB` of contiguous data inside a physical block, the memory controller coalesces the reads into exactly `32` consecutive `128-byte` transactions, achieving **`100%` memory bus efficiency (`Peak Bandwidth Saturation`)** while keeping pointer lookup overhead near zero.
 
 #### Deep Dive: What is "Pointer Overhead" and Why Does `block_size = 16` Eliminate It?
 To understand what **Pointer Overhead** means, let us break down how a computer reads memory from first principles.
@@ -486,10 +487,10 @@ Suppose the kernel needs to read Key element $d$ ($d \in [0, 127]$) of Token $p 
 - `Block_Table[1] = 104` (`Physical Block ID`).
 - Token offset inside block: `t = 25 % 16 = 9`.
 - Stride dimensions:
-  - `Stride_Block = 65,536 bytes` (`64 KB`).
-  - `Stride_KV    = 32,768 bytes` (`Key region = 0, Value region = 1`).
-  - `Stride_Head  = 4,096 bytes` (`16 tokens * 128 dim * 2 bytes`).
-  - `Stride_Token = 256 bytes` (`128 dim * 2 bytes per token`).
+    - `Stride_Block = 65,536 bytes` (`64 KB`).
+    - `Stride_KV    = 32,768 bytes` (`Key region = 0, Value region = 1`).
+    - `Stride_Head  = 4,096 bytes` (`16 tokens * 128 dim * 2 bytes`).
+    - `Stride_Token = 256 bytes` (`128 dim * 2 bytes per token`).
 
 The CUDA kernel evaluates the exact flat `HBM` byte pointer in $\mathcal{O}(1)$ time:
 
@@ -542,8 +543,8 @@ flowchart TD
 1. **Shared Pointer Assignment**: When `Beam A` and `Beam B` are spawned from a shared `32-token` prompt (`Logical Blocks 0 and 1`), vLLM does not copy memory. Instead, both sequences' Block Tables point to `Physical Block 12` and `Physical Block 45`. The Block Manager increments their reference counters to `ref_count = 2`.
 2. **Shared Autoregressive Growth**: If both beams deterministically generate identical initial tokens (`e.g., Token 32 = "The"`), vLLM writes the token into a single shared `Physical Block 88` (`ref_count = 2`).
 3. **Divergence and Duplication (`The CoW Trigger`)**: At step `33`, `Beam A` generates `"cat"` while `Beam B` generates `"dog"`. When the engine attempts to write `"dog"` into `Physical Block 88` for `Beam B`, the Block Manager checks the block's reference counter.
-   - Because `ref_count == 2 > 1`, directly writing `"dog"` would corrupt `Beam A`'s sequence!
-   - The Block Manager triggers **Copy-on-Write**: it allocates a fresh `Physical Block 99` from the free pool, copies existing shared tokens (`Token 32 = "The"`) from `Block 88` into `Block 99`, decrements `Block 88`'s `ref_count` to `1`, points `Beam B`'s Block Table to `Block 99`, and writes `"dog"` into `Block 99`.
+    - Because `ref_count == 2 > 1`, directly writing `"dog"` would corrupt `Beam A`'s sequence!
+    - The Block Manager triggers **Copy-on-Write**: it allocates a fresh `Physical Block 99` from the free pool, copies existing shared tokens (`Token 32 = "The"`) from `Block 88` into `Block 99`, decrements `Block 88`'s `ref_count` to `1`, points `Beam B`'s Block Table to `Block 99`, and writes `"dog"` into `Block 99`.
 
 By enabling zero-copy prompt sharing across arbitrary sequence groupings, `CoW` slashes `KV` cache memory consumption during `best_of_n` sampling by `> 75%`, boosting multi-branch reasoning capacity.
 
