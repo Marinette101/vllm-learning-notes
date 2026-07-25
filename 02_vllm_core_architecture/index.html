@@ -1965,23 +1965,23 @@
 <li>
 <p><strong>Layer 2: The Logical KV Cache View (<code>100% Contiguous Virtual Address Space</code>)</strong>:
   This is <strong>how the sequence and the attention formula (<code>Q @ K^T</code>) view their Key and Value representations</strong>.</p>
-</li>
-<li>
-<p>Within the sequence's virtual view, its <code>KV</code> cache is partitioned into sequential, contiguous chunks of <code>block_size</code> tokens (<code>typically block_size = 16</code>), called <strong>Logical Token/KV Blocks</strong>.</p>
-</li>
+<ul>
+<li>Within the sequence's virtual view, its <code>KV</code> cache is partitioned into sequential, contiguous chunks of <code>block_size</code> tokens (<code>typically block_size = 16</code>), called <strong>Logical Token/KV Blocks</strong>.</li>
 <li><code>Logical Block 0</code> holds the logical <code>KV</code> vectors for tokens <code>0..15</code>.</li>
 <li><code>Logical Block 1</code> holds the logical <code>KV</code> vectors for tokens <code>16..31</code>.</li>
 <li><code>Logical Block 2</code> holds the logical <code>KV</code> vectors for tokens <code>32..47</code>.</li>
 <li>From the perspective of the attention algorithm and the application, <code>Logical Block 0</code> is immediately adjacent to <code>Logical Block 1</code>, forming a seamless, continuous logical <code>KV</code> sequence across both input prompt tokens (<code>Logical Blocks 0 and 1</code>) and generated decode tokens (<code>Logical Block 2</code>).</li>
+</ul>
+</li>
 <li>
 <p><strong>Layer 3: The Physical KV Cache Pool (<code>Scattered Physical Blocks in GPU HBM</code>)</strong>:
   This represents the physical reality inside GPU <code>HBM</code> memory. A <strong>Physical KV Block</strong> is a fixed-size chunk of physical GPU memory allocated from vLLM's pre-reserved memory pool (<code>e.g., 5.24 MB per physical block on Llama 3 70B</code>).</p>
-</li>
-<li>
-<p>When the GPU calculates the <code>KV</code> vectors for <code>Logical Block 0</code> (<code>Tokens 0..15</code>), where do those numbers get stored in physical memory? They get written directly into an assigned physical slot from the free pool (<code>e.g., Physical Block 104</code>).</p>
-</li>
+<ul>
+<li>When the GPU calculates the <code>KV</code> vectors for <code>Logical Block 0</code> (<code>Tokens 0..15</code>), where do those numbers get stored in physical memory? They get written directly into an assigned physical slot from the free pool (<code>e.g., Physical Block 104</code>).</li>
 <li>When <code>Logical Block 1</code> (<code>Tokens 16..31</code>) is processed, its <code>KV</code> vectors are written into another arbitrary physical slot (<code>e.g., Physical Block 28</code>).</li>
 <li>Physical blocks <code>104</code> and <code>28</code> sit scattered across completely different, non-contiguous physical <code>HBM</code> memory addresses!</li>
+</ul>
+</li>
 </ul>
 <h4 id="2-critical-clarification-unified-mapping-across-prompt-and-generated-tokens">2. Critical Clarification: Unified Mapping Across Prompt and Generated Tokens<a class="headerlink" href="#2-critical-clarification-unified-mapping-across-prompt-and-generated-tokens" title="Permanent link">&para;</a></h4>
 <p>A common conceptual pitfall is assuming that "logical blocks are for prompt tokens while physical blocks are for the KV cache," or that prompt tokens and generated tokens map differently across logical versus physical structures. <strong>There is zero structural difference; both prompt tokens and generated tokens utilize both Logical Blocks and Physical KV Blocks identically!</strong></p>
@@ -1992,9 +1992,11 @@
 </li>
 <li>
 <p><strong>The Only Difference is Allocation Timing (<code>Prefill vs. Decode Lifecycle</code>)</strong>:</p>
-</li>
+<ul>
 <li><strong>For Prompt Tokens (<code>Prefill Phase</code>)</strong>: Because all prompt tokens (<code>e.g., 48 tokens</code>) arrive simultaneously at request admission, the Block Manager partitions them across <code>3</code> logical blocks (<code>Logical Blocks 0, 1, and 2</code>), allocates <code>3</code> physical blocks (<code>e.g., Physical Blocks 104, 28, and 45</code>) from the free pool simultaneously, and populates all 48 <code>KV</code> vectors inside them during the single prefill forward pass.</li>
 <li><strong>For Generated Tokens (<code>Decode Phase</code>)</strong>: As new tokens are emitted one by one (<code>Token 48, Token 49...</code>), they enter new logical blocks (<code>e.g., Logical Block 3</code>). When <code>Token 48</code> (<code>the very first token of Logical Block 3</code>) is generated, the Block Manager allocates <code>1</code> new physical block (<code>e.g., Physical Block 512</code>) on the fly, and fills it slot by slot (<code>num_filled_tokens = 1, 2, ..., 16</code>) across the next 16 generation steps. Once completely filled at Token <code>63</code>, generating Token <code>64</code> (<code>the first token of Logical Block 4</code>) triggers the allocation of the next physical block.</li>
+</ul>
+</li>
 </ol>
 <hr />
 <h3 id="14-the-block-table-o1-logical-to-physical-address-translation">1.4 The Block Table: O(1) Logical-to-Physical Address Translation<a class="headerlink" href="#14-the-block-table-o1-logical-to-physical-address-translation" title="Permanent link">&para;</a></h3>
@@ -2061,11 +2063,11 @@
 <li>
 <p><strong>Strictly Bounded Internal Fragmentation (<code>&lt; 4% waste</code>)</strong>:
    Because physical blocks are allocated dynamically only when a sequence spills into a new logical block, internal fragmentation is eliminated for all full physical blocks and isolated strictly to the <strong>very last physical block (the active tail block)</strong> of each sequence.</p>
-</li>
-<li>
-<p>For any active sequence, at most <code>block_size - 1</code> token slots (<code>16 - 1 = 15 slots</code>) can sit unfilled inside the active tail block.</p>
-</li>
+<ul>
+<li>For any active sequence, at most <code>block_size - 1</code> token slots (<code>16 - 1 = 15 slots</code>) can sit unfilled inside the active tail block.</li>
 <li>Across a sequence of average length <span class="arithmatex">\(s = 512\)</span> tokens, wasting an average of <span class="arithmatex">\(7.5\)</span> token slots (<span class="arithmatex">\(15 / 2\)</span>) yields an internal fragmentation rate of:</li>
+</ul>
+</li>
 </ol>
 <div class="arithmatex">\[
 \text{Average Internal Fragmentation} = \frac{7.5 \text{ wasted slots}}{512 \text{ total slots}} \approx \mathbf{1.46\%} \text{ waste!}
@@ -2144,10 +2146,12 @@ O_{\text{running}, h} \leftarrow O_{\text{running}, h} + P_{\text{tile}, h} @ V_
 <li>
 <p><strong>GPU HBM Tensor Indexing Layout (<code>key_cache</code> and <code>value_cache</code> Tensors)</strong>:
    In GPU memory (<code>HBM</code>), vLLM allocates the KV cache pool as two large, pre-reserved global tensors (or one unified fused tensor):</p>
-</li>
+<ul>
 <li><strong>Key Cache Pool Tensor</strong>: <span class="arithmatex">\(\text{key\_cache\_pool}\)</span> shape is <span class="arithmatex">\([N_{\text{blocks}}, N_{\text{kv\_heads}}, \text{block\_size}, d_{\text{head}}]\)</span>.</li>
-<li><strong>Value Cache Pool Tensor</strong>: <span class="arithmatex">\(\text{value\_cache\_pool}\)</span> shape is <span class="arithmatex">\([N_{\text{blocks}}, N_{\text{kv\_heads}}, \text{block\_size}, d_{\text{head}}]\)</span>.</li>
-<li>When the Block Manager assigns <code>physical_block_id = P</code> (<code>e.g., Physical Block 104</code>) to <code>Logical Block j</code>, that single integer <code>P</code> acts as the <strong>exact matching 0th-dimension index</strong> into both GPU tensors:<ul>
+</ul>
+</li>
+<li><strong>Value Cache Pool Tensor</strong>: <span class="arithmatex">\(\text{value\_cache\_pool}\)</span> shape is <span class="arithmatex">\([N_{\text{blocks}}, N_{\text{kv\_heads}}, \text{block\_size}, d_{\text{head}}]\)</span>.<ul>
+<li>When the Block Manager assigns <code>physical_block_id = P</code> (<code>e.g., Physical Block 104</code>) to <code>Logical Block j</code>, that single integer <code>P</code> acts as the <strong>exact matching 0th-dimension index</strong> into both GPU tensors:</li>
 <li><code>K_tile = key_cache_pool[104]</code> (holds the 16 Key vectors for tokens 0..15).</li>
 <li><code>V_tile = value_cache_pool[104]</code> (holds the 16 Value vectors for tokens 0..15).</li>
 </ul>
@@ -2167,9 +2171,9 @@ O_{\text{running}, h} \leftarrow O_{\text{running}, h} + P_{\text{tile}, h} @ V_
 <li>
 <p><strong>HBM Memory Coalescing Rules (<code>128-Byte Cache Lines</code>)</strong>:
    When GPU threads request data from global <code>HBM</code>, the memory controller does not read individual bytes; it reads memory in contiguous <strong><code>128-byte</code> cache lines</strong>.</p>
-</li>
-<li>
-<p>By setting <code>block_size = 16</code>, every physical block contains <code>16 * 256 bytes = 4,096 bytes</code> (<code>4 KB</code>) per attention head. When a warp requests <code>4 KB</code> of contiguous data inside a physical block, the memory controller coalesces the reads into exactly <code>32</code> consecutive <code>128-byte</code> transactions, achieving <strong><code>100%</code> memory bus efficiency (<code>Peak Bandwidth Saturation</code>)</strong> while keeping pointer lookup overhead near zero.</p>
+<ul>
+<li>By setting <code>block_size = 16</code>, every physical block contains <code>16 * 256 bytes = 4,096 bytes</code> (<code>4 KB</code>) per attention head. When a warp requests <code>4 KB</code> of contiguous data inside a physical block, the memory controller coalesces the reads into exactly <code>32</code> consecutive <code>128-byte</code> transactions, achieving <strong><code>100%</code> memory bus efficiency (<code>Peak Bandwidth Saturation</code>)</strong> while keeping pointer lookup overhead near zero.</li>
+</ul>
 </li>
 </ol>
 <h4 id="deep-dive-what-is-pointer-overhead-and-why-does-block_size-16-eliminate-it">Deep Dive: What is "Pointer Overhead" and Why Does <code>block_size = 16</code> Eliminate It?<a class="headerlink" href="#deep-dive-what-is-pointer-overhead-and-why-does-block_size-16-eliminate-it" title="Permanent link">&para;</a></h4>
@@ -2365,11 +2369,13 @@ O_i = O_{i-1} \cdot e^{m_{i-1} - m_i} + \sum_{j \in \text{block } i} \left( e^{z
 <ul>
 <li><code>Block_Table[1] = 104</code> (<code>Physical Block ID</code>).</li>
 <li>Token offset inside block: <code>t = 25 % 16 = 9</code>.</li>
-<li>Stride dimensions:</li>
+<li>Stride dimensions:<ul>
 <li><code>Stride_Block = 65,536 bytes</code> (<code>64 KB</code>).</li>
 <li><code>Stride_KV    = 32,768 bytes</code> (<code>Key region = 0, Value region = 1</code>).</li>
 <li><code>Stride_Head  = 4,096 bytes</code> (<code>16 tokens * 128 dim * 2 bytes</code>).</li>
 <li><code>Stride_Token = 256 bytes</code> (<code>128 dim * 2 bytes per token</code>).</li>
+</ul>
+</li>
 </ul>
 <p>The CUDA kernel evaluates the exact flat <code>HBM</code> byte pointer in <span class="arithmatex">\(\mathcal{O}(1)\)</span> time:</p>
 <div class="arithmatex">\[
@@ -2411,9 +2417,11 @@ O_i = O_{i-1} \cdot e^{m_{i-1} - m_i} + \sum_{j \in \text{block } i} \left( e^{z
 <ol>
 <li><strong>Shared Pointer Assignment</strong>: When <code>Beam A</code> and <code>Beam B</code> are spawned from a shared <code>32-token</code> prompt (<code>Logical Blocks 0 and 1</code>), vLLM does not copy memory. Instead, both sequences' Block Tables point to <code>Physical Block 12</code> and <code>Physical Block 45</code>. The Block Manager increments their reference counters to <code>ref_count = 2</code>.</li>
 <li><strong>Shared Autoregressive Growth</strong>: If both beams deterministically generate identical initial tokens (<code>e.g., Token 32 = "The"</code>), vLLM writes the token into a single shared <code>Physical Block 88</code> (<code>ref_count = 2</code>).</li>
-<li><strong>Divergence and Duplication (<code>The CoW Trigger</code>)</strong>: At step <code>33</code>, <code>Beam A</code> generates <code>"cat"</code> while <code>Beam B</code> generates <code>"dog"</code>. When the engine attempts to write <code>"dog"</code> into <code>Physical Block 88</code> for <code>Beam B</code>, the Block Manager checks the block's reference counter.</li>
+<li><strong>Divergence and Duplication (<code>The CoW Trigger</code>)</strong>: At step <code>33</code>, <code>Beam A</code> generates <code>"cat"</code> while <code>Beam B</code> generates <code>"dog"</code>. When the engine attempts to write <code>"dog"</code> into <code>Physical Block 88</code> for <code>Beam B</code>, the Block Manager checks the block's reference counter.<ul>
 <li>Because <code>ref_count == 2 &gt; 1</code>, directly writing <code>"dog"</code> would corrupt <code>Beam A</code>'s sequence!</li>
 <li>The Block Manager triggers <strong>Copy-on-Write</strong>: it allocates a fresh <code>Physical Block 99</code> from the free pool, copies existing shared tokens (<code>Token 32 = "The"</code>) from <code>Block 88</code> into <code>Block 99</code>, decrements <code>Block 88</code>'s <code>ref_count</code> to <code>1</code>, points <code>Beam B</code>'s Block Table to <code>Block 99</code>, and writes <code>"dog"</code> into <code>Block 99</code>.</li>
+</ul>
+</li>
 </ol>
 <p>By enabling zero-copy prompt sharing across arbitrary sequence groupings, <code>CoW</code> slashes <code>KV</code> cache memory consumption during <code>best_of_n</code> sampling by <code>&gt; 75%</code>, boosting multi-branch reasoning capacity.</p>
 <hr />

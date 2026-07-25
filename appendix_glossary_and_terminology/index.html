@@ -1226,19 +1226,21 @@ R_{m, \theta_i} = \begin{bmatrix} \cos(m \cdot \theta_i) &amp; -\sin(m \cdot \th
 </li>
 <li>
 <p><strong>Symmetry and Determinism of <span class="arithmatex">\(R_m\)</span> (<code>Q/K Symmetry and Theta Hierarchy</code>)</strong>:</p>
-</li>
+<ol>
 <li><strong><code>Q/K</code> Symmetry</strong>: At sequence position <span class="arithmatex">\(m\)</span>, the exact same rotation matrix <span class="arithmatex">\(R_m\)</span> multiplies both Query (<span class="arithmatex">\(Q_m\)</span>) and Key (<span class="arithmatex">\(K_m\)</span>). This symmetry is why <span class="arithmatex">\(\text{Score} = Q_m @ K_n^T\)</span> simplifies via orthogonal identity (<span class="arithmatex">\(R_m^T @ R_m = I\)</span>) directly into <span class="arithmatex">\(Q_{\text{unrotated}} @ R_{m-n} @ K_{\text{unrotated}}^T\)</span>.</li>
 <li><strong>Universal Head Application</strong>: <span class="arithmatex">\(R_m\)</span> applies identically across every single one of the <code>64</code> Query heads and <code>8</code> Key heads.</li>
 <li><strong>Strict Determinism</strong>: <span class="arithmatex">\(R_m\)</span> is completely independent of the token's semantic text or activation value (<code>"Apple"</code> vs <code>"Dog"</code> yields the exact same <span class="arithmatex">\(R_m\)</span> at position <span class="arithmatex">\(m\)</span>). It is governed strictly by two variables: the integer sequence index <span class="arithmatex">\(m\)</span> (<code>0, 1, 2, ...</code>) and the geometric frequency hierarchy <span class="arithmatex">\(\theta_i = 10000^{-2i / d_{\text{head}}}\)</span> where <span class="arithmatex">\(i \in [0, 63]\)</span>.</li>
+</ol>
+</li>
 <li>
 <p><strong>Chronological Execution Pipeline (<code>Embedding vs. RoPE</code>)</strong>:
   Initial token embedding lookup (<span class="arithmatex">\(W_{\text{Embed}}\)</span>) and <code>RoPE</code> rotation operate at two distinct execution stages:</p>
-</li>
-<li>
-<p><strong>Step 0 (<code>Embedding Lookup</code>)</strong>: Converts raw token IDs into unrotated base tensor <span class="arithmatex">\(X_0\)</span> (<code>[b, s, d]</code>). Contains <strong>zero positional information</strong>.</p>
-</li>
+<ol>
+<li><strong>Step 0 (<code>Embedding Lookup</code>)</strong>: Converts raw token IDs into unrotated base tensor <span class="arithmatex">\(X_0\)</span> (<code>[b, s, d]</code>). Contains <strong>zero positional information</strong>.</li>
 <li><strong>Step 1 (<code>Linear Projections</code>)</strong>: Inside every layer, <span class="arithmatex">\(X\)</span> multiplies against <span class="arithmatex">\(W_Q\)</span> and <span class="arithmatex">\(W_K\)</span> to produce unrotated <span class="arithmatex">\(Q\)</span> and <span class="arithmatex">\(K\)</span> tensors.</li>
 <li><strong>Step 2 (<code>RoPE Rotation</code>)</strong>: Strictly <strong>after</strong> <code>Q/K</code> linear projections and <strong>before</strong> dot-product attention, <code>RoPE</code> rotation matrices (<span class="arithmatex">\(R_m\)</span>) multiply against <span class="arithmatex">\(Q\)</span> and <span class="arithmatex">\(K\)</span> (<span class="arithmatex">\(Q_{\text{rotated}} = R_m @ Q_{\text{unrotated}}\)</span>), ensuring dot-products evaluate pristine relative distances without projection distortion across layers.</li>
+</ol>
+</li>
 </ul>
 <h3 id="swiglu-swish-gated-linear-unit"><code>SwiGLU</code> (Swish-Gated Linear Unit)<a class="headerlink" href="#swiglu-swish-gated-linear-unit" title="Permanent link">&para;</a></h3>
 <ul>
