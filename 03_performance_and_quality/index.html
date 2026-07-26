@@ -645,6 +645,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#5-scaling-to-the-entire-model-pass-all-layers-kv-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Scaling to the Entire Model Pass (All Layers + KV Cache)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1202,6 +1213,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#5-scaling-to-the-entire-model-pass-all-layers-kv-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Scaling to the Entire Model Pass (All Layers + KV Cache)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1724,31 +1746,41 @@ I_{\text{prefill}} = \frac{512 \text{ tokens} \times 140 \text{ GFLOPs / token}}
 </tbody>
 </table>
 <h4 id="4-concrete-tensor-shape-analysis-across-linear-layers">4. Concrete Tensor Shape Analysis Across Linear Layers<a class="headerlink" href="#4-concrete-tensor-shape-analysis-across-linear-layers" title="Permanent link">&para;</a></h4>
-<p>To make the Arithmetic Intensity difference intuitive, examine the exact input activation tensor shapes (<span class="arithmatex">\(X\)</span>) multiplying against a linear layer weight matrix (<span class="arithmatex">\(W\)</span>) in Llama 3 70B (e.g., <span class="arithmatex">\(W_{\text{Gate}} \in \mathbb{R}^{8,192 \times 28,672}\)</span>, requiring <span class="arithmatex">\(\mathbf{0.939 \text{ GB}}\)</span> memory read from HBM):</p>
+<p>To make the Arithmetic Intensity difference intuitive, examine the exact input activation tensor shapes (<span class="arithmatex">\(X\)</span>) multiplying against a representative linear layer weight matrix (<span class="arithmatex">\(W\)</span>) in Llama 3 70B (e.g., <span class="arithmatex">\(W_{\text{Gate}} \in \mathbb{R}^{8,192 \times 28,672}\)</span>, requiring <span class="arithmatex">\(\mathbf{0.939 \text{ GB}}\)</span> memory read from HBM):</p>
 <ol>
 <li><strong>Decode Phase (<span class="arithmatex">\(b = 64\)</span> sequences, <span class="arithmatex">\(1\)</span> token each)</strong>:<ul>
 <li><strong>Activation Tensor Shape</strong>: <span class="arithmatex">\(X_{\text{decode}} \in \mathbb{R}^{\mathbf{64 \times 8,192}}\)</span> (<span class="arithmatex">\(64\)</span> token rows).</li>
 <li><strong>Matrix Multiplication</strong>: <span class="arithmatex">\(Y_{\text{decode}} = X_{\text{decode}} @ W_{\text{Gate}} \quad ([64 \times 8,192] \times [8,192 \times 28,672] \to [64 \times 28,672])\)</span>.</li>
 <li><strong>FLOPs Performed</strong>: <span class="arithmatex">\(2 \times 64 \times 8,192 \times 28,672 = \mathbf{30.06 \text{ GFLOPs}}\)</span>.</li>
 <li><strong>Weight Bytes Transferred</strong>: <span class="arithmatex">\(8,192 \times 28,672 \times 2 \text{ bytes} = \mathbf{0.939 \text{ GB}}\)</span>.</li>
-<li><strong>Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{decode_layer}} = \frac{30.06 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{32.0 \text{ FLOPs / Byte}}\)</span> (Tall-and-skinny matrix multiplication!).</li>
+<li><strong>Single-Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{decode_layer}} = \frac{30.06 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{32.0 \text{ FLOPs / Byte}}\)</span> (Tall-and-skinny matrix multiplication!).</li>
 </ul>
 </li>
-<li><strong>Prefill Chunk Phase (<span class="arithmatex">\(N_{\text{chunk}} = 512\)</span> prompt tokens)</strong>:<ul>
-<li><strong>Activation Tensor Shape</strong>: <span class="arithmatex">\(X_{\text{prefill}} \in \mathbb{R}^{\mathbf{512 \times 8,192}}\)</span> (<span class="arithmatex">\(512\)</span> token rows).</li>
-<li><strong>Matrix Multiplication</strong>: <span class="arithmatex">\(Y_{\text{prefill}} = X_{\text{prefill}} @ W_{\text{Gate}} \quad ([512 \times 8,192] \times [8,192 \times 28,672] \to [512 \times 28,672])\)</span>.</li>
-<li><strong>FLOPs Performed</strong>: <span class="arithmatex">\(2 \times 512 \times 8,192 \times 28,672 = \mathbf{240.51 \text{ GFLOPs}}\)</span>.</li>
+<li><strong>Prefill Chunk Phase (<span class="arithmatex">\(N_{\text{chunk}} = 448\)</span> prompt tokens)</strong>:<ul>
+<li><strong>Activation Tensor Shape</strong>: <span class="arithmatex">\(X_{\text{prefill}} \in \mathbb{R}^{\mathbf{448 \times 8,192}}\)</span> (<span class="arithmatex">\(448\)</span> token rows).</li>
+<li><strong>Matrix Multiplication</strong>: <span class="arithmatex">\(Y_{\text{prefill}} = X_{\text{prefill}} @ W_{\text{Gate}} \quad ([448 \times 8,192] \times [8,192 \times 28,672] \to [448 \times 28,672])\)</span>.</li>
+<li><strong>FLOPs Performed</strong>: <span class="arithmatex">\(2 \times 448 \times 8,192 \times 28,672 = \mathbf{210.45 \text{ GFLOPs}}\)</span>.</li>
 <li><strong>Weight Bytes Transferred</strong>: <span class="arithmatex">\(8,192 \times 28,672 \times 2 \text{ bytes} = \mathbf{0.939 \text{ GB}}\)</span> (Identical weight load!).</li>
-<li><strong>Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{prefill_layer}} = \frac{240.51 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{256.0 \text{ FLOPs / Byte}}\)</span> (Reuses the exact same <span class="arithmatex">\(0.939 \text{ GB}\)</span> weight matrix across 8x more token rows!).</li>
+<li><strong>Single-Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{prefill_layer}} = \frac{210.45 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{224.1 \text{ FLOPs / Byte}}\)</span> (Reuses the exact same <span class="arithmatex">\(0.939 \text{ GB}\)</span> weight matrix across 7x more token rows!).</li>
 </ul>
 </li>
 <li><strong>Co-Scheduled Iteration Step (<span class="arithmatex">\(448\)</span> Prefill Chunk Tokens + <span class="arithmatex">\(64\)</span> Decode Tokens = <span class="arithmatex">\(512\)</span> Total Tokens)</strong>:<ul>
 <li><strong>Combined Activation Tensor Shape</strong>: <span class="arithmatex">\(X_{\text{coscheduled}} \in \mathbb{R}^{\mathbf{512 \times 8,192}}\)</span> (<span class="arithmatex">\(512\)</span> token rows).</li>
 <li><strong>Matrix Multiplication</strong>: <span class="arithmatex">\(Y_{\text{coscheduled}} = X_{\text{coscheduled}} @ W_{\text{Gate}} \quad ([512 \times 8,192] \times [8,192 \times 28,672] \to [512 \times 28,672])\)</span>.</li>
-<li><strong>Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{coscheduled_layer}} = \frac{240.51 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{256.0 \text{ FLOPs / Byte}}\)</span> (Pushes execution directly onto the GPU Ridge Point!).</li>
+<li><strong>Single-Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{coscheduled_layer}} = \frac{240.51 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{256.0 \text{ FLOPs / Byte}}\)</span> (Pushes execution directly onto the GPU Ridge Point!).</li>
 </ul>
 </li>
 </ol>
+<h4 id="5-scaling-to-the-entire-model-pass-all-layers-kv-cache">5. Scaling to the Entire Model Pass (All Layers + KV Cache)<a class="headerlink" href="#5-scaling-to-the-entire-model-pass-all-layers-kv-cache" title="Permanent link">&para;</a></h4>
+<p>While <span class="arithmatex">\(W_{\text{Gate}}\)</span> serves as a clear single-layer GEMM micro-example, <strong>what happens when we sum across ALL weight matrices (<span class="arithmatex">\(W_Q, W_K, W_V, W_O, W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}\)</span>) and KV Cache memory transfers across all 80 layers?</strong></p>
+<ul>
+<li><strong>Total Weight Parameter Memory</strong>: Across all 80 layers, total model parameters equal <span class="arithmatex">\(N = 70 \text{ Billion}\)</span> (<span class="arithmatex">\(\mathbf{140 \text{ GB}}\)</span> in FP16/BF16).</li>
+<li><strong>KV Cache Memory Transfer</strong>: For <span class="arithmatex">\(b = 64\)</span> decode sequences at context length <span class="arithmatex">\(S = 1,024\)</span>, reading the KV cache across all 80 layers transfers <span class="arithmatex">\(\approx \mathbf{0.021 \text{ GB}}\)</span>. The KV cache memory transfer represents <span class="arithmatex">\(&lt; 0.02\%\)</span> of the total <span class="arithmatex">\(140 \text{ GB}\)</span> model weight transfer!</li>
+<li><strong>Model-Wide Decode Intensity (<span class="arithmatex">\(b = 64\)</span> tokens)</strong>:
+  $<span class="arithmatex">\(I_{\text{decode_total}} = \frac{64 \text{ tokens} \times 140 \text{ GFLOPs/token}}{140 \text{ GB weights} + 0.021 \text{ GB KV}} = \frac{8,960 \text{ GFLOPs}}{140.021 \text{ GB}} = \mathbf{63.99 \text{ FLOPs / Byte}}\)</span>$</li>
+<li><strong>Model-Wide Co-Scheduled Intensity (<span class="arithmatex">\(512\)</span> total tokens)</strong>:
+  $<span class="arithmatex">\(I_{\text{coscheduled_total}} = \frac{512 \text{ tokens} \times 140 \text{ GFLOPs/token}}{140 \text{ GB weights} + \text{KV Bytes}} = \frac{71,680 \text{ GFLOPs}}{140.1 \text{ GB}} = \mathbf{511.6 \text{ FLOPs / Byte}}\)</span>$</li>
+</ul>
 <pre class="mermaid"><code>flowchart TD
     subgraph DECODE_BENEFIT ["⚡ Why Co-Scheduling Prefill and Decode is a Win-Win"]
         D_IDLE["Decode Phase (64 Tokens): Reads 140 GB weights from HBM&lt;br&gt;Activation Matrix [64 x 8192] | Tensor Cores sit 75% Idle"]
