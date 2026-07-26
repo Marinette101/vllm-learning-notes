@@ -1793,7 +1793,13 @@ I_{\text{prefill}} = \frac{512 \text{ tokens} \times 140 \text{ GFLOPs / token}}
 <h2 id="part-3-execution-overhead-minimization-cuda-graphs-and-compiled-workflows">Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows<a class="headerlink" href="#part-3-execution-overhead-minimization-cuda-graphs-and-compiled-workflows" title="Permanent link">&para;</a></h2>
 <p>While memory bandwidth bounds GPU execution during single-token decoding, CPU-side execution overhead presents a distinct performance bottleneck at small batch sizes.</p>
 <h3 id="31-the-cpu-gpu-host-overhead-bottleneck">3.1 The CPU-GPU Host Overhead Bottleneck<a class="headerlink" href="#31-the-cpu-gpu-host-overhead-bottleneck" title="Permanent link">&para;</a></h3>
-<p>Executing a single Transformer forward pass requires launching dozens of CUDA kernels per layer (RMSNorm, QKV projection, RoPE rotation, PagedAttention, SwiGLU Gate/Up/Down projections, Residual additions). For an 80-layer model like Llama 3 70B, a single forward pass executes <strong>over 400 individual CUDA kernel launches</strong>.</p>
+<blockquote>
+<p>[!NOTE]
+<strong>What is a "GPU Kernel"?</strong>
+In GPU programming (CUDA / HIP / C++), a <strong>Kernel</strong> is not an operating system kernel. A GPU Kernel is a specialized C++/CUDA function designed to execute massively parallel computations across thousands of GPU cores (e.g., an <code>rmsnorm_kernel</code>, a <code>gemm_projection_kernel</code>, or a <code>paged_attention_kernel</code>).</p>
+<p>"400 GPU kernels" does <strong>not</strong> mean 400 separate physical GPUs working together! It means that in an 80-layer model, a <strong>single GPU</strong> must execute 400 distinct CUDA kernel functions in sequence to complete one single-token forward pass.</p>
+</blockquote>
+<p>Executing a single Transformer forward pass requires launching dozens of CUDA kernels per layer (RMSNorm, QKV projection, RoPE rotation, PagedAttention, SwiGLU Gate/Up/Down projections, Residual additions). For an 80-layer model like Llama 3 70B, a single forward pass executes <strong>over 400 individual CUDA kernel launches</strong> in series on a single GPU.</p>
 <pre class="mermaid"><code>flowchart LR
     subgraph CPU_LAUNCH ["🐢 CPU Host Launch Bottleneck (Without CUDA Graphs)"]
         CPU["CPU Python Interpreter"] --&gt;|"Launch Kernel 1 (10 us)"| K1["GPU Kernel 1"]
