@@ -60,16 +60,18 @@ $$
 
 ```mermaid
 flowchart TD
-    HBM_Q["片外 HBM<br>全局 Q 张量"] -->|加载 Q 块 [B_M x d]| SRAM_Q["片上 SRAM<br>Q 分块"]
-    HBM_K["片外 HBM<br>全局 K 张量"] -->|加载 K 块 [B_N x d]| SRAM_K["片上 SRAM<br>K 分块"]
-    HBM_V["片外 HBM<br>全局 V 张量"] -->|加载 V 块 [B_N x d]| SRAM_V["片上 SRAM<br>V 分块"]
+    HBM_Q["片外 HBM<br>全局 Q 张量"] -->|"加载 Q 块 (B_M x d)"| SRAM_Q["片上 SRAM<br>Q 分块"]
+    HBM_K["片外 HBM<br>全局 K 张量"] -->|"加载 K 块 (B_N x d)"| SRAM_K["片上 SRAM<br>K 分块"]
+    HBM_V["片外 HBM<br>全局 V 张量"] -->|"加载 V 块 (B_N x d)"| SRAM_V["片上 SRAM<br>V 分块"]
 
-    subgraph ON_CHIP ["🔥 SM 共享内存 (SRAM) 计算循环"]
-        SRAM_Q & SRAM_K --> S_TILE["SRAM 注意力分数块<br>S_tile = Q_tile @ K_tile^T / sqrt(d)"]
-        S_TILE & SRAM_V --> O_TILE["Online Softmax & 加权求和<br>O_tile = Softmax(S_tile) @ V_tile"]
+    subgraph ON_CHIP ["🔥 SM 共享内存 SRAM 计算循环"]
+        SRAM_Q --> S_TILE["SRAM 注意力分数块<br>S_tile = Q_tile @ K_tile^T / sqrt(d)"]
+        SRAM_K --> S_TILE
+        S_TILE --> O_TILE["Online Softmax 与加权求和<br>O_tile = Softmax(S_tile) @ V_tile"]
+        SRAM_V --> O_TILE
     end
 
-    O_TILE -->|写回最终输出向量| HBM_O["片外 HBM<br>全局输出张量 O"]
+    O_TILE -->|"写回最终输出向量"| HBM_O["片外 HBM<br>全局输出张量 O"]
 ```
 
 #### Tiling 分块参数
@@ -149,13 +151,15 @@ PagedAttention V2 将物理 Block *沿时间/序列长度维度切分*，分发�
 ```mermaid
 flowchart TD
     subgraph PHASE1 ["阶段 1: 并行 Block 切分 (paged_attention_v2_kernel)"]
-        TB1["Thread Block 分区 0<br>(Block 0..255)"] -->|计算局部数学| TMP1["写入 Global Workspace 缓冲区<br>tmp_out[0], tmp_max[0], tmp_exp[0]"]
-        TB2["Thread Block 分区 1<br>(Block 256..511)"] -->|计算局部数学| TMP2["写入 Global Workspace 缓冲区<br>tmp_out[1], tmp_max[1], tmp_exp[1]"]
-        TB3["Thread Block 分区 P...<br>(Block ... 2047)"] -->|计算局部数学| TMP3["写入 Global Workspace 缓冲区<br>tmp_out[P], tmp_max[P], tmp_exp[P]"]
+        TB1["Thread Block 分区 0<br>(Block 0..255)"] -->|"计算局部数学"| TMP1["写入 Global Workspace 缓冲区<br>tmp_out[0], tmp_max[0], tmp_exp[0]"]
+        TB2["Thread Block 分区 1<br>(Block 256..511)"] -->|"计算局部数学"| TMP2["写入 Global Workspace 缓冲区<br>tmp_out[1], tmp_max[1], tmp_exp[1]"]
+        TB3["Thread Block 分区 P...<br>(Block ... 2047)"] -->|"计算局部数学"| TMP3["写入 Global Workspace 缓冲区<br>tmp_out[P], tmp_max[P], tmp_exp[P]"]
     end
 
     subgraph PHASE2 ["阶段 2: Split-KV 规约 Kernel (paged_attention_v2_reduce_kernel)"]
-        TMP1 & TMP2 & TMP3 ==> REDUCE["启动 Reduction Kernel<br>从 Workspace 缓冲区读取 P 个分区数据"]
+        TMP1 ==> REDUCE
+        TMP2 ==> REDUCE
+        TMP3 ==> REDUCE["启动 Reduction Kernel<br>从 Workspace 缓冲区读取 P 个分区数据"]
         REDUCE --> RESCALE["利用 Online Softmax 恒等式重缩放并融合局部输出"]
         RESCALE --> FINAL_O["将精确归一化的输出向量 O 写回 HBM"]
     end

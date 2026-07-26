@@ -60,16 +60,18 @@ Across 64 heads and 80 layers, naive attention requires terabytes of intermediat
 
 ```mermaid
 flowchart TD
-    HBM_Q["Off-Chip HBM<br>Global Q Tensor"] -->|Load Q Tile [B_M x d]| SRAM_Q["On-Chip SRAM<br>Q Tile (SRAM)"]
-    HBM_K["Off-Chip HBM<br>Global K Tensor"] -->|Load K Tile [B_N x d]| SRAM_K["On-Chip SRAM<br>K Tile (SRAM)"]
-    HBM_V["Off-Chip HBM<br>Global V Tensor"] -->|Load V Tile [B_N x d]| SRAM_V["On-Chip SRAM<br>V Tile (SRAM)"]
+    HBM_Q["Off-Chip HBM<br>Global Q Tensor"] -->|"Load Q Tile (B_M x d)"| SRAM_Q["On-Chip SRAM<br>Q Tile"]
+    HBM_K["Off-Chip HBM<br>Global K Tensor"] -->|"Load K Tile (B_N x d)"| SRAM_K["On-Chip SRAM<br>K Tile"]
+    HBM_V["Off-Chip HBM<br>Global V Tensor"] -->|"Load V Tile (B_N x d)"| SRAM_V["On-Chip SRAM<br>V Tile"]
 
-    subgraph ON_CHIP ["🔥 SM Shared Memory (SRAM) Compute Loop"]
-        SRAM_Q & SRAM_K --> S_TILE["SRAM Score Matrix Tile<br>S_tile = Q_tile @ K_tile^T / sqrt(d)"]
-        S_TILE & SRAM_V --> O_TILE["Online Softmax & Weighted Sum<br>O_tile = Softmax(S_tile) @ V_tile"]
+    subgraph ON_CHIP ["🔥 SM Shared Memory SRAM Compute Loop"]
+        SRAM_Q --> S_TILE["SRAM Score Matrix Tile<br>S_tile = Q_tile @ K_tile^T / sqrt(d)"]
+        SRAM_K --> S_TILE
+        S_TILE --> O_TILE["Online Softmax and Weighted Sum<br>O_tile = Softmax(S_tile) @ V_tile"]
+        SRAM_V --> O_TILE
     end
 
-    O_TILE -->|Write Final Output Vector| HBM_O["Off-Chip HBM<br>Global Output Tensor O"]
+    O_TILE -->|"Write Final Output Vector"| HBM_O["Off-Chip HBM<br>Global Output Tensor O"]
 ```
 
 #### Tiling Parameters
@@ -149,14 +151,16 @@ PagedAttention V2 parallelizes attention evaluation *along the sequence length d
 ```mermaid
 flowchart TD
     subgraph PHASE1 ["Phase 1: Parallel Block Partitioning (paged_attention_v2_kernel)"]
-        TB1["Thread Block Partition 0<br>(Blocks 0..255)"] -->|Compute Partial Math| TMP1["Write to Global Workspace Buffer<br>tmp_out[0], tmp_max[0], tmp_exp[0]"]
-        TB2["Thread Block Partition 1<br>(Blocks 256..511)"] -->|Compute Partial Math| TMP2["Write to Global Workspace Buffer<br>tmp_out[1], tmp_max[1], tmp_exp[1]"]
-        TB3["Thread Block Partition P...<br>(Blocks ... 2047)"] -->|Compute Partial Math| TMP3["Write to Global Workspace Buffer<br>tmp_out[P], tmp_max[P], tmp_exp[P]"]
+        TB1["Thread Block Partition 0<br>(Blocks 0..255)"] -->|"Compute Partial Math"| TMP1["Write to Global Workspace Buffer<br>tmp_out[0], tmp_max[0], tmp_exp[0]"]
+        TB2["Thread Block Partition 1<br>(Blocks 256..511)"] -->|"Compute Partial Math"| TMP2["Write to Global Workspace Buffer<br>tmp_out[1], tmp_max[1], tmp_exp[1]"]
+        TB3["Thread Block Partition P...<br>(Blocks ... 2047)"] -->|"Compute Partial Math"| TMP3["Write to Global Workspace Buffer<br>tmp_out[P], tmp_max[P], tmp_exp[P]"]
     end
 
     subgraph PHASE2 ["Phase 2: Split-KV Reduction Kernel (paged_attention_v2_reduce_kernel)"]
-        TMP1 & TMP2 & TMP3 ==> REDUCE["Launch Reduction Kernel<br>Read P Partitions from Workspace Buffer"]
-        REDUCE --> RESCALE["Rescale & Fuse Partial Outputs via Online Softmax Identity"]
+        TMP1 ==> REDUCE["Launch Reduction Kernel<br>Read P Partitions from Workspace Buffer"]
+        TMP2 ==> REDUCE
+        TMP3 ==> REDUCE
+        REDUCE --> RESCALE["Rescale and Fuse Partial Outputs via Online Softmax Identity"]
         RESCALE --> FINAL_O["Write Normalized Output Vector O to HBM"]
     end
 ```
@@ -209,7 +213,7 @@ While CUDA powers NVIDIA GPUs, vLLM features a modular backend architecture supp
 
 ```mermaid
 flowchart TD
-    CORE["vLLM Core Architecture & Scheduler"] --> C_BE["NVIDIA CUDA Backend (CUDA C++ / FlashAttention / FlashInfer)"]
+    CORE["vLLM Core Architecture and Scheduler"] --> C_BE["NVIDIA CUDA Backend (CUDA C++ / FlashAttention / FlashInfer)"]
     CORE --> R_BE["AMD ROCm HIP Backend (HIP C++ / Composable Kernel)"]
     CORE --> T_BE["Google TPU Backend (XLA / Paged KV Custom Calls)"]
     CORE --> N_BE["AWS Neuron Backend (Neuron Core / NKI Kernels)"]
