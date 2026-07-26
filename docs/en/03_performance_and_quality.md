@@ -262,24 +262,34 @@ $$
 | **Tensor Core Utilization** | **100% Peak TFLOPs Capacity** | **$< 25\%$ Utilization** (Tensor Cores sit 75%+ idle) |
 
 #### 4. Concrete Tensor Shape Analysis Across Linear Layers
-To make the Arithmetic Intensity difference intuitive, examine the exact input activation tensor shapes ($X$) multiplying against a linear layer weight matrix ($W$) in Llama 3 70B (e.g., $W_{\text{Gate}} \in \mathbb{R}^{8,192 \times 28,672}$, requiring $\mathbf{0.939 \text{ GB}}$ memory read from HBM):
+To make the Arithmetic Intensity difference intuitive, examine the exact input activation tensor shapes ($X$) multiplying against a representative linear layer weight matrix ($W$) in Llama 3 70B (e.g., $W_{\text{Gate}} \in \mathbb{R}^{8,192 \times 28,672}$, requiring $\mathbf{0.939 \text{ GB}}$ memory read from HBM):
 
 1. **Decode Phase ($b = 64$ sequences, $1$ token each)**:
     - **Activation Tensor Shape**: $X_{\text{decode}} \in \mathbb{R}^{\mathbf{64 \times 8,192}}$ ($64$ token rows).
     - **Matrix Multiplication**: $Y_{\text{decode}} = X_{\text{decode}} @ W_{\text{Gate}} \quad ([64 \times 8,192] \times [8,192 \times 28,672] \to [64 \times 28,672])$.
     - **FLOPs Performed**: $2 \times 64 \times 8,192 \times 28,672 = \mathbf{30.06 \text{ GFLOPs}}$.
     - **Weight Bytes Transferred**: $8,192 \times 28,672 \times 2 \text{ bytes} = \mathbf{0.939 \text{ GB}}$.
-    - **Layer Intensity**: $I_{\text{decode_layer}} = \frac{30.06 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{32.0 \text{ FLOPs / Byte}}$ (Tall-and-skinny matrix multiplication!).
-2. **Prefill Chunk Phase ($N_{\text{chunk}} = 512$ prompt tokens)**:
-    - **Activation Tensor Shape**: $X_{\text{prefill}} \in \mathbb{R}^{\mathbf{512 \times 8,192}}$ ($512$ token rows).
-    - **Matrix Multiplication**: $Y_{\text{prefill}} = X_{\text{prefill}} @ W_{\text{Gate}} \quad ([512 \times 8,192] \times [8,192 \times 28,672] \to [512 \times 28,672])$.
-    - **FLOPs Performed**: $2 \times 512 \times 8,192 \times 28,672 = \mathbf{240.51 \text{ GFLOPs}}$.
+    - **Single-Layer Intensity**: $I_{\text{decode_layer}} = \frac{30.06 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{32.0 \text{ FLOPs / Byte}}$ (Tall-and-skinny matrix multiplication!).
+2. **Prefill Chunk Phase ($N_{\text{chunk}} = 448$ prompt tokens)**:
+    - **Activation Tensor Shape**: $X_{\text{prefill}} \in \mathbb{R}^{\mathbf{448 \times 8,192}}$ ($448$ token rows).
+    - **Matrix Multiplication**: $Y_{\text{prefill}} = X_{\text{prefill}} @ W_{\text{Gate}} \quad ([448 \times 8,192] \times [8,192 \times 28,672] \to [448 \times 28,672])$.
+    - **FLOPs Performed**: $2 \times 448 \times 8,192 \times 28,672 = \mathbf{210.45 \text{ GFLOPs}}$.
     - **Weight Bytes Transferred**: $8,192 \times 28,672 \times 2 \text{ bytes} = \mathbf{0.939 \text{ GB}}$ (Identical weight load!).
-    - **Layer Intensity**: $I_{\text{prefill_layer}} = \frac{240.51 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{256.0 \text{ FLOPs / Byte}}$ (Reuses the exact same $0.939 \text{ GB}$ weight matrix across 8x more token rows!).
+    - **Single-Layer Intensity**: $I_{\text{prefill_layer}} = \frac{210.45 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{224.1 \text{ FLOPs / Byte}}$ (Reuses the exact same $0.939 \text{ GB}$ weight matrix across 7x more token rows!).
 3. **Co-Scheduled Iteration Step ($448$ Prefill Chunk Tokens + $64$ Decode Tokens = $512$ Total Tokens)**:
     - **Combined Activation Tensor Shape**: $X_{\text{coscheduled}} \in \mathbb{R}^{\mathbf{512 \times 8,192}}$ ($512$ token rows).
     - **Matrix Multiplication**: $Y_{\text{coscheduled}} = X_{\text{coscheduled}} @ W_{\text{Gate}} \quad ([512 \times 8,192] \times [8,192 \times 28,672] \to [512 \times 28,672])$.
-    - **Layer Intensity**: $I_{\text{coscheduled_layer}} = \frac{240.51 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{256.0 \text{ FLOPs / Byte}}$ (Pushes execution directly onto the GPU Ridge Point!).
+    - **Single-Layer Intensity**: $I_{\text{coscheduled_layer}} = \frac{240.51 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{256.0 \text{ FLOPs / Byte}}$ (Pushes execution directly onto the GPU Ridge Point!).
+
+#### 5. Scaling to the Entire Model Pass (All Layers + KV Cache)
+While $W_{\text{Gate}}$ serves as a clear single-layer GEMM micro-example, **what happens when we sum across ALL weight matrices ($W_Q, W_K, W_V, W_O, W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}$) and KV Cache memory transfers across all 80 layers?**
+
+- **Total Weight Parameter Memory**: Across all 80 layers, total model parameters equal $N = 70 \text{ Billion}$ ($\mathbf{140 \text{ GB}}$ in FP16/BF16).
+- **KV Cache Memory Transfer**: For $b = 64$ decode sequences at context length $S = 1,024$, reading the KV cache across all 80 layers transfers $\approx \mathbf{0.021 \text{ GB}}$. The KV cache memory transfer represents $< 0.02\%$ of the total $140 \text{ GB}$ model weight transfer!
+- **Model-Wide Decode Intensity ($b = 64$ tokens)**:
+  $$I_{\text{decode_total}} = \frac{64 \text{ tokens} \times 140 \text{ GFLOPs/token}}{140 \text{ GB weights} + 0.021 \text{ GB KV}} = \frac{8,960 \text{ GFLOPs}}{140.021 \text{ GB}} = \mathbf{63.99 \text{ FLOPs / Byte}}$$
+- **Model-Wide Co-Scheduled Intensity ($512$ total tokens)**:
+  $$I_{\text{coscheduled_total}} = \frac{512 \text{ tokens} \times 140 \text{ GFLOPs/token}}{140 \text{ GB weights} + \text{KV Bytes}} = \frac{71,680 \text{ GFLOPs}}{140.1 \text{ GB}} = \mathbf{511.6 \text{ FLOPs / Byte}}$$
 
 ```mermaid
 flowchart TD
