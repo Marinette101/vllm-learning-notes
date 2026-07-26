@@ -69,19 +69,19 @@ This learning folder (`vLLM/`) is organized into 6 comprehensive, self-contained
 
 | Module | Filename | Key Topics Covered |
 | :--- | :--- | :--- |
-| **Module 1: Fundamentals** | `01_llm_inference_fundamentals.md` | Autoregressive decoding mechanics, Prefill vs. Decode phase, KV Cache math (`2 * b * s * l * h * d`), Arithmetic Intensity, and memory fragmentation economics. |
-| **Module 2: Core Architecture** | `02_vllm_core_architecture.md` | OS Virtual Memory mapping, Block Manager anatomy, PagedAttention kernel workflow, Copy-on-Write (CoW) for beam search/shared prompts, and Automatic Prefix Caching (APC). |
-| **Module 3: Performance and Quality** | `03_performance_and_quality.md` | Metrics (TTFT, ITL/TBT, Throughput), Chunked Prefill, CUDA Graphs, Speculative Decoding (Medusa/EAGLE/Draft models), and Quantization trade-offs (AWQ, GPTQ, FP8, W8A8). |
-| **Module 4: Hardware Interaction** | `04_hardware_and_kernel_optimization.md` | GPU memory hierarchy (HBM/L2/SRAM), PagedAttention and FlashAttention SRAM tiling, V1 vs V2 engine async execution, and cross-hardware backends (CUDA, ROCm, TPU, Neuron). |
-| **Module 5: Distributed Parallelism** | `05_distributed_parallelism.md` | Tensor Parallelism (Megatron-LM syncs over NVLink), Pipeline Parallelism (micro-batching and bubbles), Context Parallelism (Ring-Attention), and Expert Parallelism (MoE routing). |
-| **Module 6: K8s and Orchestration** | `06_deployment_and_orchestration.md` | OpenAI API Server structure, Ray multi-host actors, Kubernetes deployment (GPU Operator, `/dev/shm` sizing, NUMA pinning), KEDA autoscaling on KV utilization, and Triton integration. |
-| **Appendix: Master Glossary** | `appendix_glossary_and_terminology.md` | Comprehensive reference of all architectural, mathematical (`RoPE`, `SwiGLU`), physical hardware (`HBM`, `L2`, `SM`), and distributed systems (`EP`, `TP`, `PP`) terminology. |
+| **[Module 1: Fundamentals](01_llm_inference_fundamentals.md)** | [`01_llm_inference_fundamentals.md`](01_llm_inference_fundamentals.md) | Autoregressive decoding mechanics, Prefill vs. Decode phase, KV Cache math (`2 * b * s * l * h * d`), Arithmetic Intensity, and memory fragmentation economics. |
+| **[Module 2: Core Architecture](02_vllm_core_architecture.md)** | [`02_vllm_core_architecture.md`](02_vllm_core_architecture.md) | OS Virtual Memory mapping, Block Manager anatomy, PagedAttention kernel workflow, Copy-on-Write (CoW) for beam search/shared prompts, and Automatic Prefix Caching (APC). |
+| **[Module 3: Performance and Quality](03_performance_and_quality.md)** | [`03_performance_and_quality.md`](03_performance_and_quality.md) | Metrics (TTFT, ITL/TBT, Throughput), Chunked Prefill, CUDA Graphs, Speculative Decoding (Medusa/EAGLE/Draft models), and Quantization trade-offs (AWQ, GPTQ, FP8, W8A8). |
+| **[Module 4: Hardware Interaction](04_hardware_and_kernel_optimization.md)** | [`04_hardware_and_kernel_optimization.md`](04_hardware_and_kernel_optimization.md) | GPU memory hierarchy (HBM/L2/SRAM), PagedAttention and FlashAttention SRAM tiling, V1 vs V2 engine async execution, and cross-hardware backends (CUDA, ROCm, TPU, Neuron). |
+| **[Module 5: Distributed Parallelism](05_distributed_parallelism.md)** | [`05_distributed_parallelism.md`](05_distributed_parallelism.md) | Tensor Parallelism (Megatron-LM syncs over NVLink), Pipeline Parallelism (micro-batching and bubbles), Context Parallelism (Ring-Attention), and Expert Parallelism (MoE routing). |
+| **[Module 6: K8s and Orchestration](06_deployment_and_orchestration.md)** | [`06_deployment_and_orchestration.md`](06_deployment_and_orchestration.md) | OpenAI API Server structure, Ray multi-host actors, Kubernetes deployment (GPU Operator, `/dev/shm` sizing, NUMA pinning), KEDA autoscaling on KV utilization, and Triton integration. |
+| **[Appendix: Master Glossary](appendix_glossary_and_terminology.md)** | [`appendix_glossary_and_terminology.md`](appendix_glossary_and_terminology.md) | Comprehensive reference of all architectural, mathematical (`RoPE`, `SwiGLU`), physical hardware (`HBM`, `L2`, `SM`), and distributed systems (`EP`, `TP`, `PP`) terminology. |
 
 ---
 
 ## Part 3: Deep-Dive Module Breakdown
 
-### [Module 1] LLM Inference Fundamentals and The Bottlenecks (`01_llm_inference_fundamentals.md`)
+### [Module 1: LLM Inference Fundamentals and The Bottlenecks](01_llm_inference_fundamentals.md)
 1. **The Anatomy of Transformer Generation**
     - **Prefill (Prompt Phase)**: Compute-bound, parallel processing of all input tokens simultaneously. Generates the initial KV cache and the first generated token.
     - **Decode (Generation Phase)**: Memory-bandwidth bound, sequential processing generating one token at a time while reading the entire historical KV cache from HBM for every step.
@@ -103,7 +103,7 @@ $$
 
 ---
 
-### [Module 2] vLLM Core Architecture and PagedAttention (`02_vllm_core_architecture.md`)
+### [Module 2: vLLM Core Architecture and PagedAttention](02_vllm_core_architecture.md)
 1. **The Operating System Analogy: Paging in LLMs**
     - Logical Token Blocks vs. Physical KV Blocks.
     - The **Block Table**: Translating logical sequence offsets to physical block indices in HBM in $\mathcal{O}(1)$ time.
@@ -120,7 +120,7 @@ $$
 
 ---
 
-### [Module 3] Performance, Quality and Engine Enhancements (`03_performance_and_quality.md`)
+### [Module 3: Performance, Quality and Engine Enhancements](03_performance_and_quality.md)
 1. **Inference Metrics and Trade-Offs**
     - **Time To First Token (TTFT)**: The responsiveness metric (governed by prefill speed and queue wait time).
     - **Inter-Token Latency (ITL / TBT)**: The smoothness metric (governed by decode step duration).
@@ -145,7 +145,7 @@ $$
 
 ---
 
-### [Module 4] Hardware Interaction and Kernel Co-Design (`04_hardware_and_kernel_optimization.md`)
+### [Module 4: Hardware Interaction and Kernel Co-Design](04_hardware_and_kernel_optimization.md)
 1. **The Complete Accelerator Storage Pyramid**
     - Memory hierarchy spectrum: Registers ($0 \text{ cycles}$, $>100 \text{ TB/s}$), On-Chip SRAM ($20 \dots 30 \text{ cycles}$, $33 \text{ TB/s}$), L2 Cache ($150 \dots 200 \text{ cycles}$, $12 \text{ TB/s}$), HBM3 ($400 \dots 800 \text{ cycles}$, $3.35 \text{ TB/s}$), Host CPU System RAM (DDR5 via PCIe/NVLink-C2C, $64 \dots 900 \text{ GB/s}$), and Host NVMe SSD Flash (NAND).
     - vLLM CPU KV Cache Swapping (`cpu_swap_space`) over PCIe 5.0 x16 and NVMe cold-start weight streaming (`safetensors`).
@@ -154,7 +154,7 @@ $$
     - Online Softmax incremental recurrence equations ($m^{(j)}, l^{(j)}, O^{(j)}$) for single-pass stability.
 3. **PagedAttention CUDA Kernel Engineering (V1 vs. V2)**
     - PagedAttention V1: One thread block per head per sequence; SM wave under-utilization during single-user long-context decoding.
-    - PagedAttention V2 & Split-KV Reduction: Parallel sequence partitioning along the time axis ($N_{\text{partitions}} = \text{seq_len} / 256$), intermediate global workspace staging (`tmp_output`, `tmp_max_logits`, `tmp_exp_sums`), and `paged_attention_v2_reduce_kernel` ($2.0\times \dots 5.0\times$ speedup).
+    - PagedAttention V2 & Split-KV Reduction: Parallel sequence partitioning along the time axis ($N_{\text{partitions}} = \text{seq\_len} / 256$), intermediate global workspace staging (`tmp_output`, `tmp_max_logits`, `tmp_exp_sums`), and `paged_attention_v2_reduce_kernel` ($2.0\times \dots 5.0\times$ speedup).
 4. **Cross-Hardware Ecosystem Abstraction**
     - AMD ROCm (HIP): Wavefront 64 (`wave64`) thread alignment, AMD Composable Kernel (CK) for MI300X Matrix Cores, and MI300X $192 \text{ GB}$ HBM3 ($5.3 \text{ TB/s}$).
     - Google TPUs: XLA Paged KV custom calls and static block table padding.
@@ -162,7 +162,7 @@ $$
 
 ---
 
-### [Module 5] Distributed Parallelism and Multi-GPU Orchestration (`05_distributed_parallelism.md`)
+### [Module 5: Distributed Parallelism and Multi-GPU Orchestration](05_distributed_parallelism.md)
 1. **Distributed Serving Taxonomy and Interconnect Constraints**
     - Hardware interconnect bandwidth matching: NVLink 4 ($900 \text{ GB/s}$) vs. PCIe Gen5 ($64 \text{ GB/s}$) vs. InfiniBand NDR ($50 \text{ GB/s}$ / $400 \text{ Gbps}$).
 2. **Tensor Parallelism (TP) Mechanics in vLLM**
@@ -178,7 +178,7 @@ $$
 
 ---
 
-### [Module 6] Production Deployment, Cloud Orchestration, and Observability (`06_deployment_and_orchestration.md`)
+### [Module 6: Production Deployment, Cloud Orchestration, and Observability](06_deployment_and_orchestration.md)
 1. **OpenAI API Server and AsyncEngine Architecture**
     - `FastAPI` / `Uvicorn` server layer providing OpenAI-compatible endpoints (`/v1/completions` and `/v1/chat/completions`).
     - Non-blocking `AsyncLLMEngine` with background `step_async()` loop decoupling HTTP queueing from GPU forward execution.

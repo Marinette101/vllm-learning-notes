@@ -69,19 +69,19 @@ flowchart TD
 
 | 模块 | 文件名 | 核心主题 |
 | :--- | :--- | :--- |
-| **模块 1: 推理基础** | `01_llm_inference_fundamentals.md` | 自回归解码机制、Prefill 与 Decode 阶段、KV Cache 数学推导 (`2 * b * s * l * h * d`)、算术强度 Roofline 模型与显存碎片。 |
-| **模块 2: 核心架构** | `02_vllm_core_architecture.md` | 操作系统虚拟内存映射、Block Manager 剖析、PagedAttention Kernel 工作流、Beam Search 的 Copy-on-Write (CoW) 与自动前缀缓存 (APC)。 |
-| **模块 3: 性能与质量** | `03_performance_and_quality.md` | 指标 (TTFT, ITL)、Prefill vs Decode FLOPs 严密推导、Chunked Prefill、CUDA Graph、投机解码 (Medusa/EAGLE/Draft) 与量化 (AWQ, FP8)。 |
-| **模块 4: 硬件交互** | `04_hardware_and_kernel_optimization.md` | 加速器存储金字塔 (SRAM/HBM/DDR5/NVMe)、SRAM Tiling 与 FlashAttention、PagedAttention V1 vs V2 Split-KV、AMD/TPU/Neuron 后端。 |
-| **模块 5: 分布式并行** | `05_distributed_parallelism.md` | 硬件互连拓扑 (NVLink/InfiniBand)、张量并行 (TP Megatron-LM `custom_ar`)、流水线并行 (PP)、上下文并行 (CP Ring-Attention) 与专家并行 (EP MoE `fused_moe`)。 |
-| **模块 6: 部署与编排** | `06_deployment_and_orchestration.md` | OpenAI API Server (`AsyncLLMEngine`)、Ray 集群编排、Kubernetes 最佳实践 (`/dev/shm` IPC)、Prometheus 指标与 KEDA 自动扩缩容。 |
-| **附录: 主词汇表** | `appendix_glossary_and_terminology.md` | 所有架构、数学 (`RoPE`, `SwiGLU`)、物理硬件 (`HBM`, `SRAM`, `SM`) 以及分布式系统 (`EP`, `TP`, `PP`) 术语的权威参考。 |
+| **[模块 1: 推理基础](01_llm_inference_fundamentals.md)** | [`01_llm_inference_fundamentals.md`](01_llm_inference_fundamentals.md) | 自回归解码机制、Prefill 与 Decode 阶段、KV Cache 数学推导 (`2 * b * s * l * h * d`)、算术强度 Roofline 模型与显存碎片。 |
+| **[模块 2: 核心架构](02_vllm_core_architecture.md)** | [`02_vllm_core_architecture.md`](02_vllm_core_architecture.md) | 操作系统虚拟内存映射、Block Manager 剖析、PagedAttention Kernel 工作流、Beam Search 的 Copy-on-Write (CoW) 与自动前缀缓存 (APC)。 |
+| **[模块 3: 性能与质量](03_performance_and_quality.md)** | [`03_performance_and_quality.md`](03_performance_and_quality.md) | 指标 (TTFT, ITL)、Prefill vs Decode FLOPs 严密推导、Chunked Prefill、CUDA Graph、投机解码 (Medusa/EAGLE/Draft) 与量化 (AWQ, FP8)。 |
+| **[模块 4: 硬件交互](04_hardware_and_kernel_optimization.md)** | [`04_hardware_and_kernel_optimization.md`](04_hardware_and_kernel_optimization.md) | 加速器存储金字塔 (SRAM/HBM/DDR5/NVMe)、SRAM Tiling 与 FlashAttention、PagedAttention V1 vs V2 Split-KV、AMD/TPU/Neuron 后端。 |
+| **[模块 5: 分布式并行](05_distributed_parallelism.md)** | [`05_distributed_parallelism.md`](05_distributed_parallelism.md) | 硬件互连拓扑 (NVLink/InfiniBand)、张量并行 (TP Megatron-LM `custom_ar`)、流水线并行 (PP)、上下文并行 (CP Ring-Attention) 与专家并行 (EP MoE `fused_moe`)。 |
+| **[模块 6: 部署与编排](06_deployment_and_orchestration.md)** | [`06_deployment_and_orchestration.md`](06_deployment_and_orchestration.md) | OpenAI API Server (`AsyncLLMEngine`)、Ray 集群编排、Kubernetes 最佳实践 (`/dev/shm` IPC)、Prometheus 指标与 KEDA 自动扩缩容。 |
+| **[附录: 主词汇表](appendix_glossary_and_terminology.md)** | [`appendix_glossary_and_terminology.md`](appendix_glossary_and_terminology.md) | 所有架构、数学 (`RoPE`, `SwiGLU`)、物理硬件 (`HBM`, `SRAM`, `SM`) 以及分布式系统 (`EP`, `TP`, `PP`) 术语的权威参考。 |
 
 ---
 
 ## 第 3 部分: 深度模块拆分
 
-### [模块 1] LLM 推理基础与瓶颈 (`01_llm_inference_fundamentals.md`)
+### [模块 1: LLM 推理基础与瓶颈](01_llm_inference_fundamentals.md)
 1. **Transformer 生成机制剖析**: Prefill (Prompt) 阶段 (计算受限) vs. Decode 阶段 (带宽受限)。
 2. **KV Cache 数学公式推导**: $2 \cdot b \cdot s \cdot L \cdot h_{\text{kv}} \cdot d_{\text{head}} \cdot \text{sizeof(dtype)}$，为什么 70B 模型在 4K 上下文下仅 KV 显存就高达数十 GB。
 3. **内存受限与计算受限范式**: Roofline 模型与算术强度 ($\text{FLOPs / Byte}$)。
@@ -89,7 +89,7 @@ flowchart TD
 
 ---
 
-### [模块 2] vLLM 核心架构与 PagedAttention (`02_vllm_core_architecture.md`)
+### [模块 2: vLLM 核心架构与 PagedAttention](02_vllm_core_architecture.md)
 1. **操作系统类比: LLM 中的分页**: 逻辑 Token Block 与物理 KV Block、$\mathcal{O}(1)$ 查表的 Block Table。
 2. **PagedAttention 深度剖析**: 注意力 Kernel 如何在 SRAM 内部按 Block Table 查表计算注意力。
 3. **Block Manager 与内存分配器**: Block Size 选择 (16 token)、Copy-on-Write (CoW) 写时复制机制与自动前缀缓存 (APC)。
@@ -97,7 +97,7 @@ flowchart TD
 
 ---
 
-### [模块 3] 性能、质量与引擎增强 (`03_performance_and_quality.md`)
+### [模块 3: 性能、质量与引擎增强](03_performance_and_quality.md)
 1. **推理性能指标**: 首 Token 延迟 (TTFT)、Token 间延迟 (ITL) 与吞吐量权衡。
 2. ** Prefill vs Decode FLOPs 系统分析**: 为什么 2x 与 4x 注意力 FLOPs 相比 140 GFLOPs 权重投影微不足道 ($< 3.6\%$)；算术强度 ($I = 64$ vs $512 \text{ FLOPs/Byte}$)；线性层矩阵形状分析 ($[64 \times 8192]$ vs $[448 \times 8192]$)。
 3. **高级调度: Chunked Prefill 与 Co-Scheduling**: 解决 Head-of-Line 阻塞，约束 Step 延迟并在内存流式传输时利用闲置 Tensor Core。
@@ -107,7 +107,7 @@ flowchart TD
 
 ---
 
-### [模块 4] 硬件交互与 Kernel 联合设计 (`04_hardware_and_kernel_optimization.md`)
+### [模块 4: 硬件交互与 Kernel 联合设计](04_hardware_and_kernel_optimization.md)
 1. **完整的加速器存储金字塔**: 寄存器 ($0 \text{ 周期}$)、片上 SRAM ($20 \text{ 周期}$)、L2 Cache ($150 \text{ 周期}$)、HBM3 ($400 \text{ 周期}$)、Host CPU 内存 (DDR5 换页 `cpu_swap_space`) 与 NVMe SSD Flash (NAND)。
 2. **SRAM Tiling 与 FlashAttention 内部机制**: 将 $Q, K, V$ Tile 载入 SRAM 消除 $O(S^2)$ 显存占用，Online Softmax 增量递推。
 3. **PagedAttention CUDA Kernel 工程实现**: V1 单 Block 串行 vs V2 Split-KV 并行切分与 `paged_attention_v2_reduce_kernel` 规约。
@@ -115,7 +115,7 @@ flowchart TD
 
 ---
 
-### [模块 5] 分布式并行与多 GPU 编排 (`05_distributed_parallelism.md`)
+### [模块 5: 分布式并行与多 GPU 编排](05_distributed_parallelism.md)
 1. **分布式服务分类与拓扑约束**: NVLink 4 ($900 \text{ GB/s}$) vs PCIe Gen5 ($64 \text{ GB/s}$) vs InfiniBand ($50 \text{ GB/s}$)。
 2. **张量并行 (TP) 机制**: ColumnParallelLinear 与 RowParallelLinear 矩阵切分；自定义 NVLink All-Reduce (`vllm._C.custom_ar`) 消除 NCCL 开销 ($15 \ \mu\text{s} \to < 2.5 \ \mu\text{s}$)。
 3. **流水线并行 (PP) 与上下文并行 (CP)**: PP 阶段划分与点对点 (P2P) 传输；CP Ring-Attention 环形传递处理 $100K+$ 上下文。
@@ -123,7 +123,7 @@ flowchart TD
 
 ---
 
-### [模块 6] 生产级部署、云原生编排与可观测性 (`06_deployment_and_orchestration.md`)
+### [模块 6: 生产级部署、云原生编排与可观测性](06_deployment_and_orchestration.md)
 1. **OpenAI API Server 与 AsyncEngine 架构**: FastAPI/Uvicorn 服务层、非阻塞 `AsyncLLMEngine` 事件循环与 SSE 流式输出。
 2. **基于 Ray Core 的多节点集群编排**: Ray Actor Worker、Ray Placement Group `PACK` 打包策略与 `torch.distributed` 初始化。
 3. **Kubernetes 生产级部署最佳实践**: `/dev/shm` 内存卷挂载防止 NVLink IPC 崩溃、NVIDIA GPU Operator、Readiness 探针与优雅终止。
