@@ -173,35 +173,64 @@ The scheduler executes the following budget evaluation:
 
 A fundamental question in LLM serving performance is: **Are FLOPs per token and execution costs identical between the Prefill phase and the Decode phase?**
 
-#### 1. The Weight Projection Myth: "Does Prefill only compute KV cache?"
-A common misconception is that prefill tokens "only calculate KV cache vectors" while decode tokens execute the model's full forward pass.
+#### 1. Why Prefill Tokens Execute Full Attention and FFN Passes Across All Layers
+A common conceptual question is: *Why do intermediate prefill tokens compute Queries, Attention, and FFN passes at all if they are not predicting output tokens? Why isn't prefill just computing Key and Value vectors?*
 
-**In reality, every single token passing through a Transformer layer—whether in Prefill or Decode—must pass through all linear weight projections**:
+There are three fundamental architectural reasons why prefill tokens must execute full Attention and FFN passes across every Transformer layer:
 
-- Query, Key, and Value projections ($W_Q, W_K, W_V$)
-- Multi-Head Output projection ($W_O$)
-- SwiGLU Feed-Forward Network projections ($W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}$)
-
-For an $N$-parameter model (e.g., Llama 3 70B), **both Prefill tokens and Decode tokens execute $2 \cdot N$ FLOPs per token for linear weight projections** ($\sim 140 \text{ GFLOPs/token}$).
-
-#### 2. Attention FLOPs Comparison per Token
-The difference in FLOPs per token arises solely within the Self-Attention mechanism ($Q @ K^T$ and $\text{Softmax} @ V$):
-
-- **Prefill Phase (Prompt of length $S$)**:
-  Prompt token $i$ (for $i \in [1, S]$) computes attention over previous tokens $1 \dots i$. The average attention FLOPs per token across the prompt is:
+1. **Layer-by-Layer Contextual Representation Building**:
+    In a multi-layer Transformer (e.g., 80 layers in Llama 3 70B), raw token embeddings ($X_0$) at Layer 0 contain only static dictionary meanings (e.g., the word `"Apple"`). As tokens pass through Layer 1, Layer 2, ..., Layer 80, attention allows token $i$ (`"Apple"`) to aggregate information from preceding tokens (`"introduced"`, `"new"`, `"iPhone"`), updating its hidden state representation $h_i^{(l)}$.
+2. **KV Cache Vectors for Deeper Layers Depend on Hidden States ($h_i^{(l)}$)**:
+    Key and Value vectors for token $i$ at Layer $l+1$ are computed directly from token $i$'s hidden state output from Layer $l$:
 
 $$
-\text{FLOPs}_{\text{attn, prefill_per_token}} \approx 2 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S
+K_i^{(l+1)} = h_i^{(l)} W_K^{(l+1)}, \quad V_i^{(l+1)} = h_i^{(l)} W_V^{(l+1)}
 $$
 
-- **Decode Phase (Single token at position $S$)**:
-  The single decode token at position $S$ computes attention against all historical $S$ tokens stored in the KV cache:
-
 $$
-\text{FLOPs}_{\text{attn, decode_per_token}} \approx 4 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S
+\text{where } h_i^{(l)} = h_i^{(l-1)} + \text{FFN}\left(\text{Attention}(h_i^{(l-1)})\right)
 $$
 
-For typical context lengths ($S < 8,000$), weight projections account for $> 95\%$ of all mathematical FLOPs, making the **raw FLOP count per token nearly identical between Prefill and Decode**.
+To compute the KV cache vectors at Layer 40, token $i$ **must** execute full Attention and FFN passes at Layer 39. Without layer-by-layer attention and FFN passes, KV cache vectors at deeper layers would be un-contextualized and mathematically meaningless!
+3. **Logit Generation for the Next Token**:
+    The prompt's final token ($s_{\text{prompt}}$) uses the contextual representation $h_{s_{\text{prompt}}}^{(80)}$ at Layer 80 to compute the logit distribution for the first generated decode token ($s_{\text{prompt}}+1$). To produce $h_{s_{\text{prompt}}}^{(80)}$, token $s_{\text{prompt}}$ must attend to all previous tokens $1 \dots s_{\text{prompt}}-1$ across all 80 layers.
+
+---
+
+#### 2. Quantitative FLOP Breakdown: Why $2\times$ vs $4\times$ Attention FLOPs is Negligible ($S < 8,000$)
+Why do systems engineers state that raw FLOPs per token are nearly identical between Prefill and Decode, even though Prefill Attention FLOPs per token use a $2\times$ factor while Decode Attention FLOPs use a $4\times$ factor?
+
+Let's evaluate the exact FLOP breakdown for a **70B parameter model** ($N = 70 \times 10^9$, $L = 80$, $h_q = 64$, $d_{\text{head}} = 128$):
+
+##### Step 1: Linear Weight Projection FLOPs (Identical for Both)
+For every token passing through the model in both Prefill and Decode, multiplying against all linear weight matrices ($W_Q, W_K, W_V, W_O, W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}$) requires:
+
+$$
+\text{FLOPs}_{\text{weights}} = 2 \cdot N = 2 \times 70 \times 10^9 = \mathbf{140 \text{ GFLOPs / token}}
+$$
+
+##### Step 2: Attention FLOPs per Token at Context Length $S = 1,024$
+- **Prefill Phase (Average Attention FLOPs per token)**:
+  In prefill, token $i \in [1, S]$ attends to $i$ previous tokens. Averaged across the prompt:
+
+$$
+\text{FLOPs}_{\text{attn, prefill}} \approx 2 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S = 2 \times 80 \times 64 \times 128 \times 1,024 = \mathbf{1.34 \text{ GFLOPs / token}}
+$$
+
+- **Decode Phase (Single-Token Attention FLOPs)**:
+  A single decode token at position $S = 1,024$ attends to all $S$ cached KV tokens ($Q @ K^T$ score calculation and $\text{Softmax} @ V$ weighted sum):
+
+$$
+\text{FLOPs}_{\text{attn, decode}} \approx 4 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S = 4 \times 80 \times 64 \times 128 \times 1,024 = \mathbf{2.68 \text{ GFLOPs / token}}
+$$
+
+##### Step 3: Total FLOPs per Token Comparison ($S = 1,024$)
+- **Prefill Total FLOPs / token**: $140.0 + 1.34 = \mathbf{141.34 \text{ GFLOPs / token}}$ (Attention is $0.95\%$ of total math).
+- **Decode Total FLOPs / token**: $140.0 + 2.68 = \mathbf{142.68 \text{ GFLOPs / token}}$ (Attention is $1.88\%$ of total math).
+
+$$\text{Difference} = \frac{142.68 - 141.34}{141.34} = \mathbf{0.948\% \text{ difference!}}$$
+
+Even though Decode Attention FLOPs ($2.68 \text{ GFLOPs}$) are $2\times$ Prefill Attention FLOPs ($1.34 \text{ GFLOPs}$), **Attention FLOPs as a whole are dwarfed by the massive $140 \text{ GFLOPs}$ of linear weight projections**. For typical context lengths ($S < 8,000$), total FLOPs per token differ by less than $3.6\%$.
 
 #### 3. The True Bottleneck Difference: Memory Bandwidth vs. Compute
 While raw FLOP counts per token are similar, **the execution time and hardware cost per token are drastically different due to Arithmetic Intensity ($I = \text{FLOPs} / \text{Bytes}$)**:
