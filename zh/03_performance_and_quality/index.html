@@ -634,6 +634,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#4-concrete-tensor-shape-analysis-across-linear-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Concrete Tensor Shape Analysis Across Linear Layers
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1180,6 +1191,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#4-concrete-tensor-shape-analysis-across-linear-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Concrete Tensor Shape Analysis Across Linear Layers
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1701,12 +1723,38 @@ I_{\text{prefill}} = \frac{512 \text{ tokens} \times 140 \text{ GFLOPs / token}}
 </tr>
 </tbody>
 </table>
+<h4 id="4-concrete-tensor-shape-analysis-across-linear-layers">4. Concrete Tensor Shape Analysis Across Linear Layers<a class="headerlink" href="#4-concrete-tensor-shape-analysis-across-linear-layers" title="Permanent link">&para;</a></h4>
+<p>To make the Arithmetic Intensity difference intuitive, examine the exact input activation tensor shapes (<span class="arithmatex">\(X\)</span>) multiplying against a linear layer weight matrix (<span class="arithmatex">\(W\)</span>) in Llama 3 70B (e.g., <span class="arithmatex">\(W_{\text{Gate}} \in \mathbb{R}^{8,192 \times 28,672}\)</span>, requiring <span class="arithmatex">\(\mathbf{0.939 \text{ GB}}\)</span> memory read from HBM):</p>
+<ol>
+<li><strong>Decode Phase (<span class="arithmatex">\(b = 64\)</span> sequences, <span class="arithmatex">\(1\)</span> token each)</strong>:<ul>
+<li><strong>Activation Tensor Shape</strong>: <span class="arithmatex">\(X_{\text{decode}} \in \mathbb{R}^{\mathbf{64 \times 8,192}}\)</span> (<span class="arithmatex">\(64\)</span> token rows).</li>
+<li><strong>Matrix Multiplication</strong>: <span class="arithmatex">\(Y_{\text{decode}} = X_{\text{decode}} @ W_{\text{Gate}} \quad ([64 \times 8,192] \times [8,192 \times 28,672] \to [64 \times 28,672])\)</span>.</li>
+<li><strong>FLOPs Performed</strong>: <span class="arithmatex">\(2 \times 64 \times 8,192 \times 28,672 = \mathbf{30.06 \text{ GFLOPs}}\)</span>.</li>
+<li><strong>Weight Bytes Transferred</strong>: <span class="arithmatex">\(8,192 \times 28,672 \times 2 \text{ bytes} = \mathbf{0.939 \text{ GB}}\)</span>.</li>
+<li><strong>Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{decode_layer}} = \frac{30.06 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{32.0 \text{ FLOPs / Byte}}\)</span> (Tall-and-skinny matrix multiplication!).</li>
+</ul>
+</li>
+<li><strong>Prefill Chunk Phase (<span class="arithmatex">\(N_{\text{chunk}} = 512\)</span> prompt tokens)</strong>:<ul>
+<li><strong>Activation Tensor Shape</strong>: <span class="arithmatex">\(X_{\text{prefill}} \in \mathbb{R}^{\mathbf{512 \times 8,192}}\)</span> (<span class="arithmatex">\(512\)</span> token rows).</li>
+<li><strong>Matrix Multiplication</strong>: <span class="arithmatex">\(Y_{\text{prefill}} = X_{\text{prefill}} @ W_{\text{Gate}} \quad ([512 \times 8,192] \times [8,192 \times 28,672] \to [512 \times 28,672])\)</span>.</li>
+<li><strong>FLOPs Performed</strong>: <span class="arithmatex">\(2 \times 512 \times 8,192 \times 28,672 = \mathbf{240.51 \text{ GFLOPs}}\)</span>.</li>
+<li><strong>Weight Bytes Transferred</strong>: <span class="arithmatex">\(8,192 \times 28,672 \times 2 \text{ bytes} = \mathbf{0.939 \text{ GB}}\)</span> (Identical weight load!).</li>
+<li><strong>Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{prefill_layer}} = \frac{240.51 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{256.0 \text{ FLOPs / Byte}}\)</span> (Reuses the exact same <span class="arithmatex">\(0.939 \text{ GB}\)</span> weight matrix across 8x more token rows!).</li>
+</ul>
+</li>
+<li><strong>Co-Scheduled Iteration Step (<span class="arithmatex">\(448\)</span> Prefill Chunk Tokens + <span class="arithmatex">\(64\)</span> Decode Tokens = <span class="arithmatex">\(512\)</span> Total Tokens)</strong>:<ul>
+<li><strong>Combined Activation Tensor Shape</strong>: <span class="arithmatex">\(X_{\text{coscheduled}} \in \mathbb{R}^{\mathbf{512 \times 8,192}}\)</span> (<span class="arithmatex">\(512\)</span> token rows).</li>
+<li><strong>Matrix Multiplication</strong>: <span class="arithmatex">\(Y_{\text{coscheduled}} = X_{\text{coscheduled}} @ W_{\text{Gate}} \quad ([512 \times 8,192] \times [8,192 \times 28,672] \to [512 \times 28,672])\)</span>.</li>
+<li><strong>Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{coscheduled_layer}} = \frac{240.51 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{256.0 \text{ FLOPs / Byte}}\)</span> (Pushes execution directly onto the GPU Ridge Point!).</li>
+</ul>
+</li>
+</ol>
 <pre class="mermaid"><code>flowchart TD
     subgraph DECODE_BENEFIT ["⚡ Why Co-Scheduling Prefill and Decode is a Win-Win"]
-        D_IDLE["Decode Phase (64 Tokens): Reads 140 GB weights from HBM&lt;br&gt;Saturates Memory Bus | Tensor Cores sit 75% Idle"]
-        P_COMP["Prefill Chunk (448 Tokens): Needs Tensor Core FLOPs math&lt;br&gt;Shares the exact same 140 GB weight read pass from HBM"]
+        D_IDLE["Decode Phase (64 Tokens): Reads 140 GB weights from HBM&lt;br&gt;Activation Matrix [64 x 8192] | Tensor Cores sit 75% Idle"]
+        P_COMP["Prefill Chunk (448 Tokens): Needs Tensor Core FLOPs math&lt;br&gt;Activation Matrix [448 x 8192] | Shares exact same HBM Weight Read"]
 
-        D_IDLE &amp; P_COMP --&gt; FUSED["Co-Scheduled Batch (512 Total Tokens):&lt;br&gt;Tensor Cores process 448 Prefill FLOPs while Memory Bus streams 64 Decode weights!&lt;br&gt;&lt;b&gt;Result: Near-Free Prefill Compute with Zero ITL Spikes&lt;/b&gt;"]
+        D_IDLE &amp; P_COMP --&gt; FUSED["Co-Scheduled Matrix [512 x 8192]:&lt;br&gt;Tensor Cores process 448 Prefill FLOPs while Memory Bus streams 64 Decode weights!&lt;br&gt;&lt;b&gt;Result: Near-Free Prefill Compute with Zero ITL Spikes&lt;/b&gt;"]
     end</code></pre>
 <p>This core systems insight explains why Chunked Prefill and Co-Scheduling in vLLM is so powerful: <strong>because single-token decode steps leave GPU Tensor Cores mostly idle waiting for memory bandwidth, co-scheduling a prefill chunk (<span class="arithmatex">\(448\)</span> tokens) alongside decode requests (<span class="arithmatex">\(64\)</span> tokens) utilizes those idle compute cycles during the exact same memory-streaming pass, evaluating prefill prompt tokens at near-zero incremental time cost</strong>.</p>
 <hr />
