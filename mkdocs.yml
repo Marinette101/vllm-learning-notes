@@ -7,6 +7,7 @@ nav:
   - Module 1 - Inference Fundamentals: 01_llm_inference_fundamentals.md
   - Module 2 - vLLM Core Architecture: 02_vllm_core_architecture.md
   - Module 3 - Performance and Quality: 03_performance_and_quality.md
+  - Module 4 - Hardware and Kernel Optimization: 04_hardware_and_kernel_optimization.md
   - Appendix - Master Glossary: appendix_glossary_and_terminology.md
 
 theme:
