@@ -1,0 +1,1299 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An AI Engineering Textbook and Production Reference">
+      
+      
+        <meta name="author" content="linghuanym">
+      
+      
+      
+        <link rel="prev" href="../04_hardware_and_kernel_optimization/">
+      
+      
+        <link rel="next" href="../appendix_glossary_and_terminology/">
+      
+      
+        
+          <link rel="alternate" href="../../05_distributed_parallelism/" hreflang="en">
+        
+          <link rel="alternate" href="./" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Module 5 - Distributed Parallelism - vLLM Core Architecture & Performance Mechanics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#5-gpu" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../" title="vLLM Core Architecture &amp; Performance Mechanics" class="md-header__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            vLLM Core Architecture & Performance Mechanics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Module 5 - Distributed Parallelism
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../05_distributed_parallelism/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../" title="vLLM Core Architecture &amp; Performance Mechanics" class="md-nav__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    vLLM Core Architecture & Performance Mechanics
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Curriculum & Principles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_llm_inference_fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 1 - Inference Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_vllm_core_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 2 - vLLM Core Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03_performance_and_quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 3 - Performance and Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04_hardware_and_kernel_optimization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 4 - Hardware and Kernel Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 5 - Distributed Parallelism
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 5 - Distributed Parallelism
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 1 部分: 分布式服务分类与互连拓扑约束
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 1 部分: 分布式服务分类与互连拓扑约束">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 硬件互连带宽差距
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 分布式并行维度速览
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-vllm-tp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 2 部分: vLLM 中的张量并行 (TP) 机制
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 2 部分: vLLM 中的张量并行 (TP) 机制">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-columnparallellinear-rowparallellinear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 ColumnParallelLinear 与 RowParallelLinear
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 ColumnParallelLinear 与 RowParallelLinear">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-columnparallellinear-w_q-w_k-w_v-w_textgate-w_textup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 按列并行 ColumnParallelLinear (\(W_Q, W_K, W_V\) 及 \(W_{\text{Gate}}, W_{\text{Up}}\))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-rowparallellinear-w_o-w_textdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 按行并行 RowParallelLinear (\(W_O\) 及 \(W_{\text{Down}}\))
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-nvlink-all-reduce-kernel-vllm_ccustom_ar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 自定义 NVLink All-Reduce Kernel (vllm._C.custom_ar)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pp-cp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 3 部分: 流水线并行 (PP) 与上下文并行 (CP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 3 部分: 流水线并行 (PP) 与上下文并行 (CP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 流水线并行机制
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 流水线并行机制">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        通信效率优势
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-cp-ring-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 上下文并行 (CP) 与 Ring-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-moe-ep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 4 部分: 混合专家模型 (MoE) 的专家并行 (EP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 4 部分: 混合专家模型 (MoE) 的专家并行 (EP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-moe-top-k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 MoE Top-k 路由机制
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-ep-fused-moe-kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 专家并行 (EP) 与 Fused MoE Kernel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 专家并行 (EP) 与 Fused MoE Kernel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fused-moe-cuda-kernel-vllm_cfused_moe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fused MoE CUDA Kernel (vllm._C.fused_moe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        总结: 并行策略决策矩阵
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix_glossary_and_terminology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix - Master Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 1 部分: 分布式服务分类与互连拓扑约束
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 1 部分: 分布式服务分类与互连拓扑约束">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 硬件互连带宽差距
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 分布式并行维度速览
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-vllm-tp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 2 部分: vLLM 中的张量并行 (TP) 机制
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 2 部分: vLLM 中的张量并行 (TP) 机制">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-columnparallellinear-rowparallellinear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 ColumnParallelLinear 与 RowParallelLinear
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 ColumnParallelLinear 与 RowParallelLinear">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-columnparallellinear-w_q-w_k-w_v-w_textgate-w_textup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 按列并行 ColumnParallelLinear (\(W_Q, W_K, W_V\) 及 \(W_{\text{Gate}}, W_{\text{Up}}\))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-rowparallellinear-w_o-w_textdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 按行并行 RowParallelLinear (\(W_O\) 及 \(W_{\text{Down}}\))
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-nvlink-all-reduce-kernel-vllm_ccustom_ar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 自定义 NVLink All-Reduce Kernel (vllm._C.custom_ar)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pp-cp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 3 部分: 流水线并行 (PP) 与上下文并行 (CP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 3 部分: 流水线并行 (PP) 与上下文并行 (CP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 流水线并行机制
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 流水线并行机制">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        通信效率优势
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-cp-ring-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 上下文并行 (CP) 与 Ring-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-moe-ep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 4 部分: 混合专家模型 (MoE) 的专家并行 (EP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 4 部分: 混合专家模型 (MoE) 的专家并行 (EP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-moe-top-k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 MoE Top-k 路由机制
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-ep-fused-moe-kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 专家并行 (EP) 与 Fused MoE Kernel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 专家并行 (EP) 与 Fused MoE Kernel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fused-moe-cuda-kernel-vllm_cfused_moe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fused MoE CUDA Kernel (vllm._C.fused_moe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        总结: 并行策略决策矩阵
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="5-gpu">模块 5: 分布式并行与多 GPU 编排<a class="headerlink" href="#5-gpu" title="Permanent link">&para;</a></h1>
+<p>随着前沿大语言模型参数量扩展至数千亿 (如 Llama 3 405B、DeepSeek-V3 671B)，单卡 GPU 的显存与算力极限被轻松打破。高吞吐推理引擎 vLLM 通过 <strong>分布式并行 (Distributed Parallelism)</strong> 技术，将模型拆分并部署在多 GPU 及多节点集群上。</p>
+<p>本模块将系统探索分布式 LLM 推理的四个核心维度：<strong>张量并行 (Tensor Parallelism, TP)</strong>、<strong>流水线并行 (Pipeline Parallelism, PP)</strong>、<strong>上下文并行 (Context Parallelism, CP)</strong> 以及面向混合专家模型 (MoE) 的 <strong>专家并行 (Expert Parallelism, EP)</strong>。</p>
+<hr />
+<h2 id="1">第 1 部分: 分布式服务分类与互连拓扑约束<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>为了高效拆分模型，系统工程师必须将分布式并行策略与集群的物理<strong>硬件互连带宽</strong>进行精确匹配。</p>
+<pre class="mermaid"><code>flowchart TD
+    NODE["单服务器节点 (如 8 x H100 HGX)"] --&gt; NVLINK["🔥 NVLink 4 / NVSwitch 互连总线&lt;br&gt;带宽: 每个 GPU 双向 900 GB/s"]
+    CLUSTER["多节点集群 (多服务器机柜)"] --&gt; IB["🚀 InfiniBand NDR / RoCE 网络&lt;br&gt;带宽: 400 Gbps (每节点 50 GB/s)"]
+
+    NVLINK --&gt; TP_SUITE["采用张量并行 (TP)&lt;br&gt;需要高节点内带宽 (每层需 2 次 All-Reduce)"]
+    IB --&gt; PP_SUITE["采用流水线并行 (PP) 与专家并行 (EP)&lt;br&gt;容忍跨节点网络延迟 (点对点或 All-to-All 传输)"]</code></pre>
+<h3 id="11">1.1 硬件互连带宽差距<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">互连层级</th>
+<th style="text-align: left;">物理技术</th>
+<th style="text-align: left;">双向理论带宽</th>
+<th style="text-align: left;">访问延迟</th>
+<th style="text-align: left;">最佳并行策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>节点内 (SXM 版)</strong></td>
+<td style="text-align: left;">NVIDIA NVLink 4 / NVSwitch</td>
+<td style="text-align: left;"><strong>每个 GPU <span class="arithmatex">\(900 \text{ GB/s}\)</span></strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(&lt; 1 \ \mu\text{s}\)</span></td>
+<td style="text-align: left;"><strong>张量并行 (Tensor Parallelism, TP)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>节点内 (PCIe 版)</strong></td>
+<td style="text-align: left;">PCIe Gen5 x16 总线</td>
+<td style="text-align: left;"><span class="arithmatex">\(64 \text{ GB/s}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 2 \dots 3 \ \mu\text{s}\)</span></td>
+<td style="text-align: left;">小规模张量并行 (<span class="arithmatex">\(\text{TP} \le 4\)</span>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>跨节点 (RDMA 网络)</strong></td>
+<td style="text-align: left;">InfiniBand NDR / RoCE v2</td>
+<td style="text-align: left;"><span class="arithmatex">\(50 \text{ GB/s}\)</span> (<span class="arithmatex">\(400 \text{ Gbps}\)</span>)</td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 5 \dots 10 \ \mu\text{s}\)</span></td>
+<td style="text-align: left;"><strong>流水线并行 (PP) 与专家并行 (EP)</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="12">1.2 分布式并行维度速览<a class="headerlink" href="#12" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>张量并行 (TP)</strong>: 将单个权重矩阵 (<span class="arithmatex">\(W_Q, W_K, W_V, W_O, W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}\)</span>) 沿列或行切分到单节点内的多块 GPU 上。每层 Transformer 需要执行两次 <strong>All-Reduce</strong> 通信。</li>
+<li><strong>流水线并行 (PP)</strong>: 将 sequential Transformer 层按 Stage 切分到不同的 GPU 或服务器节点上 (例如 GPU 0 负责第 1-20 层，GPU 1 负责第 21-40 层)。通过点对点 (P2P) 通信传输 Activation 张量。</li>
+<li><strong>上下文并行 (CP)</strong>: 沿序列长度维度 (Context Length) 切分，用于支持 <span class="arithmatex">\(100K+\)</span> 的超长上下文，采用 Ring-Attention 或 All-to-All 算法。</li>
+<li><strong>专家并行 (EP)</strong>: 将稀疏混合专家模型 (MoE) 的专家层分散到不同 GPU 上，通过 <strong>All-to-All</strong> 集合通信动态路由 Token。</li>
+</ol>
+<hr />
+<h2 id="2-vllm-tp">第 2 部分: vLLM 中的张量并行 (TP) 机制<a class="headerlink" href="#2-vllm-tp" title="Permanent link">&para;</a></h2>
+<p>vLLM 中的张量并行遵循 <strong>Shoeybi 等人 (Megatron-LM)</strong> 的矩阵列切分与行切分范式，使得线性张量运算可以在多 GPU 上并行执行，直到输出聚合时才需要跨卡通信。</p>
+<pre class="mermaid"><code>flowchart TD
+    IN["输入 Activation 张量 X"] --&gt; COL_PAR["ColumnParallelLinear (W_Q, W_K, W_V, W_Gate, W_Up)&lt;br&gt;按列将权重矩阵切分到多块 GPU"]
+    COL_PAR --&gt; ROW_PAR["RowParallelLinear (W_O, W_Down)&lt;br&gt;按行将权重矩阵切分到多块 GPU"]
+
+    subgraph ALL_REDUCE ["⚡ 自定义 NVLink All-Reduce Kernel"]
+        ROW_PAR --&gt; AR["vllm._C.custom_ar All-Reduce&lt;br&gt;通过 NVLink 共享内存对多 GPU 局部输出求和"]
+    end
+
+    AR --&gt; OUT["最终聚合后的 Activation 张量 Y"]</code></pre>
+<h3 id="21-columnparallellinear-rowparallellinear">2.1 ColumnParallelLinear 与 RowParallelLinear<a class="headerlink" href="#21-columnparallellinear-rowparallellinear" title="Permanent link">&para;</a></h3>
+<h4 id="1-columnparallellinear-w_q-w_k-w_v-w_textgate-w_textup">1. 按列并行 ColumnParallelLinear (<span class="arithmatex">\(W_Q, W_K, W_V\)</span> 及 <span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>)<a class="headerlink" href="#1-columnparallellinear-w_q-w_k-w_v-w_textgate-w_textup" title="Permanent link">&para;</a></h4>
+<p>权重矩阵 <span class="arithmatex">\(W \in \mathbb{R}^{d \times d_{\text{out}}}\)</span> 沿<strong>列</strong>切分到 <span class="arithmatex">\(N_{\text{TP}}\)</span> 块 GPU 上：</p>
+<div class="arithmatex">\[
+W = \begin{bmatrix} W_1 &amp; W_2 &amp; \dots &amp; W_{N_{\text{TP}}} \end{bmatrix}
+\]</div>
+<p>每块 GPU <span class="arithmatex">\(i\)</span> 独立保存分片 <span class="arithmatex">\(W_i\)</span>，并与输入 Activation 矩阵 <span class="arithmatex">\(X\)</span> 相乘：</p>
+<div class="arithmatex">\[
+Y_i = X @ W_i
+\]</div>
+<p>由于 <span class="arithmatex">\(Y_i\)</span> 本身就是完整输出 <span class="arithmatex">\(Y = \begin{bmatrix} Y_1 &amp; Y_2 &amp; \dots &amp; Y_{N_{\text{TP}}} \end{bmatrix}\)</span> 的一个列分片，<strong>ColumnParallelLinear 层执行完毕后无需任何跨卡通信</strong>！</p>
+<h4 id="2-rowparallellinear-w_o-w_textdown">2. 按行并行 RowParallelLinear (<span class="arithmatex">\(W_O\)</span> 及 <span class="arithmatex">\(W_{\text{Down}}\)</span>)<a class="headerlink" href="#2-rowparallellinear-w_o-w_textdown" title="Permanent link">&para;</a></h4>
+<p>权重矩阵 <span class="arithmatex">\(W \in \mathbb{R}^{d_{\text{in}} \times d}\)</span> 沿<strong>行</strong>切分到 <span class="arithmatex">\(N_{\text{TP}}\)</span> 块 GPU 上：</p>
+<div class="arithmatex">\[
+W = \begin{bmatrix} W_1 \\ W_2 \\ \vdots \\ W_{N_{\text{TP}}} \end{bmatrix}
+\]</div>
+<p>输入 Activation <span class="arithmatex">\(X\)</span> (此时已按列切分为 <span class="arithmatex">\(\begin{bmatrix} X_1 &amp; X_2 &amp; \dots &amp; X_{N_{\text{TP}}} \end{bmatrix}\)</span>) 分别与 <span class="arithmatex">\(W_i\)</span> 相乘：</p>
+<div class="arithmatex">\[
+Y_i = X_i @ W_i
+\]</div>
+<p>为了还原真正的数学输出 <span class="arithmatex">\(Y = X @ W\)</span>，必须对所有 GPU 的局部输出求和：</p>
+<div class="arithmatex">\[
+Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
+\]</div>
+<hr />
+<h3 id="22-nvlink-all-reduce-kernel-vllm_ccustom_ar">2.2 自定义 NVLink All-Reduce Kernel (<code>vllm._C.custom_ar</code>)<a class="headerlink" href="#22-nvlink-all-reduce-kernel-vllm_ccustom_ar" title="Permanent link">&para;</a></h3>
+<p>在原生 PyTorch 中，标准 <code>torch.distributed.all_reduce</code> 会调用 NCCL 库，带来额外的 Kernel 启动开销与 IPC 同步延迟 (<span class="arithmatex">\(\sim 10 \dots 15 \ \mu\text{s}\)</span>)。</p>
+<p>为了消除节点内 NVLink 传输的 NCCL 开销，vLLM 研发了自定义 CUDA All-Reduce Kernel (<code>vllm._C.custom_ar</code>)：</p>
+<ol>
+<li><strong>共享 NVLink IPC 缓冲区</strong>: 引擎初始化时，vLLM 在节点内所有 GPU 之间注册 POSIX 共享内存指针。</li>
+<li><strong>单 Kernel All-Reduce</strong>: 当 <code>RowParallelLinear</code> 完成时，一个自定义 CUDA Kernel 在所有 GPU 上同时启动，直接通过 NVLink 读取对端 GPU 显存中的局部张量并在片上完成原位相加。</li>
+<li><strong>延迟降低</strong>: 将 All-Reduce 通信延迟从 <span class="arithmatex">\(15 \ \mu\text{s}\)</span> 降低至 <strong><span class="arithmatex">\(&lt; 2.5 \ \mu\text{s}\)</span></strong>，大幅提升了 Tensor Core 计算效率！</li>
+</ol>
+<hr />
+<h2 id="3-pp-cp">第 3 部分: 流水线并行 (PP) 与上下文并行 (CP)<a class="headerlink" href="#3-pp-cp" title="Permanent link">&para;</a></h2>
+<p>当模型显存体积超出单个节点的 NVLink 承载极限时 (例如 Llama 3 405B 在 FP16 下需要 <span class="arithmatex">\(810 \text{ GB}\)</span> 显存)，<strong>流水线并行 (Pipeline Parallelism, PP)</strong> 可以跨越服务器节点切分模型。</p>
+<h3 id="31">3.1 流水线并行机制<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p>流水线并行将 <span class="arithmatex">\(L\)</span> 层 Transformer 划分给 <span class="arithmatex">\(N_{\text{PP}}\)</span> 块 GPU/节点 (例如 80 层模型在 <span class="arithmatex">\(N_{\text{PP}} = 4\)</span> 时，每 Stage 负责 20 层)。</p>
+<pre class="mermaid"><code>flowchart LR
+    subgraph STAGE0 ["Stage 0 (GPU 0: 第 1..20 层)"]
+        S0_P["Prefill / Decode 前向计算"]
+    end
+
+    subgraph STAGE1 ["Stage 1 (GPU 1: 第 21..40 层)"]
+        S1_P["Prefill / Decode 前向计算"]
+    end
+
+    subgraph STAGE2 ["Stage 2 (GPU 2: 第 41..60 层)"]
+        S2_P["Prefill / Decode 前向计算"]
+    end
+
+    subgraph STAGE3 ["Stage 3 (GPU 3: 第 61..80 层)"]
+        S3_P["Prefill / Decode 前向计算"]
+    end
+
+    S0_P --&gt;|"点对点传输 (P2P)"| S1_P
+    S1_P --&gt;|"点对点传输 (P2P)"| S2_P
+    S2_P --&gt;|"点对点传输 (P2P)"| S3_P</code></pre>
+<h4 id="_1">通信效率优势<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<p>不同于张量并行 (每层需要 2 次 All-Reduce)，流水线并行在 Stage 边界之间<strong>仅需 1 次点对点 (P2P) Activation 张量传输</strong>。较小的网络通信量使得 PP 能够完美运行在跨节点的 InfiniBand / RoCE 网络上 (<span class="arithmatex">\(50 \text{ GB/s}\)</span>)。</p>
+<hr />
+<h3 id="32-cp-ring-attention">3.2 上下文并行 (CP) 与 Ring-Attention<a class="headerlink" href="#32-cp-ring-attention" title="Permanent link">&para;</a></h3>
+<p>对于超长上下文场景 (<span class="arithmatex">\(S &gt; 100,000\)</span> token)，即使用 PagedAttention，单块 GPU 也无法在显存中容纳整条序列的物理 KV Block。</p>
+<p><strong>上下文并行 (Context Parallelism, CP)</strong> 利用 <strong>Ring-Attention</strong> (Liu 等人) 将序列长度维度 <span class="arithmatex">\(S\)</span> 切分到 <span class="arithmatex">\(N_{\text{CP}}\)</span> 块 GPU 上：</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph RING ["🔄 Ring-Attention 环形通信循环"]
+        GPU0["GPU 0 (Tokens 0..25K)&lt;br&gt;保存 Q_0, K_0, V_0"] --&gt;|"传递 K, V Block"| GPU1["GPU 1 (Tokens 25K..50K)&lt;br&gt;保存 Q_1, K_1, V_1"]
+        GPU1 --&gt;|"传递 K, V Block"| GPU2["GPU 2 (Tokens 50K..75K)&lt;br&gt;保存 Q_2, K_2, V_2"]
+        GPU2 --&gt;|"传递 K, V Block"| GPU3["GPU 3 (Tokens 75K..100K)&lt;br&gt;保存 Q_3, K_3, V_3"]
+        GPU3 --&gt;|"传递 K, V Block"| GPU0
+    end</code></pre>
+<ol>
+<li>每块 GPU <span class="arithmatex">\(i\)</span> 保存一部分 Query token 分片 <span class="arithmatex">\(Q_i\)</span> 和一部分 Key/Value token 分片 <span class="arithmatex">\(K_i, V_i\)</span>。</li>
+<li>当 GPU <span class="arithmatex">\(i\)</span> 计算 <span class="arithmatex">\(Q_i\)</span> 与本地 <span class="arithmatex">\(K_i, V_i\)</span> 的局部 SRAM 注意力时，它同时异步将 <span class="arithmatex">\(K_i, V_i\)</span> 块传输给环形拓扑中的下一个 GPU。</li>
+<li>经过 <span class="arithmatex">\(N_{\text{CP}}\)</span> 次环形传递后，所有 GPU 都在未持有完整 KV Cache 的情况下完成了全量序列的注意力计算！</li>
+</ol>
+<hr />
+<h2 id="4-moe-ep">第 4 部分: 混合专家模型 (MoE) 的专家并行 (EP)<a class="headerlink" href="#4-moe-ep" title="Permanent link">&para;</a></h2>
+<p>前沿大模型 (如 <strong>DeepSeek-V3 / DeepSeek-R1</strong> 拥有 6710 亿总参数，每 Token 激活 370 亿参数) 及 <strong>Mixtral 8x22B</strong> 采用了 <strong>混合专家 (MoE)</strong> 架构。</p>
+<p>在 MoE Transformer 层中，稠密的 FFN 网络被替换为了一个 <strong>路由/门控网络 (Router/Gating Network)</strong> 和 <span class="arithmatex">\(N_{\text{experts}}\)</span> 个并行的 Expert 网络。</p>
+<h3 id="41-moe-top-k">4.1 MoE Top-k 路由机制<a class="headerlink" href="#41-moe-top-k" title="Permanent link">&para;</a></h3>
+<p>对于每个 Token <span class="arithmatex">\(x\)</span>，门控网络计算所有专家的 Softmax 概率，并挑选出得分最高的 <strong>Top-<span class="arithmatex">\(k\)</span></strong> 个专家 (例如 Mixtral 挑选 Top-2，DeepSeek-V3 挑选 Top-8)：</p>
+<div class="arithmatex">\[
+g(x) = \text{TopK}\left(\text{Softmax}(x @ W_{\text{gate}})\right)
+\]</div>
+<div class="arithmatex">\[
+y = \sum_{i \in \text{TopK}} g(x)_i \cdot \text{Expert}_i(x)
+\]</div>
+<pre class="mermaid"><code>flowchart TD
+    X["输入 Token 向量 x"] --&gt; ROUTER["门控路由网络 (W_gate)"]
+    ROUTER --&gt; TOPK["选择 Top-k 专家 (如 Top-2 或 Top-8)"]
+
+    TOPK --&gt; E1["专家 1 (FFN)"]
+    TOPK --&gt; E4["专家 4 (FFN)"]
+
+    E1 --&gt; SUM["专家输出加权求和"]
+    E4 --&gt; SUM
+    SUM --&gt; Y["最终输出向量 y"]</code></pre>
+<hr />
+<h3 id="42-ep-fused-moe-kernel">4.2 专家并行 (EP) 与 Fused MoE Kernel<a class="headerlink" href="#42-ep-fused-moe-kernel" title="Permanent link">&para;</a></h3>
+<p>在拥有 64 或 256 个专家的大型 MoE 模型中 (例如 DeepSeek-V3 跨 8 节点拥有 256 个路由专家)：</p>
+<ol>
+<li><strong>专家分布 (EP)</strong>: 专家被均匀划分给各个 GPU (<span class="arithmatex">\(N_{\text{experts}} / N_{\text{GPUs}}\)</span> 个专家/GPU)。</li>
+<li><strong>All-to-All 集合通信 (<code>all_to_all_single</code>)</strong>:</li>
+<li><strong>Dispatch 阶段</strong>: 通过 <code>All-to-All</code> 网络传输，将 Token 路由发往目标专家所在的 GPU。</li>
+<li><strong>Combine 阶段</strong>: 目标专家 GPU 计算完 FFN 后，通过第二次 <code>All-to-All</code> 网络传输将结果向量发回源 GPU。</li>
+</ol>
+<pre class="mermaid"><code>flowchart LR
+    subgraph DISPATCH ["1. Dispatch 阶段 All-to-All"]
+        G0_TOK["GPU 0 的 Tokens"] --&gt;|"路由至目标专家 GPU"| EP_GPU["专家 GPUs (EP 0..N)"]
+    end
+
+    subgraph COMPUTE ["2. Fused MoE CUDA 计算"]
+        EP_GPU --&gt; FUSED["vllm._C.fused_moe&lt;br&gt;按专家分组 Token 并执行 SRAM GEMM"]
+    end
+
+    subgraph COMBINE ["3. Combine 阶段 All-to-All"]
+        FUSED --&gt;|"返回结果向量"| G0_OUT["GPU 0 输出聚合"]
+    end</code></pre>
+<h4 id="fused-moe-cuda-kernel-vllm_cfused_moe">Fused MoE CUDA Kernel (<code>vllm._C.fused_moe</code>)<a class="headerlink" href="#fused-moe-cuda-kernel-vllm_cfused_moe" title="Permanent link">&para;</a></h4>
+<p>为分散的 Token 子集单独启动 GEMM 会导致巨大的 CPU 启动开销与 GPU 碎片化。vLLM 实现了自定义 <strong>Fused MoE CUDA Kernel (<code>fused_moe</code>)</strong>：</p>
+<ul>
+<li><strong>Token 排序</strong>: Kernel 在 SRAM 内部按目标专家 ID 对所有 Token 进行排序分组。</li>
+<li><strong>Batched GEMM 执行</strong>: 发起一次分组 GEMM CUDA 启动，同时处理所有专家的计算任务，极大提升了 Tensor Core 的利用率！</li>
+</ul>
+<hr />
+<h2 id="_2">总结: 并行策略决策矩阵<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">模型架构 / 参数量</th>
+<th style="text-align: left;">推荐并行配置</th>
+<th style="text-align: left;">核心通信原语</th>
+<th style="text-align: left;">目标硬件拓扑</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>中型模型 (7B - 70B)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(\text{TP} = 2 \dots 8\)</span>, <span class="arithmatex">\(\text{PP} = 1\)</span></td>
+<td style="text-align: left;">All-Reduce (<code>vllm._C.custom_ar</code>)</td>
+<td style="text-align: left;">单 HGX 节点 (NVLink 互连)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>超大稠密模型 (405B)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(\text{TP} = 8\)</span>, <span class="arithmatex">\(\text{PP} = 8 \dots 16\)</span></td>
+<td style="text-align: left;">All-Reduce (节点内) + P2P (跨节点)</td>
+<td style="text-align: left;">多节点 NVLink + InfiniBand</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>超长上下文 (100K+)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(\text{TP} = 8\)</span>, <span class="arithmatex">\(\text{CP} = 4 \dots 8\)</span></td>
+<td style="text-align: left;">Ring-Attention (异步 P2P / All-to-All)</td>
+<td style="text-align: left;">多节点高带宽网络</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>海量 MoE (DeepSeek / Mixtral)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(\text{TP} = 8\)</span>, <span class="arithmatex">\(\text{EP} = 8 \dots 64\)</span></td>
+<td style="text-align: left;">All-to-All (<code>all_to_all_single</code>) + Fused MoE</td>
+<td style="text-align: left;">多节点集群 (InfiniBand RDMA)</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

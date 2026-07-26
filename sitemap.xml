@@ -36,6 +36,13 @@
         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/04_hardware_and_kernel_optimization/"/>
     </url>
     <url>
+        <loc>None05_distributed_parallelism/</loc>
+        <lastmod>2026-07-26</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="None05_distributed_parallelism/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/05_distributed_parallelism/"/>
+    </url>
+    <url>
         <loc>Noneappendix_glossary_and_terminology/</loc>
         <lastmod>2026-07-26</lastmod>
         <changefreq>daily</changefreq>
@@ -76,6 +83,13 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/04_hardware_and_kernel_optimization/"/>
         <xhtml:link rel="alternate" hreflang="en" href="None04_hardware_and_kernel_optimization/"/>
+    </url>
+    <url>
+        <loc>Nonezh/05_distributed_parallelism/</loc>
+        <lastmod>2026-07-26</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/05_distributed_parallelism/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="None05_distributed_parallelism/"/>
     </url>
     <url>
         <loc>Nonezh/appendix_glossary_and_terminology/</loc>

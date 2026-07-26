@@ -1,0 +1,1300 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An AI Engineering Textbook and Production Reference">
+      
+      
+        <meta name="author" content="linghuanym">
+      
+      
+      
+        <link rel="prev" href="../04_hardware_and_kernel_optimization/">
+      
+      
+        <link rel="next" href="../appendix_glossary_and_terminology/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="en">
+        
+          <link rel="alternate" href="../zh/05_distributed_parallelism/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Module 5 - Distributed Parallelism - vLLM Core Architecture & Performance Mechanics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#module-5-distributed-parallelism-and-multi-gpu-orchestration" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-header__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            vLLM Core Architecture & Performance Mechanics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Module 5 - Distributed Parallelism
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../zh/05_distributed_parallelism/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-nav__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    vLLM Core Architecture & Performance Mechanics
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Curriculum & Principles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_llm_inference_fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 1 - Inference Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_vllm_core_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 2 - vLLM Core Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03_performance_and_quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 3 - Performance and Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04_hardware_and_kernel_optimization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 4 - Hardware and Kernel Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 5 - Distributed Parallelism
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 5 - Distributed Parallelism
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-distributed-serving-taxonomy-and-interconnect-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: Distributed Serving Taxonomy and Interconnect Constraints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: Distributed Serving Taxonomy and Interconnect Constraints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-interconnect-bandwidth-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The Interconnect Bandwidth Gap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-summary-of-distributed-parallelism-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Summary of Distributed Parallelism Dimensions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-tensor-parallelism-tp-mechanics-in-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: Tensor Parallelism (TP) Mechanics in vLLM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: Tensor Parallelism (TP) Mechanics in vLLM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-columnparallellinear-and-rowparallellinear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 ColumnParallelLinear and RowParallelLinear
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 ColumnParallelLinear and RowParallelLinear">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-columnparallellinear-w_q-w_k-w_v-and-w_textgate-w_textup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. ColumnParallelLinear (\(W_Q, W_K, W_V\) and \(W_{\text{Gate}}, W_{\text{Up}}\))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-rowparallellinear-w_o-and-w_textdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. RowParallelLinear (\(W_O\) and \(W_{\text{Down}}\))
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-custom-nvlink-all-reduce-kernels-vllm_ccustom_ar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Custom NVLink All-Reduce Kernels (vllm._C.custom_ar)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-pipeline-parallelism-pp-and-context-parallelism-cp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Pipeline Parallelism (PP) and Context Parallelism (CP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Pipeline Parallelism (PP) and Context Parallelism (CP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-pipeline-parallelism-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Pipeline Parallelism Mechanics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Pipeline Parallelism Mechanics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#communication-efficiency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Communication Efficiency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-context-parallelism-cp-and-ring-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Context Parallelism (CP) and Ring-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-expert-parallelism-ep-for-mixture-of-experts-moe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Expert Parallelism (EP) for Mixture-of-Experts (MoE)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Expert Parallelism (EP) for Mixture-of-Experts (MoE)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-moe-top-k-routing-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 MoE Top-k Routing Mechanics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-expert-parallelism-ep-and-fused-moe-kernels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Expert Parallelism (EP) and Fused MoE Kernels
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 Expert Parallelism (EP) and Fused MoE Kernels">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fused-moe-cuda-kernels-vllm_cfused_moe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fused MoE CUDA Kernels (vllm._C.fused_moe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-parallelism-strategy-decision-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: Parallelism Strategy Decision Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix_glossary_and_terminology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix - Master Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-distributed-serving-taxonomy-and-interconnect-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: Distributed Serving Taxonomy and Interconnect Constraints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: Distributed Serving Taxonomy and Interconnect Constraints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-interconnect-bandwidth-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The Interconnect Bandwidth Gap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-summary-of-distributed-parallelism-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Summary of Distributed Parallelism Dimensions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-tensor-parallelism-tp-mechanics-in-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: Tensor Parallelism (TP) Mechanics in vLLM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: Tensor Parallelism (TP) Mechanics in vLLM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-columnparallellinear-and-rowparallellinear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 ColumnParallelLinear and RowParallelLinear
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 ColumnParallelLinear and RowParallelLinear">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-columnparallellinear-w_q-w_k-w_v-and-w_textgate-w_textup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. ColumnParallelLinear (\(W_Q, W_K, W_V\) and \(W_{\text{Gate}}, W_{\text{Up}}\))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-rowparallellinear-w_o-and-w_textdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. RowParallelLinear (\(W_O\) and \(W_{\text{Down}}\))
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-custom-nvlink-all-reduce-kernels-vllm_ccustom_ar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Custom NVLink All-Reduce Kernels (vllm._C.custom_ar)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-pipeline-parallelism-pp-and-context-parallelism-cp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Pipeline Parallelism (PP) and Context Parallelism (CP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Pipeline Parallelism (PP) and Context Parallelism (CP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-pipeline-parallelism-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Pipeline Parallelism Mechanics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Pipeline Parallelism Mechanics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#communication-efficiency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Communication Efficiency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-context-parallelism-cp-and-ring-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Context Parallelism (CP) and Ring-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-expert-parallelism-ep-for-mixture-of-experts-moe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Expert Parallelism (EP) for Mixture-of-Experts (MoE)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Expert Parallelism (EP) for Mixture-of-Experts (MoE)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-moe-top-k-routing-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 MoE Top-k Routing Mechanics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-expert-parallelism-ep-and-fused-moe-kernels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Expert Parallelism (EP) and Fused MoE Kernels
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 Expert Parallelism (EP) and Fused MoE Kernels">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fused-moe-cuda-kernels-vllm_cfused_moe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fused MoE CUDA Kernels (vllm._C.fused_moe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-parallelism-strategy-decision-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: Parallelism Strategy Decision Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="module-5-distributed-parallelism-and-multi-gpu-orchestration">Module 5: Distributed Parallelism and Multi-GPU Orchestration<a class="headerlink" href="#module-5-distributed-parallelism-and-multi-gpu-orchestration" title="Permanent link">&para;</a></h1>
+<p>As frontier LLMs scale to hundreds of billions of parameters (e.g., Llama 3 405B, DeepSeek-V3 671B), single-GPU memory and compute capacity are easily exceeded. High-throughput serving engines like vLLM partition model execution across multiple GPUs and multi-node clusters using <strong>Distributed Parallelism</strong>.</p>
+<p>This module explores the four fundamental dimensions of distributed LLM serving: <strong>Tensor Parallelism (TP)</strong>, <strong>Pipeline Parallelism (PP)</strong>, <strong>Context Parallelism (CP)</strong>, and <strong>Expert Parallelism (EP)</strong> for Mixture-of-Experts (MoE) models.</p>
+<hr />
+<h2 id="part-1-distributed-serving-taxonomy-and-interconnect-constraints">Part 1: Distributed Serving Taxonomy and Interconnect Constraints<a class="headerlink" href="#part-1-distributed-serving-taxonomy-and-interconnect-constraints" title="Permanent link">&para;</a></h2>
+<p>To partition a model effectively, systems engineers match distributed parallelism strategies to the physical <strong>hardware interconnect bandwidth</strong> of the host cluster.</p>
+<pre class="mermaid"><code>flowchart TD
+    NODE["Single HGX Server Node (8 x H100 GPUs)"] --&gt; NVLINK["🔥 NVLink 4 / NVSwitch Interconnect&lt;br&gt;Bandwidth: 900 GB/s per GPU (Bidirectional)"]
+    CLUSTER["Multi-Node Cluster (Multiple Server Racks)"] --&gt; IB["🚀 InfiniBand NDR / RoCE Network&lt;br&gt;Bandwidth: 400 Gbps (50 GB/s per node)"]
+
+    NVLINK --&gt; TP_SUITE["Use Tensor Parallelism (TP)&lt;br&gt;Requires High Intra-Node Bandwidth (All-Reduce per Layer)"]
+    IB --&gt; PP_SUITE["Use Pipeline Parallelism (PP) and Expert Parallelism (EP)&lt;br&gt;Tolerates Inter-Node Network Latency (Point-to-Point Transfers)"]</code></pre>
+<h3 id="11-the-interconnect-bandwidth-gap">1.1 The Interconnect Bandwidth Gap<a class="headerlink" href="#11-the-interconnect-bandwidth-gap" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Interconnect Level</th>
+<th style="text-align: left;">Physical Technology</th>
+<th style="text-align: left;">Bidirectional Bandwidth</th>
+<th style="text-align: left;">Latency</th>
+<th style="text-align: left;">Optimal Parallelism Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Intra-Node (SXM)</strong></td>
+<td style="text-align: left;">NVIDIA NVLink 4 / NVSwitch</td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(900 \text{ GB/s}\)</span> per GPU</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(&lt; 1 \ \mu\text{s}\)</span></td>
+<td style="text-align: left;"><strong>Tensor Parallelism (TP)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Intra-Node (PCIe)</strong></td>
+<td style="text-align: left;">PCIe Gen5 x16 Bus</td>
+<td style="text-align: left;"><span class="arithmatex">\(64 \text{ GB/s}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 2 \dots 3 \ \mu\text{s}\)</span></td>
+<td style="text-align: left;">Small Tensor Parallelism (<span class="arithmatex">\(\text{TP} \le 4\)</span>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Inter-Node (RDMA)</strong></td>
+<td style="text-align: left;">InfiniBand NDR / RoCE v2</td>
+<td style="text-align: left;"><span class="arithmatex">\(50 \text{ GB/s}\)</span> (<span class="arithmatex">\(400 \text{ Gbps}\)</span>)</td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 5 \dots 10 \ \mu\text{s}\)</span></td>
+<td style="text-align: left;"><strong>Pipeline Parallelism (PP) &amp; Expert Parallelism (EP)</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="12-summary-of-distributed-parallelism-dimensions">1.2 Summary of Distributed Parallelism Dimensions<a class="headerlink" href="#12-summary-of-distributed-parallelism-dimensions" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Tensor Parallelism (TP)</strong>: Splits individual weight matrices (<span class="arithmatex">\(W_Q, W_K, W_V, W_O, W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}\)</span>) across GPUs inside a single node. Requires an <strong>All-Reduce</strong> communication step twice per Transformer layer.</li>
+<li><strong>Pipeline Parallelism (PP)</strong>: Partitions sequential Transformer layers across GPUs or server nodes (e.g., GPU 0 holds Layers 1-20, GPU 1 holds Layers 21-40). Communicates activation tensors via point-to-point transfers.</li>
+<li><strong>Context Parallelism (CP)</strong>: Partitions the sequence dimension (context length) across GPUs for massive <span class="arithmatex">\(100K+\)</span> context windows, using Ring-Attention or All-to-All communication.</li>
+<li><strong>Expert Parallelism (EP)</strong>: Distributes sparse Mixture-of-Experts (MoE) expert layers across GPUs, routing tokens dynamically via <strong>All-to-All</strong> communication primitives.</li>
+</ol>
+<hr />
+<h2 id="part-2-tensor-parallelism-tp-mechanics-in-vllm">Part 2: Tensor Parallelism (TP) Mechanics in vLLM<a class="headerlink" href="#part-2-tensor-parallelism-tp-mechanics-in-vllm" title="Permanent link">&para;</a></h2>
+<p>Tensor Parallelism in vLLM follows the <strong>Shoeybi et al. (Megatron-LM)</strong> matrix column/row splitting paradigm, enabling linear tensor operations to execute in parallel without intermediate communication overhead until output aggregation.</p>
+<pre class="mermaid"><code>flowchart TD
+    IN["Input Activation X"] --&gt; COL_PAR["ColumnParallelLinear (W_Q, W_K, W_V, W_Gate, W_Up)&lt;br&gt;Splits Weight Matrix Column-Wise across GPUs"]
+    COL_PAR --&gt; ROW_PAR["RowParallelLinear (W_O, W_Down)&lt;br&gt;Splits Weight Matrix Row-Wise across GPUs"]
+
+    subgraph ALL_REDUCE ["⚡ Custom NVLink All-Reduce Kernel"]
+        ROW_PAR --&gt; AR["vllm._C.custom_ar All-Reduce&lt;br&gt;Sum Partial Outputs across GPUs via Shared NVLink Memory"]
+    end
+
+    AR --&gt; OUT["Final Aggregated Activation Tensor Y"]</code></pre>
+<h3 id="21-columnparallellinear-and-rowparallellinear">2.1 ColumnParallelLinear and RowParallelLinear<a class="headerlink" href="#21-columnparallellinear-and-rowparallellinear" title="Permanent link">&para;</a></h3>
+<h4 id="1-columnparallellinear-w_q-w_k-w_v-and-w_textgate-w_textup">1. ColumnParallelLinear (<span class="arithmatex">\(W_Q, W_K, W_V\)</span> and <span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>)<a class="headerlink" href="#1-columnparallellinear-w_q-w_k-w_v-and-w_textgate-w_textup" title="Permanent link">&para;</a></h4>
+<p>A weight matrix <span class="arithmatex">\(W \in \mathbb{R}^{d \times d_{\text{out}}}\)</span> is split along its <strong>columns</strong> across <span class="arithmatex">\(N_{\text{TP}}\)</span> GPUs:</p>
+<div class="arithmatex">\[
+W = \begin{bmatrix} W_1 &amp; W_2 &amp; \dots &amp; W_{N_{\text{TP}}} \end{bmatrix}
+\]</div>
+<p>Each GPU <span class="arithmatex">\(i\)</span> receives a slice <span class="arithmatex">\(W_i\)</span> and multiplies against the input activation matrix <span class="arithmatex">\(X\)</span>:</p>
+<div class="arithmatex">\[
+Y_i = X @ W_i
+\]</div>
+<p>Because <span class="arithmatex">\(Y_i\)</span> is a column slice of the full output <span class="arithmatex">\(Y = \begin{bmatrix} Y_1 &amp; Y_2 &amp; \dots &amp; Y_{N_{\text{TP}}} \end{bmatrix}\)</span>, <strong>no cross-GPU communication is needed</strong> after a ColumnParallelLinear layer!</p>
+<h4 id="2-rowparallellinear-w_o-and-w_textdown">2. RowParallelLinear (<span class="arithmatex">\(W_O\)</span> and <span class="arithmatex">\(W_{\text{Down}}\)</span>)<a class="headerlink" href="#2-rowparallellinear-w_o-and-w_textdown" title="Permanent link">&para;</a></h4>
+<p>A weight matrix <span class="arithmatex">\(W \in \mathbb{R}^{d_{\text{in}} \times d}\)</span> is split along its <strong>rows</strong> across <span class="arithmatex">\(N_{\text{TP}}\)</span> GPUs:</p>
+<div class="arithmatex">\[
+W = \begin{bmatrix} W_1 \\ W_2 \\ \vdots \\ W_{N_{\text{TP}}} \end{bmatrix}
+\]</div>
+<p>Input activation <span class="arithmatex">\(X\)</span> (which is already split column-wise as <span class="arithmatex">\(\begin{bmatrix} X_1 &amp; X_2 &amp; \dots &amp; X_{N_{\text{TP}}} \end{bmatrix}\)</span>) multiplies against <span class="arithmatex">\(W_i\)</span>:</p>
+<div class="arithmatex">\[
+Y_i = X_i @ W_i
+\]</div>
+<p>To recover the true mathematical output <span class="arithmatex">\(Y = X @ W\)</span>, partial outputs must be summed across all GPUs:</p>
+<div class="arithmatex">\[
+Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
+\]</div>
+<hr />
+<h3 id="22-custom-nvlink-all-reduce-kernels-vllm_ccustom_ar">2.2 Custom NVLink All-Reduce Kernels (<code>vllm._C.custom_ar</code>)<a class="headerlink" href="#22-custom-nvlink-all-reduce-kernels-vllm_ccustom_ar" title="Permanent link">&para;</a></h3>
+<p>In PyTorch, standard <code>torch.distributed.all_reduce</code> invokes NCCL, which incurs kernel launch overhead and IPC synchronization latency (<span class="arithmatex">\(\sim 10 \dots 15 \ \mu\text{s}\)</span>).</p>
+<p>To eliminate NCCL host overhead for intra-node NVLink transfers, vLLM implements custom CUDA All-Reduce kernels (<code>vllm._C.custom_ar</code>):</p>
+<ol>
+<li><strong>Shared NVLink IPC Buffer</strong>: During engine initialization, vLLM registers static POSIX shared memory pointers across all intra-node GPUs over NVLink.</li>
+<li><strong>Single-Kernel All-Reduce</strong>: When <code>RowParallelLinear</code> completes, a single custom CUDA kernel executes across all GPUs simultaneously, reading partial tensors directly from peer GPU HBM over NVLink and performing the summation in-place.</li>
+<li><strong>Latency Reduction</strong>: Reduces All-Reduce communication latency from <span class="arithmatex">\(15 \ \mu\text{s}\)</span> down to <strong><span class="arithmatex">\(&lt; 2.5 \ \mu\text{s}\)</span></strong>, maximizing Tensor Core compute efficiency!</li>
+</ol>
+<hr />
+<h2 id="part-3-pipeline-parallelism-pp-and-context-parallelism-cp">Part 3: Pipeline Parallelism (PP) and Context Parallelism (CP)<a class="headerlink" href="#part-3-pipeline-parallelism-pp-and-context-parallelism-cp" title="Permanent link">&para;</a></h2>
+<p>When a model's memory footprint exceeds a single node's NVLink capacity (e.g. Llama 3 405B requiring <span class="arithmatex">\(810 \text{ GB}\)</span> in FP16), <strong>Pipeline Parallelism (PP)</strong> partitions layers across multiple node boundaries.</p>
+<h3 id="31-pipeline-parallelism-mechanics">3.1 Pipeline Parallelism Mechanics<a class="headerlink" href="#31-pipeline-parallelism-mechanics" title="Permanent link">&para;</a></h3>
+<p>Pipeline Parallelism partitions the <span class="arithmatex">\(L\)</span> Transformer layers into contiguous stage groups across <span class="arithmatex">\(N_{\text{PP}}\)</span> GPUs/nodes (e.g., <span class="arithmatex">\(N_{\text{PP}} = 4\)</span> for an 80-layer model <span class="arithmatex">\(\implies 20\)</span> layers per stage).</p>
+<pre class="mermaid"><code>flowchart LR
+    subgraph STAGE0 ["Stage 0 (GPU 0: Layers 1..20)"]
+        S0_P["Prefill / Decode Forward Pass"]
+    end
+
+    subgraph STAGE1 ["Stage 1 (GPU 1: Layers 21..40)"]
+        S1_P["Prefill / Decode Forward Pass"]
+    end
+
+    subgraph STAGE2 ["Stage 2 (GPU 2: Layers 41..60)"]
+        S2_P["Prefill / Decode Forward Pass"]
+    end
+
+    subgraph STAGE3 ["Stage 3 (GPU 3: Layers 61..80)"]
+        S3_P["Prefill / Decode Forward Pass"]
+    end
+
+    S0_P --&gt;|"Point-to-Point Transfer (P2P)"| S1_P
+    S1_P --&gt;|"Point-to-Point Transfer (P2P)"| S2_P
+    S2_P --&gt;|"Point-to-Point Transfer (P2P)"| S3_P</code></pre>
+<h4 id="communication-efficiency">Communication Efficiency<a class="headerlink" href="#communication-efficiency" title="Permanent link">&para;</a></h4>
+<p>Unlike Tensor Parallelism (which requires 2 All-Reduces per layer), Pipeline Parallelism requires only <strong>1 Point-to-Point (P2P) activation transfer between stage boundaries</strong>. This minimal network payload allows PP to run efficiently over inter-node InfiniBand / RoCE links (<span class="arithmatex">\(50 \text{ GB/s}\)</span>).</p>
+<hr />
+<h3 id="32-context-parallelism-cp-and-ring-attention">3.2 Context Parallelism (CP) and Ring-Attention<a class="headerlink" href="#32-context-parallelism-cp-and-ring-attention" title="Permanent link">&para;</a></h3>
+<p>For extreme long-context workloads (<span class="arithmatex">\(S &gt; 100,000\)</span> tokens), a single GPU cannot store the physical KV cache blocks for the entire sequence even with PagedAttention.</p>
+<p><strong>Context Parallelism (CP)</strong> partitions the sequence length dimension <span class="arithmatex">\(S\)</span> across <span class="arithmatex">\(N_{\text{CP}}\)</span> GPUs using <strong>Ring-Attention</strong> (Liu et al.):</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph RING ["🔄 Ring-Attention Communication Loop"]
+        GPU0["GPU 0 (Tokens 0..25K)&lt;br&gt;Holds Q_0, K_0, V_0"] --&gt;|"Pass K, V Block"| GPU1["GPU 1 (Tokens 25K..50K)&lt;br&gt;Holds Q_1, K_1, V_1"]
+        GPU1 --&gt;|"Pass K, V Block"| GPU2["GPU 2 (Tokens 50K..75K)&lt;br&gt;Holds Q_2, K_2, V_2"]
+        GPU2 --&gt;|"Pass K, V Block"| GPU3["GPU 3 (Tokens 75K..100K)&lt;br&gt;Holds Q_3, K_3, V_3"]
+        GPU3 --&gt;|"Pass K, V Block"| GPU0
+    end</code></pre>
+<ol>
+<li>Each GPU <span class="arithmatex">\(i\)</span> holds a slice of Query tokens <span class="arithmatex">\(Q_i\)</span> and a slice of Key/Value tokens <span class="arithmatex">\(K_i, V_i\)</span>.</li>
+<li>While GPU <span class="arithmatex">\(i\)</span> computes partial SRAM attention between <span class="arithmatex">\(Q_i\)</span> and local <span class="arithmatex">\(K_i, V_i\)</span>, it asynchronously streams its <span class="arithmatex">\(K_i, V_i\)</span> blocks to the next GPU in a ring topology.</li>
+<li>Over <span class="arithmatex">\(N_{\text{CP}}\)</span> ring steps, every GPU evaluates full attention over all sequence tiles without any single GPU holding the complete KV cache in memory!</li>
+</ol>
+<hr />
+<h2 id="part-4-expert-parallelism-ep-for-mixture-of-experts-moe">Part 4: Expert Parallelism (EP) for Mixture-of-Experts (MoE)<a class="headerlink" href="#part-4-expert-parallelism-ep-for-mixture-of-experts-moe" title="Permanent link">&para;</a></h2>
+<p>Modern frontier models like <strong>DeepSeek-V3 / DeepSeek-R1</strong> (671 Billion total parameters, 37 Billion active parameters per token) and <strong>Mixtral 8x22B</strong> utilize <strong>Mixture-of-Experts (MoE)</strong> architectures.</p>
+<p>In an MoE Transformer layer, dense Feed-Forward Networks (FFNs) are replaced by a <strong>Router / Gating Network</strong> and <span class="arithmatex">\(N_{\text{experts}}\)</span> parallel Expert networks.</p>
+<h3 id="41-moe-top-k-routing-mechanics">4.1 MoE Top-k Routing Mechanics<a class="headerlink" href="#41-moe-top-k-routing-mechanics" title="Permanent link">&para;</a></h3>
+<p>For each token <span class="arithmatex">\(x\)</span>, a router network computes softmax probabilities over all experts and selects the <strong>Top-<span class="arithmatex">\(k\)</span></strong> highest scoring experts (e.g. top-2 for Mixtral, top-8 for DeepSeek-V3):</p>
+<div class="arithmatex">\[
+g(x) = \text{TopK}\left(\text{Softmax}(x @ W_{\text{gate}})\right)
+\]</div>
+<div class="arithmatex">\[
+y = \sum_{i \in \text{TopK}} g(x)_i \cdot \text{Expert}_i(x)
+\]</div>
+<pre class="mermaid"><code>flowchart TD
+    X["Input Token Vector x"] --&gt; ROUTER["Gating Router Network (W_gate)"]
+    ROUTER --&gt; TOPK["Select Top-k Experts (e.g. Top-2 or Top-8)"]
+
+    TOPK --&gt; E1["Expert 1 (FFN)"]
+    TOPK --&gt; E4["Expert 4 (FFN)"]
+
+    E1 --&gt; SUM["Weighted Sum of Expert Outputs"]
+    E4 --&gt; SUM
+    SUM --&gt; Y["Final Output Vector y"]</code></pre>
+<hr />
+<h3 id="42-expert-parallelism-ep-and-fused-moe-kernels">4.2 Expert Parallelism (EP) and Fused MoE Kernels<a class="headerlink" href="#42-expert-parallelism-ep-and-fused-moe-kernels" title="Permanent link">&para;</a></h3>
+<p>In large MoE models with 64 or 256 total experts (e.g. DeepSeek-V3 with 256 routing experts across 8 nodes):</p>
+<ol>
+<li><strong>Expert Distribution (EP)</strong>: Experts are distributed evenly across GPUs (<span class="arithmatex">\(N_{\text{experts}} / N_{\text{GPUs}}\)</span> experts per GPU).</li>
+<li><strong>All-to-All Communication (<code>all_to_all_single</code>)</strong>:</li>
+<li><strong>Dispatch Pass</strong>: Tokens are routed to the specific GPUs holding their assigned Top-<span class="arithmatex">\(k\)</span> experts using an <code>All-to-All</code> network transfer.</li>
+<li><strong>Combine Pass</strong>: After expert GPUs compute FFN math, output vectors are transferred back to the origin GPUs via a second <code>All-to-All</code> network transfer.</li>
+</ol>
+<pre class="mermaid"><code>flowchart LR
+    subgraph DISPATCH ["1. Dispatch All-to-All"]
+        G0_TOK["GPU 0 Tokens"] --&gt;|"Route to Assigned Experts"| EP_GPU["Expert GPUs (EP 0..N)"]
+    end
+
+    subgraph COMPUTE ["2. Fused MoE CUDA Computation"]
+        EP_GPU --&gt; FUSED["vllm._C.fused_moe&lt;br&gt;Groups tokens by expert and executes GEMM in SRAM"]
+    end
+
+    subgraph COMBINE ["3. Combine All-to-All"]
+        FUSED --&gt;|"Return Result Vectors"| G0_OUT["GPU 0 Output Aggregation"]
+    end</code></pre>
+<h4 id="fused-moe-cuda-kernels-vllm_cfused_moe">Fused MoE CUDA Kernels (<code>vllm._C.fused_moe</code>)<a class="headerlink" href="#fused-moe-cuda-kernels-vllm_cfused_moe" title="Permanent link">&para;</a></h4>
+<p>Executing individual GEMMs for scattered token subsets causes massive CPU launch overhead and GPU fragmentation. vLLM implements custom <strong>Fused MoE CUDA Kernels (<code>fused_moe</code>)</strong>:</p>
+<ul>
+<li><strong>Token Sorting</strong>: The kernel sorts and groups all tokens in SRAM by their target expert ID.</li>
+<li><strong>Batched GEMM Execution</strong>: Executes a single grouped GEMM CUDA launch that processes all expert workloads simultaneously without returning to the CPU, maximizing Tensor Core compute efficiency!</li>
+</ul>
+<hr />
+<h2 id="summary-parallelism-strategy-decision-matrix">Summary: Parallelism Strategy Decision Matrix<a class="headerlink" href="#summary-parallelism-strategy-decision-matrix" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Model Architecture / Size</th>
+<th style="text-align: left;">Recommended Parallelism Setup</th>
+<th style="text-align: left;">Primary Communication Primitives</th>
+<th style="text-align: left;">Target Hardware Topology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Medium Models (7B - 70B)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(\text{TP} = 2 \dots 8\)</span>, <span class="arithmatex">\(\text{PP} = 1\)</span></td>
+<td style="text-align: left;">All-Reduce (<code>vllm._C.custom_ar</code>)</td>
+<td style="text-align: left;">Single HGX Node (NVLink)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Large Dense Models (405B)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(\text{TP} = 8\)</span>, <span class="arithmatex">\(\text{PP} = 8 \dots 16\)</span></td>
+<td style="text-align: left;">All-Reduce (Intra-Node) + P2P (Inter-Node)</td>
+<td style="text-align: left;">Multi-Node NVLink + InfiniBand</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Extreme Long Context (100K+)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(\text{TP} = 8\)</span>, <span class="arithmatex">\(\text{CP} = 4 \dots 8\)</span></td>
+<td style="text-align: left;">Ring-Attention (Async P2P / All-to-All)</td>
+<td style="text-align: left;">Multi-Node High-Bandwidth Network</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Massive MoE (DeepSeek / Mixtral)</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(\text{TP} = 8\)</span>, <span class="arithmatex">\(\text{EP} = 8 \dots 64\)</span></td>
+<td style="text-align: left;">All-to-All (<code>all_to_all_single</code>) + Fused MoE</td>
+<td style="text-align: left;">Multi-Node Cluster with InfiniBand RDMA</td>
+</tr>
+</tbody>
+</table>
+<p>With <strong>Module 5</strong> complete, we advance to <strong>Module 6: Production Deployment and Cloud Orchestration (<code>06_deployment_and_orchestration.md</code>)</strong>, where we explore OpenAI API server architecture, Ray Core actor clusters, Kubernetes deployments (NVIDIA GPU Operator, <code>/dev/shm</code> IPC sizing), and KEDA autoscaling.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
