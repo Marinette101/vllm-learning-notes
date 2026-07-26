@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#module-3-performance-quality-and-engine-enhancements" class="md-skip">
+        <a href="#3" class="md-skip">
           跳转至
         </a>
       
@@ -411,34 +411,34 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#part-1-inference-performance-metrics-and-systems-trade-offs" class="md-nav__link">
+  <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 1: Inference Performance Metrics and Systems Trade-Offs
+        第 1 部分: 推理性能指标与系统权衡
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 1: Inference Performance Metrics and Systems Trade-Offs">
+    <nav class="md-nav" aria-label="第 1 部分: 推理性能指标与系统权衡">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#11-the-production-metric-hierarchy" class="md-nav__link">
+  <a href="#11" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1.1 The Production Metric Hierarchy
+        1.1 生产级指标体系
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1.1 The Production Metric Hierarchy">
+    <nav class="md-nav" aria-label="1.1 生产级指标体系">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-time-to-first-token-ttft" class="md-nav__link">
+  <a href="#1-token-time-to-first-token-ttft" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Time To First Token (TTFT)
+        1. 首 Token 延迟 (Time To First Token - TTFT)
       
     </span>
   </a>
@@ -446,10 +446,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-inter-token-latency-itl-time-between-tokens-tbt" class="md-nav__link">
+  <a href="#2-token-inter-token-latency-itl-tbt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Inter-Token Latency (ITL / Time Between Tokens - TBT)
+        2. Token 间延迟 (Inter-Token Latency - ITL / TBT)
       
     </span>
   </a>
@@ -460,7 +460,7 @@
   <a href="#3-system-throughput-tokens-per-second" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. System Throughput (Tokens per Second)
+        3. 系统吞吐量 (System Throughput - Tokens per Second)
       
     </span>
   </a>
@@ -473,322 +473,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#12-the-latency-throughput-pareto-frontier" class="md-nav__link">
+  <a href="#12-pareto-frontier" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1.2 The Latency-Throughput Pareto Frontier
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#part-2-advanced-scheduling-chunked-prefill-and-co-scheduling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Part 2: Advanced Scheduling: Chunked Prefill and Co-Scheduling
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Part 2: Advanced Scheduling: Chunked Prefill and Co-Scheduling">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#21-the-head-of-line-hol-blocking-problem" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2.1 The Head-of-Line (HoL) Blocking Problem
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#22-chunked-prefill-architecture-and-co-scheduling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2.2 Chunked Prefill Architecture and Co-Scheduling
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#23-mathematical-scheduling-constraints" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2.3 Mathematical Scheduling Constraints
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2.3 Mathematical Scheduling Constraints">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#quantitative-scheduling-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quantitative Scheduling Example
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#24-systems-analysis-prefill-vs-decode-flops-arithmetic-intensity-and-cost-per-token" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2.4 Systems Analysis: Prefill vs. Decode FLOPs, Arithmetic Intensity, and Cost per Token
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2.4 Systems Analysis: Prefill vs. Decode FLOPs, Arithmetic Intensity, and Cost per Token">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-why-prefill-tokens-execute-full-attention-and-ffn-passes-across-all-layers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Why Prefill Tokens Execute Full Attention and FFN Passes Across All Layers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-quantitative-flop-breakdown-why-2times-vs-4times-attention-flops-is-negligible-s-8000" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Quantitative FLOP Breakdown: Why \(2\times\) vs \(4\times\) Attention FLOPs is Negligible (\(S &lt; 8,000\))
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2. Quantitative FLOP Breakdown: Why \(2\times\) vs \(4\times\) Attention FLOPs is Negligible (\(S &lt; 8,000\))">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#step-1-linear-weight-projection-flops-identical-for-both" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 1: Linear Weight Projection FLOPs (Identical for Both)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-2-attention-flops-per-token-at-context-length-s-1024" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 2: Attention FLOPs per Token at Context Length \(S = 1,024\)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-3-total-flops-per-token-comparison-s-1024" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 3: Total FLOPs per Token Comparison (\(S = 1,024\))
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-the-true-bottleneck-difference-arithmetic-intensity-i-textflops-textbytes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. The True Bottleneck Difference: Arithmetic Intensity (\(I = \text{FLOPs} / \text{Bytes}\))
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-concrete-tensor-shape-analysis-across-linear-layers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Concrete Tensor Shape Analysis Across Linear Layers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-scaling-to-the-entire-model-pass-all-layers-kv-cache" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Scaling to the Entire Model Pass (All Layers + KV Cache)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#part-3-execution-overhead-minimization-cuda-graphs-and-compiled-workflows" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#31-the-cpu-gpu-host-overhead-bottleneck" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.1 The CPU-GPU Host Overhead Bottleneck
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#32-cuda-graph-capture-and-replay-engine-in-vllm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.2 CUDA Graph Capture and Replay Engine in vLLM
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="3.2 CUDA Graph Capture and Replay Engine in vLLM">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-how-cuda-graphs-work" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. How CUDA Graphs Work
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-fixed-size-batch-bucketing-and-static-input-buffers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Fixed-Size Batch Bucketing and Static Input Buffers
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#part-4-speculative-decoding-multi-token-verification-pipelines" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Part 4: Speculative Decoding: Multi-Token Verification Pipelines
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Part 4: Speculative Decoding: Multi-Token Verification Pipelines">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#41-the-fundamental-principle-of-speculative-decoding" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4.1 The Fundamental Principle of Speculative Decoding
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="4.1 The Fundamental Principle of Speculative Decoding">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#mathematical-distribution-preservation-modified-rejection-sampling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mathematical Distribution Preservation (Modified Rejection Sampling)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#42-speculative-architectures-in-vllm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4.2 Speculative Architectures in vLLM
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#43-tree-based-attention-verification-kernels" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4.3 Tree-Based Attention Verification Kernels
+        1.2 延迟-吞吐量 帕累托前沿 (Pareto Frontier)
       
     </span>
   </a>
@@ -801,34 +489,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#part-5-quantization-precision-compression-and-kernel-engineering" class="md-nav__link">
+  <a href="#2-chunked-prefill-co-scheduling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 5: Quantization: Precision, Compression, and Kernel Engineering
+        第 2 部分: 高级调度: Chunked Prefill 与 Co-Scheduling
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 5: Quantization: Precision, Compression, and Kernel Engineering">
+    <nav class="md-nav" aria-label="第 2 部分: 高级调度: Chunked Prefill 与 Co-Scheduling">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#51-quantization-taxonomy-in-production-inference" class="md-nav__link">
+  <a href="#21-hol-blocking" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5.1 Quantization Taxonomy in Production Inference
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5.1 Quantization Taxonomy in Production Inference">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-weight-only-quantization-awq-gptq-marlin" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Weight-Only Quantization (AWQ / GPTQ / Marlin)
+        2.1 队头阻塞 (HoL Blocking) 难题
       
     </span>
   </a>
@@ -836,10 +512,44 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-weight-and-activation-quantization-fp8-w8a8" class="md-nav__link">
+  <a href="#22-chunked-prefill-co-scheduling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Weight-and-Activation Quantization (FP8 / W8A8)
+        2.2 Chunked Prefill 架构与 Co-Scheduling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-prefill-vs-decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 算术强度系统分析: Prefill vs Decode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3 算术强度系统分析: Prefill vs Decode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-prefill-token-attention-ffn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 为什么 Prefill Token 必须跨所有层执行完整 Attention 和 FFN 计算
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-flops-2times-vs-4times-flops-s-8000" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 定量 FLOPs 拆解: 为什么 \(2\times\) vs \(4\times\) 注意力 FLOPs 在 \(S &lt; 8,000\) 时微不足道
       
     </span>
   </a>
@@ -852,49 +562,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#52-kv-cache-quantization-fp8-int8-kv-blocks" class="md-nav__link">
+  <a href="#24-i-textflopsbyte" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5.2 KV Cache Quantization (FP8 / INT8 KV Blocks)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5.2 KV Cache Quantization (FP8 / INT8 KV Blocks)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-physical-storage-transformation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Physical Storage Transformation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-impact-on-serving-concurrency" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Impact on Serving Concurrency
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#53-quantitative-performance-and-accuracy-trade-off-matrix" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.3 Quantitative Performance and Accuracy Trade-Off Matrix
+        2.4 根本瓶颈差异: 算术强度 (\(I = \text{FLOPs/Byte}\))
       
     </span>
   </a>
@@ -907,13 +578,86 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#summary-the-integrated-performance-stack" class="md-nav__link">
+  <a href="#3-cuda-graphs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Summary: The Integrated Performance Stack
+        第 3 部分: 执行开销最小化: CUDA Graphs
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="第 3 部分: 执行开销最小化: CUDA Graphs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-cuda-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 CUDA Graph 捕获与重放机制
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-vllm-speculative-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 4 部分: vLLM 投机解码 (Speculative Decoding)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 4 部分: vLLM 投机解码 (Speculative Decoding)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 投机解码工作流
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 5 部分: 量化与精度优化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 5 部分: 量化与精度优化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 主要量化方案对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1060,34 +804,34 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#part-1-inference-performance-metrics-and-systems-trade-offs" class="md-nav__link">
+  <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 1: Inference Performance Metrics and Systems Trade-Offs
+        第 1 部分: 推理性能指标与系统权衡
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 1: Inference Performance Metrics and Systems Trade-Offs">
+    <nav class="md-nav" aria-label="第 1 部分: 推理性能指标与系统权衡">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#11-the-production-metric-hierarchy" class="md-nav__link">
+  <a href="#11" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1.1 The Production Metric Hierarchy
+        1.1 生产级指标体系
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1.1 The Production Metric Hierarchy">
+    <nav class="md-nav" aria-label="1.1 生产级指标体系">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-time-to-first-token-ttft" class="md-nav__link">
+  <a href="#1-token-time-to-first-token-ttft" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Time To First Token (TTFT)
+        1. 首 Token 延迟 (Time To First Token - TTFT)
       
     </span>
   </a>
@@ -1095,10 +839,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-inter-token-latency-itl-time-between-tokens-tbt" class="md-nav__link">
+  <a href="#2-token-inter-token-latency-itl-tbt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Inter-Token Latency (ITL / Time Between Tokens - TBT)
+        2. Token 间延迟 (Inter-Token Latency - ITL / TBT)
       
     </span>
   </a>
@@ -1109,7 +853,7 @@
   <a href="#3-system-throughput-tokens-per-second" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. System Throughput (Tokens per Second)
+        3. 系统吞吐量 (System Throughput - Tokens per Second)
       
     </span>
   </a>
@@ -1122,322 +866,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#12-the-latency-throughput-pareto-frontier" class="md-nav__link">
+  <a href="#12-pareto-frontier" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1.2 The Latency-Throughput Pareto Frontier
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#part-2-advanced-scheduling-chunked-prefill-and-co-scheduling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Part 2: Advanced Scheduling: Chunked Prefill and Co-Scheduling
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Part 2: Advanced Scheduling: Chunked Prefill and Co-Scheduling">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#21-the-head-of-line-hol-blocking-problem" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2.1 The Head-of-Line (HoL) Blocking Problem
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#22-chunked-prefill-architecture-and-co-scheduling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2.2 Chunked Prefill Architecture and Co-Scheduling
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#23-mathematical-scheduling-constraints" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2.3 Mathematical Scheduling Constraints
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2.3 Mathematical Scheduling Constraints">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#quantitative-scheduling-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quantitative Scheduling Example
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#24-systems-analysis-prefill-vs-decode-flops-arithmetic-intensity-and-cost-per-token" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2.4 Systems Analysis: Prefill vs. Decode FLOPs, Arithmetic Intensity, and Cost per Token
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2.4 Systems Analysis: Prefill vs. Decode FLOPs, Arithmetic Intensity, and Cost per Token">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-why-prefill-tokens-execute-full-attention-and-ffn-passes-across-all-layers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Why Prefill Tokens Execute Full Attention and FFN Passes Across All Layers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-quantitative-flop-breakdown-why-2times-vs-4times-attention-flops-is-negligible-s-8000" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Quantitative FLOP Breakdown: Why \(2\times\) vs \(4\times\) Attention FLOPs is Negligible (\(S &lt; 8,000\))
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2. Quantitative FLOP Breakdown: Why \(2\times\) vs \(4\times\) Attention FLOPs is Negligible (\(S &lt; 8,000\))">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#step-1-linear-weight-projection-flops-identical-for-both" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 1: Linear Weight Projection FLOPs (Identical for Both)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-2-attention-flops-per-token-at-context-length-s-1024" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 2: Attention FLOPs per Token at Context Length \(S = 1,024\)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-3-total-flops-per-token-comparison-s-1024" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 3: Total FLOPs per Token Comparison (\(S = 1,024\))
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-the-true-bottleneck-difference-arithmetic-intensity-i-textflops-textbytes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. The True Bottleneck Difference: Arithmetic Intensity (\(I = \text{FLOPs} / \text{Bytes}\))
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-concrete-tensor-shape-analysis-across-linear-layers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Concrete Tensor Shape Analysis Across Linear Layers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-scaling-to-the-entire-model-pass-all-layers-kv-cache" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Scaling to the Entire Model Pass (All Layers + KV Cache)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#part-3-execution-overhead-minimization-cuda-graphs-and-compiled-workflows" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#31-the-cpu-gpu-host-overhead-bottleneck" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.1 The CPU-GPU Host Overhead Bottleneck
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#32-cuda-graph-capture-and-replay-engine-in-vllm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.2 CUDA Graph Capture and Replay Engine in vLLM
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="3.2 CUDA Graph Capture and Replay Engine in vLLM">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-how-cuda-graphs-work" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. How CUDA Graphs Work
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-fixed-size-batch-bucketing-and-static-input-buffers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Fixed-Size Batch Bucketing and Static Input Buffers
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#part-4-speculative-decoding-multi-token-verification-pipelines" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Part 4: Speculative Decoding: Multi-Token Verification Pipelines
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Part 4: Speculative Decoding: Multi-Token Verification Pipelines">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#41-the-fundamental-principle-of-speculative-decoding" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4.1 The Fundamental Principle of Speculative Decoding
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="4.1 The Fundamental Principle of Speculative Decoding">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#mathematical-distribution-preservation-modified-rejection-sampling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mathematical Distribution Preservation (Modified Rejection Sampling)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#42-speculative-architectures-in-vllm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4.2 Speculative Architectures in vLLM
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#43-tree-based-attention-verification-kernels" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4.3 Tree-Based Attention Verification Kernels
+        1.2 延迟-吞吐量 帕累托前沿 (Pareto Frontier)
       
     </span>
   </a>
@@ -1450,34 +882,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#part-5-quantization-precision-compression-and-kernel-engineering" class="md-nav__link">
+  <a href="#2-chunked-prefill-co-scheduling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 5: Quantization: Precision, Compression, and Kernel Engineering
+        第 2 部分: 高级调度: Chunked Prefill 与 Co-Scheduling
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 5: Quantization: Precision, Compression, and Kernel Engineering">
+    <nav class="md-nav" aria-label="第 2 部分: 高级调度: Chunked Prefill 与 Co-Scheduling">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#51-quantization-taxonomy-in-production-inference" class="md-nav__link">
+  <a href="#21-hol-blocking" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5.1 Quantization Taxonomy in Production Inference
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5.1 Quantization Taxonomy in Production Inference">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-weight-only-quantization-awq-gptq-marlin" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Weight-Only Quantization (AWQ / GPTQ / Marlin)
+        2.1 队头阻塞 (HoL Blocking) 难题
       
     </span>
   </a>
@@ -1485,10 +905,44 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-weight-and-activation-quantization-fp8-w8a8" class="md-nav__link">
+  <a href="#22-chunked-prefill-co-scheduling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Weight-and-Activation Quantization (FP8 / W8A8)
+        2.2 Chunked Prefill 架构与 Co-Scheduling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-prefill-vs-decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 算术强度系统分析: Prefill vs Decode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3 算术强度系统分析: Prefill vs Decode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-prefill-token-attention-ffn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 为什么 Prefill Token 必须跨所有层执行完整 Attention 和 FFN 计算
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-flops-2times-vs-4times-flops-s-8000" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 定量 FLOPs 拆解: 为什么 \(2\times\) vs \(4\times\) 注意力 FLOPs 在 \(S &lt; 8,000\) 时微不足道
       
     </span>
   </a>
@@ -1501,49 +955,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#52-kv-cache-quantization-fp8-int8-kv-blocks" class="md-nav__link">
+  <a href="#24-i-textflopsbyte" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5.2 KV Cache Quantization (FP8 / INT8 KV Blocks)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5.2 KV Cache Quantization (FP8 / INT8 KV Blocks)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-physical-storage-transformation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Physical Storage Transformation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-impact-on-serving-concurrency" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Impact on Serving Concurrency
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#53-quantitative-performance-and-accuracy-trade-off-matrix" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.3 Quantitative Performance and Accuracy Trade-Off Matrix
+        2.4 根本瓶颈差异: 算术强度 (\(I = \text{FLOPs/Byte}\))
       
     </span>
   </a>
@@ -1556,13 +971,86 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#summary-the-integrated-performance-stack" class="md-nav__link">
+  <a href="#3-cuda-graphs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Summary: The Integrated Performance Stack
+        第 3 部分: 执行开销最小化: CUDA Graphs
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="第 3 部分: 执行开销最小化: CUDA Graphs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-cuda-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 CUDA Graph 捕获与重放机制
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-vllm-speculative-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 4 部分: vLLM 投机解码 (Speculative Decoding)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 4 部分: vLLM 投机解码 (Speculative Decoding)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 投机解码工作流
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 5 部分: 量化与精度优化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 5 部分: 量化与精度优化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 主要量化方案对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1583,531 +1071,231 @@
 
 
 
-<h1 id="module-3-performance-quality-and-engine-enhancements">Module 3: Performance, Quality and Engine Enhancements<a class="headerlink" href="#module-3-performance-quality-and-engine-enhancements" title="Permanent link">&para;</a></h1>
-<p>To achieve high-throughput, low-latency Large Language Model (LLM) serving in production, modern inference engines must optimize beyond basic virtual memory management. While PagedAttention resolves Key-Value (KV) cache memory fragmentation, serving systems face three fundamental performance bottlenecks: <strong>inter-token latency spikes caused by long prompt pre-fills</strong>, <strong>CPU host execution overhead during repetitive kernel launches</strong>, and <strong>memory bandwidth saturation during autoregressive decoding</strong>.</p>
-<p>This module explores the core performance mechanics and engine enhancements designed into vLLM to overcome these bottlenecks, covering <strong>Inference Performance Metrics</strong>, <strong>Chunked Prefill</strong>, <strong>Systems Economics of Prefill vs. Decode</strong>, <strong>CUDA Graph Execution</strong>, <strong>Speculative Decoding</strong>, and <strong>Model/KV Cache Quantization</strong>.</p>
+<h1 id="3">模块 3: 性能、质量与引擎增强<a class="headerlink" href="#3" title="Permanent link">&para;</a></h1>
+<p>为了在生产环境中实现大语言模型 (LLM) 的高吞吐、低延迟推理，现代推理引擎必须超出基本的虚拟内存管理范畴进行深度优化。虽然 PagedAttention 解决了 Key-Value (KV) Cache 显存碎片化问题，但推理服务系统仍面临三个根本性的性能瓶颈：<strong>长 Prompt 预填充导致的 Token 间延迟飙升</strong>、<strong>重复 Kernel 启动时的 CPU 主机执行开销</strong>，以及<strong>自回归解码过程中的显存带宽饱和</strong>。</p>
+<p>本模块将探索 vLLM 为克服这些瓶颈而设计的核心性能机制与引擎增强功能，涵盖 <strong>推理性能评估指标</strong>、<strong>Chunked Prefill (分块预填充)</strong>、<strong>Prefill 与 Decode 的系统经济学</strong>、<strong>CUDA Graph 图执行</strong>、<strong>投机解码 (Speculative Decoding)</strong> 以及 <strong>模型与 KV Cache 量化</strong>。</p>
 <hr />
-<h2 id="part-1-inference-performance-metrics-and-systems-trade-offs">Part 1: Inference Performance Metrics and Systems Trade-Offs<a class="headerlink" href="#part-1-inference-performance-metrics-and-systems-trade-offs" title="Permanent link">&para;</a></h2>
-<p>To evaluate and optimize serving performance, AI systems engineers distinguish between <strong>responsiveness (latency)</strong> and <strong>capacity (throughput)</strong>. In LLM serving, single-request latency is split into two distinct execution phases.</p>
+<h2 id="1">第 1 部分: 推理性能指标与系统权衡<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>为了评估和优化推理服务性能，AI 系统工程师严格区分<strong>响应速度 (延迟 Latency)</strong> 与 <strong>服务容量 (吞吐量 Throughput)</strong>。在 LLM 推理中，单次请求的延迟被清晰划分为两个不同的执行阶段。</p>
 <pre class="mermaid"><code>flowchart LR
-    REQ["📥 User Request Arrives"] --&gt; PREFILL["⚡ Prefill Phase (Prompt Evaluation)&lt;br&gt;Compute-Bound | Parallel Tensor Pass"]
-    PREFILL --&gt; TTFT_MARK["⏱️ TTFT (Time To First Token)"]
-    TTFT_MARK --&gt; DECODE["🔄 Decode Phase (Autoregressive Token Generation)&lt;br&gt;Memory-Bound | Sequential Forward Passes"]
-    DECODE --&gt; ITL_MARK["⏱️ ITL / TBT (Inter-Token Latency)"]</code></pre>
-<h3 id="11-the-production-metric-hierarchy">1.1 The Production Metric Hierarchy<a class="headerlink" href="#11-the-production-metric-hierarchy" title="Permanent link">&para;</a></h3>
-<h4 id="1-time-to-first-token-ttft">1. Time To First Token (TTFT)<a class="headerlink" href="#1-time-to-first-token-ttft" title="Permanent link">&para;</a></h4>
-<p><strong>Time To First Token (TTFT)</strong> measures the elapsed time from when a user submits a prompt to when the engine emits the very first generated token.</p>
+    REQ["📥 用户请求到达"] --&gt; PREFILL["⚡ Prefill 阶段 (Prompt 评估)&lt;br&gt;计算受限 | 并行张量前向计算"]
+    PREFILL --&gt; TTFT_MARK["⏱️ TTFT (首 Token 延迟)"]
+    TTFT_MARK --&gt; DECODE["🔄 Decode 阶段 (自回归 Token 生成)&lt;br&gt;带宽受限 | 串行前向计算"]
+    DECODE --&gt; ITL_MARK["⏱️ ITL / TBT (Token 间延迟)"]</code></pre>
+<h3 id="11">1.1 生产级指标体系<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<h4 id="1-token-time-to-first-token-ttft">1. 首 Token 延迟 (Time To First Token - TTFT)<a class="headerlink" href="#1-token-time-to-first-token-ttft" title="Permanent link">&para;</a></h4>
+<p><strong>首 Token 延迟 (TTFT)</strong> 测量从用户提交 Prompt 到引擎吐出第一个生成 Token 所经过的时间。</p>
 <div class="arithmatex">\[
 \text{TTFT} = t_{\text{queue}} + t_{\text{prefill}}
 \]</div>
-<p>Where:</p>
-<ul>
-<li><span class="arithmatex">\(t_{\text{queue}}\)</span>: Time spent waiting in the engine's <code>Waiting</code> queue for free High-Bandwidth Memory (HBM) KV blocks and execution budget.</li>
-<li><span class="arithmatex">\(t_{\text{prefill}}\)</span>: Time required to execute the compute-bound prompt prefill pass across all <span class="arithmatex">\(s_{\text{prompt}}\)</span> input tokens.</li>
-</ul>
-<p>TTFT is the primary metric for user-perceived engine responsiveness. Long prompt evaluations (e.g., 32,768 tokens) or heavy queue contention degrade TTFT.</p>
-<h4 id="2-inter-token-latency-itl-time-between-tokens-tbt">2. Inter-Token Latency (ITL / Time Between Tokens - TBT)<a class="headerlink" href="#2-inter-token-latency-itl-time-between-tokens-tbt" title="Permanent link">&para;</a></h4>
-<p><strong>Inter-Token Latency (ITL)</strong>, also known as <strong>Time Between Tokens (TBT)</strong>, measures the time elapsed between generating consecutive output tokens during the autoregressive decoding phase.</p>
+<p>其中：
+- <span class="arithmatex">\(t_{\text{queue}}\)</span>: 在引擎 <code>Waiting</code> 队列中等待空闲 HBM KV Block 和执行预算的时间。
+- <span class="arithmatex">\(t_{\text{prefill}}\)</span>: 跨所有 <span class="arithmatex">\(s_{\text{prompt}}\)</span> 个输入 Token 执行计算受限的 Prompt 预填充计算所需的时间。</p>
+<p>TTFT 是用户感知引擎响应速度的核心指标。长 Prompt 评估 (例如 32,768 个 Token) 或严重的队列排队都会拉高 TTFT。</p>
+<h4 id="2-token-inter-token-latency-itl-tbt">2. Token 间延迟 (Inter-Token Latency - ITL / TBT)<a class="headerlink" href="#2-token-inter-token-latency-itl-tbt" title="Permanent link">&para;</a></h4>
+<p><strong>Token 间延迟 (ITL)</strong>，也称为 <strong>Time Between Tokens (TBT)</strong>，测量在自回归解码阶段生成连续输出 Token 之间的时间间隔。</p>
 <div class="arithmatex">\[
-\text{ITL} = t_{\text{decode_step}} = \frac{\text{Total Bytes Transferred}}{\text{Memory Bandwidth}} + \frac{\text{FLOPs}}{\text{Peak Compute Capacity}}
+\text{ITL} = t_{\text{decode_step}} = \frac{\text{传输的总内存字节数}}{\text{显存带宽}} + \frac{\text{FLOPs 运算量}}{\text{峰值算力}}
 \]</div>
-<p>Because single-token decoding is memory-bandwidth bound (<span class="arithmatex">\(I \approx 1.0 \text{ FLOPs/Byte}\)</span>), ITL is governed by how fast the GPU reads model weights and KV cache blocks from off-chip HBM into on-chip SRAM. Consistent ITL is required for smooth streaming user experiences (typically targeting <span class="arithmatex">\(20 \text{ to } 50 \text{ ms/token}\)</span>).</p>
-<h4 id="3-system-throughput-tokens-per-second">3. System Throughput (Tokens per Second)<a class="headerlink" href="#3-system-throughput-tokens-per-second" title="Permanent link">&para;</a></h4>
-<p><strong>System Throughput</strong> measures the total aggregate number of output tokens generated across all active requests per unit time.</p>
+<p>由于单 Token 解码处于显存带宽受限状态 (<span class="arithmatex">\(I \approx 1.0 \text{ FLOPs/Byte}\)</span>)，ITL 完全取决于 GPU 从片外 HBM 向片上 SRAM 读取模型权重和 KV Cache Block 的速度。平稳的 ITL 是保证流式输出体验的关键 (通常目标为 <span class="arithmatex">\(20 \text{ 至 } 50 \text{ ms/token}\)</span>)。</p>
+<h4 id="3-system-throughput-tokens-per-second">3. 系统吞吐量 (System Throughput - Tokens per Second)<a class="headerlink" href="#3-system-throughput-tokens-per-second" title="Permanent link">&para;</a></h4>
+<p><strong>系统吞吐量</strong> 测量单位时间内所有活跃请求累计生成的输出 Token 总数。</p>
 <div class="arithmatex">\[
-\text{Throughput} = \frac{\sum_{i=1}^{b} N_{\text{gen_tokens}, i}}{\Delta t} = \frac{b}{\text{Average ITL}}
+\text{吞吐量} = \frac{\sum_{i=1}^{b} N_{\text{gen_tokens}, i}}{\Delta t} = \frac{b}{\text{平均 ITL}}
 \]</div>
-<p>Where:</p>
-<ul>
-<li><span class="arithmatex">\(b\)</span>: Concurrent batch size (number of actively generating sequences).</li>
-<li><span class="arithmatex">\(N_{\text{gen_tokens}, i}\)</span>: Output tokens produced by sequence <span class="arithmatex">\(i\)</span>.</li>
-</ul>
+<p>其中：
+- <span class="arithmatex">\(b\)</span>: 并发 Batch 大小 (<code>batch_size</code>)。
+- <span class="arithmatex">\(N_{\text{gen_tokens}, i}\)</span>: 序列 <span class="arithmatex">\(i\)</span> 产生的输出 Token 数量。</p>
 <hr />
-<h3 id="12-the-latency-throughput-pareto-frontier">1.2 The Latency-Throughput Pareto Frontier<a class="headerlink" href="#12-the-latency-throughput-pareto-frontier" title="Permanent link">&para;</a></h3>
-<p>In high-concurrency production serving, latency and throughput stand in direct conflict.</p>
+<h3 id="12-pareto-frontier">1.2 延迟-吞吐量 帕累托前沿 (Pareto Frontier)<a class="headerlink" href="#12-pareto-frontier" title="Permanent link">&para;</a></h3>
+<p>在高并发生产推理中，延迟与吞吐量存在直接的物理冲突。</p>
 <pre class="mermaid"><code>flowchart TD
-    CONFIG["⚙️ Batch Size Configuration"] --&gt; SMALL_B["Small Batch Size (b = 1..8)"]
-    CONFIG --&gt; LARGE_B["Large Batch Size (b = 64..256)"]
+    CONFIG["⚙️ Batch 大小配置"] --&gt; SMALL_B["小 Batch 大小 (b = 1..8)"]
+    CONFIG --&gt; LARGE_B["大 Batch 大小 (b = 64..256)"]
 
-    SMALL_B --&gt; S_PERF["⚡ Low ITL (Ultra-Fast Response)&lt;br&gt;❌ Low Throughput (GPU Compute Under-utilized)"]
-    LARGE_B --&gt; L_PERF["🚀 High Aggregate Throughput (Max Tokens/sec)&lt;br&gt;⚠️ Higher ITL (Memory Bus Competition)"]</code></pre>
-<p>When batch size <span class="arithmatex">\(b\)</span> increases:</p>
-<ul>
-<li><strong>HBM Weight Reuse</strong>: The engine reads model weights from HBM once and reuses them across <span class="arithmatex">\(b\)</span> sequences, increasing arithmetic intensity <span class="arithmatex">\(I\)</span> toward the GPU Ridge Point.</li>
-<li><strong>Aggregate Throughput Increases</strong>: Total token generation capacity scales near-linearly with <span class="arithmatex">\(b\)</span>.</li>
-<li><strong>Per-User ITL Increases</strong>: The total KV cache bytes read from HBM increase (<span class="arithmatex">\(2 \cdot b \cdot s \cdot L \cdot h_{\text{kv}} \cdot d_{\text{head}} \cdot \text{sizeof(dtype)}\)</span>), causing each decoding iteration step to take slightly longer.</li>
-</ul>
-<p>Systems engineers select operating points on the <strong>Latency-Throughput Pareto Frontier</strong> based on application requirements: real-time conversational agents prioritize low ITL (<span class="arithmatex">\(b = 4 \dots 16\)</span>), while offline batch processing prioritizes maximum throughput (<span class="arithmatex">\(b = 64 \dots 256\)</span>).</p>
+    SMALL_B --&gt; S_PERF["⚡ 低 ITL (极速单用户响应)&lt;br&gt;❌ 低吞吐量 (GPU 算力未打满)"]
+    LARGE_B --&gt; L_PERF["🚀 高总吞吐量 (最大化每秒 Token 数)&lt;br&gt;⚠️ 较高的 ITL (显存总线竞争)"]</code></pre>
+<p>当 Batch 大小 <span class="arithmatex">\(b\)</span> 增大时：
+- <strong>HBM 权重复用</strong>: 引擎从 HBM 读取一次模型权重，即可在 <span class="arithmatex">\(b\)</span> 条序列之间复用，将算术强度 <span class="arithmatex">\(I\)</span> 推向 GPU 转折点 (Ridge Point)。
+- <strong>总吞吐量提升</strong>: 总 Token 生成能力随 <span class="arithmatex">\(b\)</span> 呈近乎线性扩展。
+- <strong>单用户 ITL 增加</strong>: 从 HBM 读取的总 KV Cache 字节数增加 (<span class="arithmatex">\(2 \cdot b \cdot s \cdot L \cdot h_{\text{kv}} \cdot d_{\text{head}} \cdot \text{sizeof(dtype)}\)</span>)，导致每个解码迭代步骤耗时略微变长。</p>
+<p>系统工程师根据业务需求在 <strong>延迟-吞吐量帕累托前沿</strong> 上选择运行点：实时对话 Agent 优先考虑低 ITL (<span class="arithmatex">\(b = 4 \dots 16\)</span>)，而离线批量处理则优先考虑最大吞吐量 (<span class="arithmatex">\(b = 64 \dots 256\)</span>)。</p>
 <hr />
-<h2 id="part-2-advanced-scheduling-chunked-prefill-and-co-scheduling">Part 2: Advanced Scheduling: Chunked Prefill and Co-Scheduling<a class="headerlink" href="#part-2-advanced-scheduling-chunked-prefill-and-co-scheduling" title="Permanent link">&para;</a></h2>
-<p>In traditional LLM engines, prompt prefill passes and token decode steps are executed separately. This design creates a severe performance hazard known as <strong>Head-of-Line (HoL) Blocking</strong>.</p>
-<h3 id="21-the-head-of-line-hol-blocking-problem">2.1 The Head-of-Line (HoL) Blocking Problem<a class="headerlink" href="#21-the-head-of-line-hol-blocking-problem" title="Permanent link">&para;</a></h3>
-<p>Suppose an engine is actively generating tokens for 64 concurrent user requests with a smooth ITL of <span class="arithmatex">\(25 \text{ ms/token}\)</span>. Suddenly, a new request arrives containing a massive <span class="arithmatex">\(32,768\)</span>-token document prompt.</p>
-<p>If the engine schedules the entire <span class="arithmatex">\(32,768\)</span>-token prompt prefill in a single un-chunked forward pass:</p>
+<h2 id="2-chunked-prefill-co-scheduling">第 2 部分: 高级调度: Chunked Prefill 与 Co-Scheduling<a class="headerlink" href="#2-chunked-prefill-co-scheduling" title="Permanent link">&para;</a></h2>
+<p>在传统的 LLM 引擎中，Prompt 预填充 Pass 与 Token 解码 Step 是分开执行的。这种设计会引发严重的 <strong>Head-of-Line (HoL) 队头阻塞</strong> 问题。</p>
+<h3 id="21-hol-blocking">2.1 队头阻塞 (HoL Blocking) 难题<a class="headerlink" href="#21-hol-blocking" title="Permanent link">&para;</a></h3>
+<p>假设引擎当前正在为 64 个并发用户请求生成 Token，ITL 维持在平滑的 <span class="arithmatex">\(25 \text{ ms/token}\)</span>。突然，一个新的请求到达，包含一个长达 <span class="arithmatex">\(32,768\)</span> Token 的超长文档 Prompt。</p>
+<p>如果引擎在单个未分块的前向计算中调度这 <span class="arithmatex">\(32,768\)</span> 个 Token 的预填充：</p>
 <ol>
-<li>The prefill pass requires a large forward computation across all 32.7K tokens simultaneously.</li>
-<li>On an NVIDIA H100, a 32.7K prefill forward pass on a 70B model requires <span class="arithmatex">\(\sim 500 \text{ ms}\)</span> of continuous GPU compute.</li>
-<li><strong>The Consequence</strong>: All 64 generating decode requests are blocked waiting for the prefill pass to conclude, causing an ITL spike from <span class="arithmatex">\(25 \text{ ms}\)</span> to <span class="arithmatex">\(&gt; 500 \text{ ms}\)</span>—creating a visible freeze in user-facing streaming output.</li>
+<li>该 Prefill Pass 需要对所有 32.7K 个 Token 同时进行大规模前向计算。</li>
+<li>在 NVIDIA H100 上，运行 70B 模型的 32.7K Prefill 前向计算需要连续消耗 <span class="arithmatex">\(\sim 500 \text{ ms}\)</span> 的 GPU 算力。</li>
+<li><strong>后果</strong>: 所有 64 个正在生成的 Decode 请求都被迫停顿，等待 Prefill 完成，导致 ITL 从 <span class="arithmatex">\(25 \text{ ms}\)</span> 骤增至 <span class="arithmatex">\(&gt; 500 \text{ ms}\)</span>——在前端流式输出上表现为明显的卡顿。</li>
 </ol>
 <hr />
-<h3 id="22-chunked-prefill-architecture-and-co-scheduling">2.2 Chunked Prefill Architecture and Co-Scheduling<a class="headerlink" href="#22-chunked-prefill-architecture-and-co-scheduling" title="Permanent link">&para;</a></h3>
-<p>To eliminate HoL blocking, vLLM implements <strong>Chunked Prefill</strong> (<code>v0.4+</code>).</p>
-<p>Rather than executing a long prompt prefill in a single forward pass, the scheduler breaks incoming prompts into smaller, budget-bounded logical segments called <strong>Prefill Chunks</strong> (controlled by <code>max_num_batched_tokens</code>, typically set to <span class="arithmatex">\(512\)</span> or <span class="arithmatex">\(2,048\)</span> tokens).</p>
+<h3 id="22-chunked-prefill-co-scheduling">2.2 Chunked Prefill 架构与 Co-Scheduling<a class="headerlink" href="#22-chunked-prefill-co-scheduling" title="Permanent link">&para;</a></h3>
+<p>为了消除队头阻塞，vLLM 实现了 <strong>Chunked Prefill (分块预填充)</strong> (<code>v0.4+</code>)。</p>
+<p>调度器不再在单次前向计算中执行长 Prompt 预填充，而是将新到达的 Prompt 切分为更小的、有预算约束的逻辑片段，称为 <strong>Prefill Chunks</strong> (由 <code>max_num_batched_tokens</code> 控制，通常设置为 <span class="arithmatex">\(512\)</span> 或 <span class="arithmatex">\(2,048\)</span> Token)。</p>
 <pre class="mermaid"><code>flowchart TD
-    PROMPT["📄 Incoming Long Request (32,768 Tokens)"] --&gt; CHUNKER["✂️ vLLM Chunking Engine"]
+    PROMPT["📄 新到的长请求 (32,768 Tokens)"] --&gt; CHUNKER["✂️ vLLM 分块引擎"]
 
     CHUNKER --&gt; C1["Chunk 0 (Tokens 0..511)"]
     CHUNKER --&gt; C2["Chunk 1 (Tokens 512..1023)"]
     CHUNKER --&gt; C3["... Chunk 63 (Tokens 32256..32767)"]
 
-    subgraph CO_SCHED ["⚡ Iteration t: Prefill-Decode Co-Scheduling"]
-        C1 --&gt; BATCH["Dynamic Forward Pass Batch"]
-        D_REQS["64 Active Single-Token Decode Requests"] --&gt; BATCH
-        BATCH --&gt; KERNEL["PagedAttention Co-Execution Kernel&lt;br&gt;Total Tokens = 512 Prefill + 64 Decode = 576 Tokens"]
+    subgraph CO_SCHED ["⚡ 迭代 t: Prefill-Decode 联合调度 Co-Scheduling"]
+        C1 --&gt; BATCH["动态前向 Batch"]
+        D_REQS["64 个活跃单 Token Decode 请求"] --&gt; BATCH
+        BATCH --&gt; KERNEL["PagedAttention 联合执行 Kernel&lt;br&gt;总 Tokens = 512 Prefill + 64 Decode = 576 Tokens"]
     end</code></pre>
-<p>During each iteration step <span class="arithmatex">\(t\)</span>, the scheduler co-schedules:</p>
-<ol>
-<li><strong>Active Decode Tokens</strong>: <span class="arithmatex">\(b_{\text{decode}}\)</span> single tokens from running requests.</li>
-<li><strong>Partial Prefill Chunk</strong>: <span class="arithmatex">\(N_{\text{chunk}}\)</span> tokens from an incoming prompt.</li>
-</ol>
-<p>By bounding total tokens per iteration step (<span class="arithmatex">\(\text{Tokens}_{\text{total}} = N_{\text{chunk}} + b_{\text{decode}} \le \text{max_num_batched_tokens}\)</span>), iteration step latency remains bounded, guaranteeing strict ITL SLAs while continuously advancing long prompt prefills in the background.</p>
+<p>在每次迭代步骤 <span class="arithmatex">\(t\)</span>，调度器联合调度 (Co-Schedule)：
+1. <strong>活跃 Decode Tokens</strong>: 来自运行中请求的 <span class="arithmatex">\(b_{\text{decode}}\)</span> 个单 Token。
+2. <strong>部分 Prefill Chunk</strong>: 来自新到 Prompt 的 <span class="arithmatex">\(N_{\text{chunk}}\)</span> 个 Token。</p>
+<p>通过限制每次迭代步骤的总 Token 数量 (<span class="arithmatex">\(\text{Tokens}_{\text{total}} = N_{\text{chunk}} + b_{\text{decode}} \le \text{max_num_batched_tokens}\)</span>)，迭代步骤的延迟保持严格可控，在后台持续推进长 Prompt 评估的同时，保障了严格的 ITL SLA。</p>
 <hr />
-<h3 id="23-mathematical-scheduling-constraints">2.3 Mathematical Scheduling Constraints<a class="headerlink" href="#23-mathematical-scheduling-constraints" title="Permanent link">&para;</a></h3>
-<p>During iteration step <span class="arithmatex">\(t\)</span>, the vLLM iteration scheduler evaluates three quantitative budget constraints:</p>
-<div class="arithmatex">\[
-\sum_{i \in \text{Prefills}} N_{\text{chunk}, i} + \sum_{j \in \text{Decodes}} 1 \le \text{max_num_batched_tokens}
-\]</div>
-<div class="arithmatex">\[
-|\text{Prefills}| + |\text{Decodes}| \le \text{max_num_seqs}
-\]</div>
-<div class="arithmatex">\[
-\text{Required_Blocks}(\text{Prefills}) + \text{Required_Blocks}(\text{Decodes}) \le \text{Free_HBM_Blocks}
-\]</div>
-<h4 id="quantitative-scheduling-example">Quantitative Scheduling Example<a class="headerlink" href="#quantitative-scheduling-example" title="Permanent link">&para;</a></h4>
-<p>Consider a vLLM configuration with:</p>
-<ul>
-<li><code>max_num_batched_tokens = 512</code></li>
-<li><code>max_num_seqs = 256</code></li>
-<li>Active Running Decode Requests: <span class="arithmatex">\(b_{\text{decode}} = 64\)</span> sequences (1 token each = <span class="arithmatex">\(64\)</span> tokens)</li>
-<li>Incoming Waiting Request Prompt Length: <span class="arithmatex">\(s_{\text{prompt}} = 2,048\)</span> tokens</li>
-</ul>
-<p>The scheduler executes the following budget evaluation:</p>
+<h3 id="23-prefill-vs-decode">2.3 算术强度系统分析: Prefill vs Decode<a class="headerlink" href="#23-prefill-vs-decode" title="Permanent link">&para;</a></h3>
+<p>一个核心问题是：<strong>Prefill 阶段与 Decode 阶段的每 Token FLOPs 算力和执行成本完全相同吗？</strong></p>
+<h4 id="1-prefill-token-attention-ffn">1. 为什么 Prefill Token 必须跨所有层执行完整 Attention 和 FFN 计算<a class="headerlink" href="#1-prefill-token-attention-ffn" title="Permanent link">&para;</a></h4>
+<p>为什么中间 Prompt Token 在不直接预测输出 Token 的情况下，也必须执行 Attention 和 FFN 计算？</p>
+<p>有三个根本性的架构原因：
+1. <strong>逐层上下文特征构建</strong>: 在多层 Transformer 中 (如 Llama 3 70B 的 80 层)，Layer 0 的原始词嵌入 (<span class="arithmatex">\(X_0\)</span>) 仅包含静态字典含义。随着 Token 穿过 Layer 1, 2, ..., 80，Attention 允许 Token <span class="arithmatex">\(i\)</span> 整合前序 Token 的信息，不断更新其隐藏状态表示 <span class="arithmatex">\(h_i^{(l)}\)</span>。
+2. <strong>深层的 KV Cache 向量依赖于隐藏状态 (<span class="arithmatex">\(h_i^{(l)}\)</span>)</strong>:
+   Layer <span class="arithmatex">\(l+1\)</span> 的 Key 和 Value 向量由 Layer <span class="arithmatex">\(l\)</span> 的隐藏状态输出直接计算得出：
+   $<span class="arithmatex">\(K_i^{(l+1)} = h_i^{(l)} W_K^{(l+1)}, \quad V_i^{(l+1)} = h_i^{(l)} W_V^{(l+1)}\)</span>$
+   要计算 Layer 40 的 KV Cache，Token <span class="arithmatex">\(i\)</span> <strong>必须</strong>在 Layer 39 执行完整的 Attention 和 FFN计算！
+3. <strong>首个 Decode Token 的 Logit 生成</strong>:
+   Prompt 的最后一个 Token 需要聚合前面所有 Token 的上下文特征，以计算第一个生成 Token 的 Logit 分布。</p>
+<h4 id="2-flops-2times-vs-4times-flops-s-8000">2. 定量 FLOPs 拆解: 为什么 <span class="arithmatex">\(2\times\)</span> vs <span class="arithmatex">\(4\times\)</span> 注意力 FLOPs 在 <span class="arithmatex">\(S &lt; 8,000\)</span> 时微不足道<a class="headerlink" href="#2-flops-2times-vs-4times-flops-s-8000" title="Permanent link">&para;</a></h4>
+<p>在 70B 参数模型 (<span class="arithmatex">\(N = 70 \times 10^9\)</span>) 且上下文长度 <span class="arithmatex">\(S = 1,024\)</span> 下：</p>
 <ol>
-<li><strong>Sequence Count Check (<code>max_num_seqs</code>)</strong>:<ul>
-<li>Current active decode sequences: <span class="arithmatex">\(|\text{Decodes}| = 64\)</span>.</li>
-<li>Adding 1 new waiting prefill request: <span class="arithmatex">\(|\text{Prefills}| = 1\)</span>.</li>
-<li>Total concurrent sequences <span class="arithmatex">\(= 64 + 1 = 65 \le 256\)</span> (<code>max_num_seqs</code>). The sequence concurrency budget is satisfied!</li>
-</ul>
-</li>
-<li><strong>Token Budget Reservation (<code>max_num_batched_tokens</code>)</strong>:<ul>
-<li>Reserve <span class="arithmatex">\(64\)</span> tokens for active decode requests (<span class="arithmatex">\(512 - 64 = 448\)</span> remaining token budget).</li>
-</ul>
-</li>
-<li><strong>Chunked Prefill Allocation</strong>:<ul>
-<li>Takes <span class="arithmatex">\(448\)</span> tokens from the incoming <span class="arithmatex">\(2,048\)</span>-token prompt (Chunk 0).</li>
-</ul>
-</li>
-<li><strong>Memory Block Check (<code>Free_HBM_Blocks</code>)</strong>:<ul>
-<li>The Block Manager verifies that the free pool holds sufficient physical blocks for <span class="arithmatex">\(448\)</span> new prefill tokens (<span class="arithmatex">\(448 / 16 = 28\)</span> physical blocks) plus active decode tail block expansions.</li>
-</ul>
-</li>
-<li><strong>Execution Batch</strong>:<ul>
-<li>Schedules <span class="arithmatex">\(448\)</span> prompt prefill tokens <span class="arithmatex">\(+ \ 64\)</span> decode tokens <span class="arithmatex">\(= 512\)</span> total tokens in the iteration step.</li>
-</ul>
-</li>
-<li><strong>State Tracking</strong>:<ul>
-<li>The incoming request transitions to <code>Running</code> state. In iteration step <span class="arithmatex">\(t+1\)</span>, Chunk 1 (<span class="arithmatex">\(448\)</span> tokens) is co-scheduled alongside active decodes until the full <span class="arithmatex">\(2,048\)</span> prompt tokens are evaluated.</li>
-</ul>
-</li>
+<li><strong>线性权重投影 FLOPs (两者完全相同)</strong>:
+   $<span class="arithmatex">\(\text{FLOPs}_{\text{weights}} = 2 \cdot N = 2 \times 70 \times 10^9 = \mathbf{140 \text{ GFLOPs / Token}}\)</span>$</li>
+<li><strong>Self-Attention FLOPs / Token (<span class="arithmatex">\(S = 1,024\)</span>)</strong>:</li>
+<li><strong>Prefill 注意力 FLOPs / Token</strong>: <span class="arithmatex">\(\approx 2 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S = \mathbf{1.34 \text{ GFLOPs / Token}}\)</span> (<span class="arithmatex">\(0.95\%\)</span> 占比)。</li>
+<li><strong>Decode 注意力 FLOPs / Token</strong>: <span class="arithmatex">\(\approx 4 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S = \mathbf{2.68 \text{ GFLOPs / Token}}\)</span> (<span class="arithmatex">\(1.88\%\)</span> 占比)。</li>
+<li><strong>总 FLOPs 对比</strong>:</li>
+<li><strong>Prefill 总 FLOPs / Token</strong>: <span class="arithmatex">\(140.0 + 1.34 = \mathbf{141.34 \text{ GFLOPs}}\)</span></li>
+<li><strong>Decode 总 FLOPs / Token</strong>: <span class="arithmatex">\(140.0 + 2.68 = \mathbf{142.68 \text{ GFLOPs}}\)</span>
+   $<span class="arithmatex">\(\text{差异} = \frac{142.68 - 141.34}{141.34} = \mathbf{0.948\% \text{ 极小差异!}}\)</span>$</li>
 </ol>
+<p>尽管 Decode 注意力 FLOPs (<span class="arithmatex">\(2.68 \text{ GFLOPs}\)</span>) 是 Prefill 注意力 FLOPs (<span class="arithmatex">\(1.34 \text{ GFLOPs}\)</span>) 的 <span class="arithmatex">\(2\times\)</span>，<strong>但注意力 FLOPs 整体被线性权重矩阵投影的巨量 <span class="arithmatex">\(140 \text{ GFLOPs}\)</span> 所淹没</strong>。在常见上下文长度 (<span class="arithmatex">\(S &lt; 8,000\)</span>) 下，两者的单 Token 总 FLOPs 差异小于 <span class="arithmatex">\(3.6\%\)</span>。</p>
 <hr />
-<h3 id="24-systems-analysis-prefill-vs-decode-flops-arithmetic-intensity-and-cost-per-token">2.4 Systems Analysis: Prefill vs. Decode FLOPs, Arithmetic Intensity, and Cost per Token<a class="headerlink" href="#24-systems-analysis-prefill-vs-decode-flops-arithmetic-intensity-and-cost-per-token" title="Permanent link">&para;</a></h3>
-<p>A fundamental question in LLM serving performance is: <strong>Are FLOPs per token and execution costs identical between the Prefill phase and the Decode phase?</strong></p>
-<h4 id="1-why-prefill-tokens-execute-full-attention-and-ffn-passes-across-all-layers">1. Why Prefill Tokens Execute Full Attention and FFN Passes Across All Layers<a class="headerlink" href="#1-why-prefill-tokens-execute-full-attention-and-ffn-passes-across-all-layers" title="Permanent link">&para;</a></h4>
-<p>A common conceptual question is: <em>Why do intermediate prefill tokens compute Queries, Attention, and FFN passes at all if they are not predicting output tokens? Why isn't prefill just computing Key and Value vectors?</em></p>
-<p>There are three fundamental architectural reasons why prefill tokens must execute full Attention and FFN passes across every Transformer layer:</p>
-<ol>
-<li><strong>Layer-by-Layer Contextual Representation Building</strong>:
-    In a multi-layer Transformer (e.g., 80 layers in Llama 3 70B), raw token embeddings (<span class="arithmatex">\(X_0\)</span>) at Layer 0 contain only static dictionary meanings (e.g., the word <code>"Apple"</code>). As tokens pass through Layer 1, Layer 2, ..., Layer 80, attention allows token <span class="arithmatex">\(i\)</span> (<code>"Apple"</code>) to aggregate information from preceding tokens (<code>"introduced"</code>, <code>"new"</code>, <code>"iPhone"</code>), updating its hidden state representation <span class="arithmatex">\(h_i^{(l)}\)</span>.</li>
-<li><strong>KV Cache Vectors for Deeper Layers Depend on Hidden States (<span class="arithmatex">\(h_i^{(l)}\)</span>)</strong>:
-    Key and Value vectors for token <span class="arithmatex">\(i\)</span> at Layer <span class="arithmatex">\(l+1\)</span> are computed directly from token <span class="arithmatex">\(i\)</span>'s hidden state output from Layer <span class="arithmatex">\(l\)</span>:</li>
-</ol>
-<div class="arithmatex">\[
-K_i^{(l+1)} = h_i^{(l)} W_K^{(l+1)}, \quad V_i^{(l+1)} = h_i^{(l)} W_V^{(l+1)}
-\]</div>
-<div class="arithmatex">\[
-\text{where } h_i^{(l)} = h_i^{(l-1)} + \text{FFN}\left(\text{Attention}(h_i^{(l-1)})\right)
-\]</div>
-<p>To compute the KV cache vectors at Layer 40, token <span class="arithmatex">\(i\)</span> <strong>must</strong> execute full Attention and FFN passes at Layer 39. Without layer-by-layer attention and FFN passes, KV cache vectors at deeper layers would be un-contextualized and mathematically meaningless!
-3. <strong>Logit Generation for the Next Token</strong>:
-    The prompt's final token (<span class="arithmatex">\(s_{\text{prompt}}\)</span>) uses the contextual representation <span class="arithmatex">\(h_{s_{\text{prompt}}}^{(80)}\)</span> at Layer 80 to compute the logit distribution for the first generated decode token (<span class="arithmatex">\(s_{\text{prompt}}+1\)</span>). To produce <span class="arithmatex">\(h_{s_{\text{prompt}}}^{(80)}\)</span>, token <span class="arithmatex">\(s_{\text{prompt}}\)</span> must attend to all previous tokens <span class="arithmatex">\(1 \dots s_{\text{prompt}}-1\)</span> across all 80 layers.</p>
-<hr />
-<h4 id="2-quantitative-flop-breakdown-why-2times-vs-4times-attention-flops-is-negligible-s-8000">2. Quantitative FLOP Breakdown: Why <span class="arithmatex">\(2\times\)</span> vs <span class="arithmatex">\(4\times\)</span> Attention FLOPs is Negligible (<span class="arithmatex">\(S &lt; 8,000\)</span>)<a class="headerlink" href="#2-quantitative-flop-breakdown-why-2times-vs-4times-attention-flops-is-negligible-s-8000" title="Permanent link">&para;</a></h4>
-<p>Why do systems engineers state that raw FLOPs per token are nearly identical between Prefill and Decode, even though Prefill Attention FLOPs per token use a <span class="arithmatex">\(2\times\)</span> factor while Decode Attention FLOPs use a <span class="arithmatex">\(4\times\)</span> factor?</p>
-<p>Let's evaluate the exact FLOP breakdown for a <strong>70B parameter model</strong> (<span class="arithmatex">\(N = 70 \times 10^9\)</span>, <span class="arithmatex">\(L = 80\)</span>, <span class="arithmatex">\(h_q = 64\)</span>, <span class="arithmatex">\(d_{\text{head}} = 128\)</span>):</p>
-<h5 id="step-1-linear-weight-projection-flops-identical-for-both">Step 1: Linear Weight Projection FLOPs (Identical for Both)<a class="headerlink" href="#step-1-linear-weight-projection-flops-identical-for-both" title="Permanent link">&para;</a></h5>
-<p>For every token passing through the model in both Prefill and Decode, multiplying against all linear weight matrices (<span class="arithmatex">\(W_Q, W_K, W_V, W_O, W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}\)</span>) requires:</p>
-<div class="arithmatex">\[
-\text{FLOPs}_{\text{weights}} = 2 \cdot N = 2 \times 70 \times 10^9 = \mathbf{140 \text{ GFLOPs / token}}
-\]</div>
-<h5 id="step-2-attention-flops-per-token-at-context-length-s-1024">Step 2: Attention FLOPs per Token at Context Length <span class="arithmatex">\(S = 1,024\)</span><a class="headerlink" href="#step-2-attention-flops-per-token-at-context-length-s-1024" title="Permanent link">&para;</a></h5>
+<h3 id="24-i-textflopsbyte">2.4 根本瓶颈差异: 算术强度 (<span class="arithmatex">\(I = \text{FLOPs/Byte}\)</span>)<a class="headerlink" href="#24-i-textflopsbyte" title="Permanent link">&para;</a></h3>
+<p>虽然单 Token 的原始 FLOPs 几乎相同，但由于<strong>算术强度 (<span class="arithmatex">\(I = \text{FLOPs} / \text{内存传输字节数}\)</span>)</strong> 的巨大差异，两者的执行时间和硬件行为截然不同：</p>
 <ul>
-<li><strong>Prefill Phase (Average Attention FLOPs per token)</strong>:
-  In prefill, token <span class="arithmatex">\(i \in [1, S]\)</span> attends to <span class="arithmatex">\(i\)</span> previous tokens. Averaged across the prompt:</li>
-</ul>
-<div class="arithmatex">\[
-\text{FLOPs}_{\text{attn, prefill}} \approx 2 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S = 2 \times 80 \times 64 \times 128 \times 1,024 = \mathbf{1.34 \text{ GFLOPs / token}}
-\]</div>
-<ul>
-<li><strong>Decode Phase (Single-Token Attention FLOPs)</strong>:
-  A single decode token at position <span class="arithmatex">\(S = 1,024\)</span> attends to all <span class="arithmatex">\(S\)</span> cached KV tokens (<span class="arithmatex">\(Q @ K^T\)</span> score calculation and <span class="arithmatex">\(\text{Softmax} @ V\)</span> weighted sum):</li>
-</ul>
-<div class="arithmatex">\[
-\text{FLOPs}_{\text{attn, decode}} \approx 4 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S = 4 \times 80 \times 64 \times 128 \times 1,024 = \mathbf{2.68 \text{ GFLOPs / token}}
-\]</div>
-<h5 id="step-3-total-flops-per-token-comparison-s-1024">Step 3: Total FLOPs per Token Comparison (<span class="arithmatex">\(S = 1,024\)</span>)<a class="headerlink" href="#step-3-total-flops-per-token-comparison-s-1024" title="Permanent link">&para;</a></h5>
-<ul>
-<li><strong>Prefill Total FLOPs / token</strong>: <span class="arithmatex">\(140.0 + 1.34 = \mathbf{141.34 \text{ GFLOPs / token}}\)</span> (Attention is <span class="arithmatex">\(0.95\%\)</span> of total math).</li>
-<li><strong>Decode Total FLOPs / token</strong>: <span class="arithmatex">\(140.0 + 2.68 = \mathbf{142.68 \text{ GFLOPs / token}}\)</span> (Attention is <span class="arithmatex">\(1.88\%\)</span> of total math).</li>
-</ul>
-<div class="arithmatex">\[\text{Difference} = \frac{142.68 - 141.34}{141.34} = \mathbf{0.948\% \text{ difference!}}\]</div>
-<p>Even though Decode Attention FLOPs (<span class="arithmatex">\(2.68 \text{ GFLOPs}\)</span>) are <span class="arithmatex">\(2\times\)</span> Prefill Attention FLOPs (<span class="arithmatex">\(1.34 \text{ GFLOPs}\)</span>), <strong>Attention FLOPs as a whole are dwarfed by the massive <span class="arithmatex">\(140 \text{ GFLOPs}\)</span> of linear weight projections</strong>. For typical context lengths (<span class="arithmatex">\(S &lt; 8,000\)</span>), total FLOPs per token differ by less than <span class="arithmatex">\(3.6\%\)</span>.</p>
-<h4 id="3-the-true-bottleneck-difference-arithmetic-intensity-i-textflops-textbytes">3. The True Bottleneck Difference: Arithmetic Intensity (<span class="arithmatex">\(I = \text{FLOPs} / \text{Bytes}\)</span>)<a class="headerlink" href="#3-the-true-bottleneck-difference-arithmetic-intensity-i-textflops-textbytes" title="Permanent link">&para;</a></h4>
-<p>While raw FLOP counts per token are nearly identical, <strong>the execution time and hardware behavior per token are radically different due to Arithmetic Intensity (<span class="arithmatex">\(I = \text{FLOPs} / \text{Memory Bytes Transferred}\)</span>)</strong>:</p>
-<ul>
-<li><strong>Decode Sequences (<span class="arithmatex">\(64\)</span> active decodes, <span class="arithmatex">\(b=64\)</span>, <span class="arithmatex">\(1\)</span> token each)</strong>:
-  For every single decode iteration step, the GPU must read the entire <span class="arithmatex">\(140 \text{ GB}\)</span> model weight matrix from HBM over the memory bus to process just <span class="arithmatex">\(64\)</span> tokens.</li>
-</ul>
-<div class="arithmatex">\[
-I_{\text{decode}} = \frac{64 \text{ tokens} \times 140 \text{ GFLOPs / token}}{140 \text{ GB weights read}} = \mathbf{64 \text{ FLOPs / Byte}}
-\]</div>
-<p>Because <span class="arithmatex">\(64 \text{ FLOPs / Byte} \ll I_{\text{ridge}} (295 \text{ FLOPs / Byte on H100})\)</span>, <strong>the decode phase is memory-bandwidth bound</strong>. The HBM memory bus is <span class="arithmatex">\(100\%\)</span> saturated, while GPU Tensor Cores sit <strong><span class="arithmatex">\(&gt; 75\%\)</span> IDLE</strong> waiting for weight bytes to arrive!</p>
-<ul>
-<li><strong>Prefill Chunk (<span class="arithmatex">\(N_{\text{chunk}} = 512\)</span> prompt tokens processed together)</strong>:
-  All <span class="arithmatex">\(512\)</span> prompt tokens are packed into a single GEMM matrix multiplication (<span class="arithmatex">\(y = X @ W\)</span>, where <span class="arithmatex">\(X \in \mathbb{R}^{512 \times d}\)</span>). The <span class="arithmatex">\(140 \text{ GB}\)</span> model weight matrix is read from HBM <strong>once</strong> and multiplied against all <span class="arithmatex">\(512\)</span> tokens simultaneously.</li>
-</ul>
-<div class="arithmatex">\[
-I_{\text{prefill}} = \frac{512 \text{ tokens} \times 140 \text{ GFLOPs / token}}{140 \text{ GB weights read}} = \mathbf{512 \text{ FLOPs / Byte}}
-\]</div>
-<p>Because <span class="arithmatex">\(512 \text{ FLOPs / Byte} &gt; I_{\text{ridge}} (295)\)</span>, <strong>the prefill phase is compute-bound</strong>, driving GPU Tensor Cores to <strong>100% Peak Utilization</strong>!</p>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">Execution Dimension</th>
-<th style="text-align: left;">Prefill Phase (Prompt Evaluation)</th>
-<th style="text-align: left;">Decode Phase (Token Generation)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;"><strong>Operating Regime</strong></td>
-<td style="text-align: left;"><strong>Compute-Bound</strong> (<span class="arithmatex">\(I \gg I_{\text{ridge}}\)</span>)</td>
-<td style="text-align: left;"><strong>Memory-Bandwidth Bound</strong> (<span class="arithmatex">\(I \ll I_{\text{ridge}}\)</span>)</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Tokens Processed per Weight Read</strong></td>
-<td style="text-align: left;"><span class="arithmatex">\(N_{\text{chunk}}\)</span> tokens simultaneously (e.g., <span class="arithmatex">\(512\)</span>)</td>
-<td style="text-align: left;"><span class="arithmatex">\(1\)</span> token per sequence (e.g., batch size <span class="arithmatex">\(b = 64\)</span>)</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Arithmetic Intensity (<span class="arithmatex">\(I\)</span>)</strong></td>
-<td style="text-align: left;"><span class="arithmatex">\(I_{\text{prefill}} \approx \frac{512 \cdot 2N}{2N} \approx \mathbf{512 \text{ FLOPs/Byte}}\)</span></td>
-<td style="text-align: left;"><span class="arithmatex">\(I_{\text{decode}} \approx \frac{64 \cdot 2N}{2N} \approx \mathbf{64 \text{ FLOPs/Byte}}\)</span></td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>GPU Hardware Bottleneck</strong></td>
-<td style="text-align: left;">Tensor Core FLOP Compute Speed</td>
-<td style="text-align: left;">HBM Memory Bandwidth Bus Speed</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Tensor Core Utilization</strong></td>
-<td style="text-align: left;"><strong>100% Peak TFLOPs Capacity</strong></td>
-<td style="text-align: left;"><strong><span class="arithmatex">\(&lt; 25\%\)</span> Utilization</strong> (Tensor Cores sit 75%+ idle)</td>
-</tr>
-</tbody>
-</table>
-<h4 id="4-concrete-tensor-shape-analysis-across-linear-layers">4. Concrete Tensor Shape Analysis Across Linear Layers<a class="headerlink" href="#4-concrete-tensor-shape-analysis-across-linear-layers" title="Permanent link">&para;</a></h4>
-<p>To make the Arithmetic Intensity difference intuitive, examine the exact input activation tensor shapes (<span class="arithmatex">\(X\)</span>) multiplying against a representative linear layer weight matrix (<span class="arithmatex">\(W\)</span>) in Llama 3 70B (e.g., <span class="arithmatex">\(W_{\text{Gate}} \in \mathbb{R}^{8,192 \times 28,672}\)</span>, requiring <span class="arithmatex">\(\mathbf{0.939 \text{ GB}}\)</span> memory read from HBM):</p>
-<ol>
-<li><strong>Decode Phase (<span class="arithmatex">\(b = 64\)</span> sequences, <span class="arithmatex">\(1\)</span> token each)</strong>:<ul>
-<li><strong>Activation Tensor Shape</strong>: <span class="arithmatex">\(X_{\text{decode}} \in \mathbb{R}^{\mathbf{64 \times 8,192}}\)</span> (<span class="arithmatex">\(64\)</span> token rows).</li>
-<li><strong>Matrix Multiplication</strong>: <span class="arithmatex">\(Y_{\text{decode}} = X_{\text{decode}} @ W_{\text{Gate}} \quad ([64 \times 8,192] \times [8,192 \times 28,672] \to [64 \times 28,672])\)</span>.</li>
-<li><strong>FLOPs Performed</strong>: <span class="arithmatex">\(2 \times 64 \times 8,192 \times 28,672 = \mathbf{30.06 \text{ GFLOPs}}\)</span>.</li>
-<li><strong>Weight Bytes Transferred</strong>: <span class="arithmatex">\(8,192 \times 28,672 \times 2 \text{ bytes} = \mathbf{0.939 \text{ GB}}\)</span>.</li>
-<li><strong>Single-Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{decode_layer}} = \frac{30.06 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{32.0 \text{ FLOPs / Byte}}\)</span> (Tall-and-skinny matrix multiplication!).</li>
-</ul>
+<li>
+<p><strong>Decode 序列 (<span class="arithmatex">\(64\)</span> 个解码，Batch <span class="arithmatex">\(b=64\)</span>)</strong>:
+  每次迭代，GPU 必须从 HBM 显存中读取整个 <span class="arithmatex">\(140 \text{ GB}\)</span> 的模型权重矩阵来仅处理这 64 个 Token。
+  $<span class="arithmatex">\(I_{\text{decode}} = \frac{64 \text{ tokens} \times 140 \text{ GFLOPs/token}}{140 \text{ GB 权重}} = \mathbf{64 \text{ FLOPs / Byte}}\)</span>$
+  因为 <span class="arithmatex">\(64 \text{ FLOPs/Byte} \ll I_{\text{ridge}} (295 \text{ FLOPs/Byte on H100})\)</span>，<strong>Decode 阶段严重受限于显存带宽</strong>，Tensor Core 存在 <strong><span class="arithmatex">\(&gt; 75\%\)</span> 的时间处于闲置</strong>！</p>
 </li>
-<li><strong>Prefill Chunk Phase (<span class="arithmatex">\(N_{\text{chunk}} = 448\)</span> prompt tokens)</strong>:<ul>
-<li><strong>Activation Tensor Shape</strong>: <span class="arithmatex">\(X_{\text{prefill}} \in \mathbb{R}^{\mathbf{448 \times 8,192}}\)</span> (<span class="arithmatex">\(448\)</span> token rows).</li>
-<li><strong>Matrix Multiplication</strong>: <span class="arithmatex">\(Y_{\text{prefill}} = X_{\text{prefill}} @ W_{\text{Gate}} \quad ([448 \times 8,192] \times [8,192 \times 28,672] \to [448 \times 28,672])\)</span>.</li>
-<li><strong>FLOPs Performed</strong>: <span class="arithmatex">\(2 \times 448 \times 8,192 \times 28,672 = \mathbf{210.45 \text{ GFLOPs}}\)</span>.</li>
-<li><strong>Weight Bytes Transferred</strong>: <span class="arithmatex">\(8,192 \times 28,672 \times 2 \text{ bytes} = \mathbf{0.939 \text{ GB}}\)</span> (Identical weight load!).</li>
-<li><strong>Single-Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{prefill_layer}} = \frac{210.45 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{224.1 \text{ FLOPs / Byte}}\)</span> (Reuses the exact same <span class="arithmatex">\(0.939 \text{ GB}\)</span> weight matrix across 7x more token rows!).</li>
-</ul>
+<li>
+<p><strong>Prefill Chunk (<span class="arithmatex">\(448\)</span> 个 Prompt Token 打包处理)</strong>:
+  所有 448 个 Prompt Token 打包入单次 GEMM 矩阵乘法 (<span class="arithmatex">\([448 \times 8192] \times [8192 \times 28672]\)</span>)，<span class="arithmatex">\(140 \text{ GB}\)</span> 的模型权重从 HBM 中读取<strong>一次</strong>并同时乘以这 448 个 Token。
+  $<span class="arithmatex">\(I_{\text{prefill}} = \frac{448 \text{ tokens} \times 140 \text{ GFLOPs/token}}{140 \text{ GB 权重}} = \mathbf{448 \text{ FLOPs / Byte}}\)</span>$
+  因为 <span class="arithmatex">\(448 \text{ FLOPs/Byte} &gt; I_{\text{ridge}} (295)\)</span>，<strong>Prefill 阶段处于计算受限状态</strong>，驱动 Tensor Core 达到 <strong>100% 满载利用率</strong>！</p>
 </li>
-<li><strong>Co-Scheduled Iteration Step (<span class="arithmatex">\(448\)</span> Prefill Chunk Tokens + <span class="arithmatex">\(64\)</span> Decode Tokens = <span class="arithmatex">\(512\)</span> Total Tokens)</strong>:<ul>
-<li><strong>Combined Activation Tensor Shape</strong>: <span class="arithmatex">\(X_{\text{coscheduled}} \in \mathbb{R}^{\mathbf{512 \times 8,192}}\)</span> (<span class="arithmatex">\(512\)</span> token rows).</li>
-<li><strong>Matrix Multiplication</strong>: <span class="arithmatex">\(Y_{\text{coscheduled}} = X_{\text{coscheduled}} @ W_{\text{Gate}} \quad ([512 \times 8,192] \times [8,192 \times 28,672] \to [512 \times 28,672])\)</span>.</li>
-<li><strong>Single-Layer Intensity</strong>: <span class="arithmatex">\(I_{\text{coscheduled_layer}} = \frac{240.51 \text{ GFLOPs}}{0.939 \text{ GB}} = \mathbf{256.0 \text{ FLOPs / Byte}}\)</span> (Pushes execution directly onto the GPU Ridge Point!).</li>
-</ul>
-</li>
-</ol>
-<h4 id="5-scaling-to-the-entire-model-pass-all-layers-kv-cache">5. Scaling to the Entire Model Pass (All Layers + KV Cache)<a class="headerlink" href="#5-scaling-to-the-entire-model-pass-all-layers-kv-cache" title="Permanent link">&para;</a></h4>
-<p>While <span class="arithmatex">\(W_{\text{Gate}}\)</span> serves as a clear single-layer GEMM micro-example, <strong>what happens when we sum across ALL weight matrices (<span class="arithmatex">\(W_Q, W_K, W_V, W_O, W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}\)</span>) and KV Cache memory transfers across all 80 layers?</strong></p>
-<ul>
-<li><strong>Total Weight Parameter Memory</strong>: Across all 80 layers, total model parameters equal <span class="arithmatex">\(N = 70 \text{ Billion}\)</span> (<span class="arithmatex">\(\mathbf{140 \text{ GB}}\)</span> in FP16/BF16).</li>
-<li><strong>KV Cache Memory Transfer</strong>: For <span class="arithmatex">\(b = 64\)</span> decode sequences at context length <span class="arithmatex">\(S = 1,024\)</span>, reading the KV cache across all 80 layers transfers <span class="arithmatex">\(\approx \mathbf{0.021 \text{ GB}}\)</span>. The KV cache memory transfer represents <span class="arithmatex">\(&lt; 0.02\%\)</span> of the total <span class="arithmatex">\(140 \text{ GB}\)</span> model weight transfer!</li>
-<li><strong>Model-Wide Decode Intensity (<span class="arithmatex">\(b = 64\)</span> tokens)</strong>:
-  $<span class="arithmatex">\(I_{\text{decode_total}} = \frac{64 \text{ tokens} \times 140 \text{ GFLOPs/token}}{140 \text{ GB weights} + 0.021 \text{ GB KV}} = \frac{8,960 \text{ GFLOPs}}{140.021 \text{ GB}} = \mathbf{63.99 \text{ FLOPs / Byte}}\)</span>$</li>
-<li><strong>Model-Wide Co-Scheduled Intensity (<span class="arithmatex">\(512\)</span> total tokens)</strong>:
-  $<span class="arithmatex">\(I_{\text{coscheduled_total}} = \frac{512 \text{ tokens} \times 140 \text{ GFLOPs/token}}{140 \text{ GB weights} + \text{KV Bytes}} = \frac{71,680 \text{ GFLOPs}}{140.1 \text{ GB}} = \mathbf{511.6 \text{ FLOPs / Byte}}\)</span>$</li>
 </ul>
 <pre class="mermaid"><code>flowchart TD
-    subgraph DECODE_BENEFIT ["⚡ Why Co-Scheduling Prefill and Decode is a Win-Win"]
-        D_IDLE["Decode Phase (64 Tokens): Reads 140 GB weights from HBM&lt;br&gt;Activation Matrix [64 x 8192] | Tensor Cores sit 75% Idle"]
-        P_COMP["Prefill Chunk (448 Tokens): Needs Tensor Core FLOPs math&lt;br&gt;Activation Matrix [448 x 8192] | Shares exact same HBM Weight Read"]
+    subgraph DECODE_BENEFIT ["⚡ 为什么联合调度 Prefill 和 Decode 是双赢方案"]
+        D_IDLE["Decode 阶段 (64 Tokens): 从 HBM 读取 140 GB 权重&lt;br&gt;激活矩阵 [64 x 8192] | Tensor Core 存在 75% 闲置"]
+        P_COMP["Prefill Chunk (448 Tokens): 需要 Tensor Core 计算&lt;br&gt;激活矩阵 [448 x 8192] | 共享完全相同的 HBM 权重读取"]
 
-        D_IDLE &amp; P_COMP --&gt; FUSED["Co-Scheduled Matrix [512 x 8192]:&lt;br&gt;Tensor Cores process 448 Prefill FLOPs while Memory Bus streams 64 Decode weights!&lt;br&gt;&lt;b&gt;Result: Near-Free Prefill Compute with Zero ITL Spikes&lt;/b&gt;"]
+        D_IDLE &amp; P_COMP --&gt; FUSED["联合调度矩阵 [512 x 8192]:&lt;br&gt;Tensor Core 在内存总线流式传输 64 个 Decode 权重的同时计算 448 个 Prefill FLOPs!&lt;br&gt;&lt;b&gt;结果: 以近乎零的额外时间开销完成 Prefill 计算&lt;/b&gt;"]
     end</code></pre>
-<p>This core systems insight explains why Chunked Prefill and Co-Scheduling in vLLM is so powerful: <strong>because single-token decode steps leave GPU Tensor Cores mostly idle waiting for memory bandwidth, co-scheduling a prefill chunk (<span class="arithmatex">\(448\)</span> tokens) alongside decode requests (<span class="arithmatex">\(64\)</span> tokens) utilizes those idle compute cycles during the exact same memory-streaming pass, evaluating prefill prompt tokens at near-zero incremental time cost</strong>.</p>
 <hr />
-<h2 id="part-3-execution-overhead-minimization-cuda-graphs-and-compiled-workflows">Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows<a class="headerlink" href="#part-3-execution-overhead-minimization-cuda-graphs-and-compiled-workflows" title="Permanent link">&para;</a></h2>
-<p>While memory bandwidth bounds GPU execution during single-token decoding, CPU-side execution overhead presents a distinct performance bottleneck at small batch sizes.</p>
-<h3 id="31-the-cpu-gpu-host-overhead-bottleneck">3.1 The CPU-GPU Host Overhead Bottleneck<a class="headerlink" href="#31-the-cpu-gpu-host-overhead-bottleneck" title="Permanent link">&para;</a></h3>
+<h2 id="3-cuda-graphs">第 3 部分: 执行开销最小化: CUDA Graphs<a class="headerlink" href="#3-cuda-graphs" title="Permanent link">&para;</a></h2>
+<p>在小 Batch 大小下，除了显存带宽瓶颈外，<strong>CPU 端的 Host 执行开销</strong>也构成了显著的性能瓶颈。</p>
 <blockquote>
 <p>[!NOTE]
-<strong>What is a "GPU Kernel"?</strong>
-In GPU programming (CUDA / HIP / C++), a <strong>Kernel</strong> is not an operating system kernel. A GPU Kernel is a specialized C++/CUDA function designed to execute massively parallel computations across thousands of GPU cores (e.g., an <code>rmsnorm_kernel</code>, a <code>gemm_projection_kernel</code>, or a <code>paged_attention_kernel</code>).</p>
-<p>"400 GPU kernels" does <strong>not</strong> mean 400 separate physical GPUs working together! It means that in an 80-layer model, a <strong>single GPU</strong> must execute 400 distinct CUDA kernel functions in sequence to complete one single-token forward pass.</p>
+<strong>什么是 "GPU Kernel"?</strong>
+在 GPU 编程 (CUDA / HIP / C++) 中，<strong>Kernel 并不是操作系统内核</strong>。GPU Kernel 是专门设计用于在数千个 GPU 核心上执行大规模并行计算的 C++/CUDA 函数 (例如 <code>rmsnorm_kernel</code>、<code>gemm_projection_kernel</code> 或 <code>paged_attention_kernel</code>)。</p>
+<p>"400 个 GPU Kernel" <strong>并不</strong>意味着 400 块独立的物理 GPU 协同工作！它意味着在一个 80 层的模型中，<strong>单块 GPU</strong> 必须按顺序连续执行 400 个独立的 CUDA Kernel 函数才能完成单次前向计算。</p>
 </blockquote>
-<p>Executing a single Transformer forward pass requires launching dozens of CUDA kernels per layer (RMSNorm, QKV projection, RoPE rotation, PagedAttention, SwiGLU Gate/Up/Down projections, Residual additions). For an 80-layer model like Llama 3 70B, a single forward pass executes <strong>over 400 individual CUDA kernel launches</strong> in series on a single GPU.</p>
 <pre class="mermaid"><code>flowchart LR
-    subgraph CPU_LAUNCH ["🐢 CPU Host Launch Bottleneck (Without CUDA Graphs)"]
-        CPU["CPU Python Interpreter"] --&gt;|"Launch Kernel 1 (10 us)"| K1["GPU Kernel 1"]
-        CPU --&gt;|"Launch Kernel 2 (10 us)"| K2["GPU Kernel 2"]
-        CPU --&gt;|"Launch Kernel 400..."| K400["GPU Kernel 400"]
-        NOTE1["CPU Launch Overhead: 400 kernels * 10 us = 4,000 us (4.0 ms)&lt;br&gt;Actual GPU Execution Time: 1.5 ms&lt;br&gt;&lt;b&gt;Result: GPU sits idle waiting for CPU!&lt;/b&gt;"]
+    subgraph CPU_LAUNCH ["🐢 CPU Host 启动瓶颈 (无 CUDA Graph)"]
+        CPU["CPU Python 解释器"] --&gt;|"启动 Kernel 1 (10 us)"| K1["GPU Kernel 1"]
+        CPU --&gt;|"启动 Kernel 2 (10 us)"| K2["GPU Kernel 2"]
+        CPU --&gt;|"启动 Kernel 400..."| K400["GPU Kernel 400"]
+        NOTE1["CPU 启动总开销: 400 kernels * 10 us = 4,000 us (4.0 ms)&lt;br&gt;GPU 实际计算时间: 1.5 ms&lt;br&gt;&lt;b&gt;结果: GPU 存在 70% 以上的时间在闲置等待 CPU!&lt;/b&gt;"]
     end</code></pre>
-<p>At small batch sizes (<span class="arithmatex">\(b = 1 \dots 4\)</span>), GPU kernel execution time for a layer is extremely fast (<span class="arithmatex">\(&lt; 2 \ \mu\text{s}\)</span>). If CPU PyTorch launch overhead takes <span class="arithmatex">\(10 \dots 15 \ \mu\text{s}\)</span> per kernel, <strong>the GPU spends over 70% of its time completely idle waiting for the CPU to issue the next launch command</strong>.</p>
-<hr />
-<h3 id="32-cuda-graph-capture-and-replay-engine-in-vllm">3.2 CUDA Graph Capture and Replay Engine in vLLM<a class="headerlink" href="#32-cuda-graph-capture-and-replay-engine-in-vllm" title="Permanent link">&para;</a></h3>
-<p>To eliminate CPU host launch overhead, vLLM integrates <strong>CUDA Graphs</strong> (<code>torch.cuda.graph</code>).</p>
-<h4 id="1-how-cuda-graphs-work">1. How CUDA Graphs Work<a class="headerlink" href="#1-how-cuda-graphs-work" title="Permanent link">&para;</a></h4>
-<p>During engine initialization (the "warm-up" phase), vLLM executes dummy forward passes while CUDA stream capture is active (<code>torch.cuda.graph</code>).</p>
-<p>Instead of executing the pass dynamically, the NVIDIA CUDA driver records:
-1. <strong>The exact sequence of function entry point addresses</strong> for all 400 CUDA kernels.
-2. <strong>The exact pre-allocated static GPU memory buffer pointers</strong> for inputs, intermediate activations, and outputs.
-3. <strong>The exact execution dependency graph</strong> (which kernel depends on which prior kernel).</p>
+<h3 id="31-cuda-graph">3.1 CUDA Graph 捕获与重放机制<a class="headerlink" href="#31-cuda-graph" title="Permanent link">&para;</a></h3>
+<p>为了消除 CPU 主机启动开销，vLLM 集成了 <strong>CUDA Graphs</strong> (<code>torch.cuda.graph</code>)。</p>
+<p>在引擎初始化 (预热阶段)，vLLM 针对固定的 Batch 桶 (<span class="arithmatex">\(b \in \{1, 2, 4, 8, 16, 32, 64, 128\}\)</span>) 执行预热前向计算并进行图捕获。</p>
+<p>NVIDIA CUDA 驱动直接在 GPU 上预录并烘焙：
+1. 所有 400 个 CUDA Kernel 的<strong>函数入口地址序列</strong>。
+2. 输入、中间层激活、Block Table 和输出 Token 的<strong>静态 GPU 内存缓冲区指针</strong>。
+3. <strong>执行依赖图</strong>。</p>
 <pre class="mermaid"><code>flowchart TD
-    subgraph CAPTURE ["1. Warm-Up Phase: Graph Capture"]
-        C_EXEC["Execute Forward Pass for Fixed Batch Size b"] --&gt; C_REC["Record Kernel Launch Sequences and Memory Addresses into Static Graph"]
+    subgraph CAPTURE ["1. 预热阶段: 图捕获 Capture"]
+        C_EXEC["针对固定 Batch 大小 b 执行前向计算"] --&gt; C_REC["将 Kernel 启动序列与内存地址录入静态 Graph"]
     end
 
-    subgraph REPLAY ["2. Production Execution: Single Graph Replay"]
-        R_LAUNCH["CPU Copies New Tokens to Static Input Buffer &amp; Calls Single C-API:&lt;br&gt;cudaGraphLaunch(graph_exec)"] --&gt; R_GPU["GPU Hardware Command Processor Executes Entire 400-Kernel Graph Autonomously!"]
+    subgraph REPLAY ["2. 线上生产执行: 单图重放 Replay"]
+        R_LAUNCH["CPU 将新 Token 复制到静态输入缓冲区并调用单次 C-API:&lt;br&gt;cudaGraphLaunch(graph_exec)"] --&gt; R_GPU["GPU 硬件命令处理器自主连贯执行全部 400 个 Kernel!"]
     end
 
     CAPTURE ==&gt; REPLAY</code></pre>
-<p>During production inference, the CPU does not construct or evaluate PyTorch code. The CPU simply copies the new token IDs into the static GPU input buffer (<code>in-place copy_</code>), and then issues a <strong>single <code>cudaGraphLaunch</code> C-API call (<span class="arithmatex">\(\approx 3 \ \mu\text{s}\)</span>)</strong>. The GPU hardware's internal command processor autonomously executes all 400 recorded kernels back-to-back at hardware speed!</p>
-<h4 id="2-fixed-size-batch-bucketing-and-static-input-buffers">2. Fixed-Size Batch Bucketing and Static Input Buffers<a class="headerlink" href="#2-fixed-size-batch-bucketing-and-static-input-buffers" title="Permanent link">&para;</a></h4>
-<p>CUDA Graphs require fixed memory addresses and fixed tensor shapes. Because active batch sizes fluctuate dynamically during continuous batching, vLLM maintains a pool of captured CUDA Graphs for discrete batch size buckets (e.g., <span class="arithmatex">\(b \in \{1, 2, 4, 8, 16, 32, 64, 128\}\)</span>).</p>
+<p>在线上推理期间，CPU 无需评估 Python 代码。CPU 仅需将新 Token ID 写入静态 GPU 输入缓冲区 (<code>in-place copy_</code>)，然后发起<strong>单次 <code>cudaGraphLaunch</code> C-API 调用 (<span class="arithmatex">\(\approx 3 \ \mu\text{s}\)</span>)</strong>。GPU 硬件命令处理器自主以硬件极速完成全部 400 个 Kernel 的连贯执行！</p>
+<hr />
+<h2 id="4-vllm-speculative-decoding">第 4 部分: vLLM 投机解码 (Speculative Decoding)<a class="headerlink" href="#4-vllm-speculative-decoding" title="Permanent link">&para;</a></h2>
+<p>自回归解码的逐 Token 串行特性限制了单请求的生成速度。<strong>投机解码 (Speculative Decoding)</strong> 通过“草稿预测 + 目标验证”的范式打破了这一限制。</p>
+<h3 id="41">4.1 投机解码工作流<a class="headerlink" href="#41" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>草稿生成 (Draft Generation)</strong>: 使用轻量级草稿机制 (如小模型、Medusa 头、EAGLE 头或 N-Gram 检索) 在极低开销下连续预测 <span class="arithmatex">\(K\)</span> 个候选 Token (如 <span class="arithmatex">\(K=5\)</span>)。</li>
+<li><strong>并行验证 (Parallel Verification)</strong>: 将这 <span class="arithmatex">\(K\)</span> 个候选 Token 打包为单次前向 Pass 输入给主目标模型 (Target Model)。</li>
+<li><strong>拒绝采样验证 (Rejection Sampling)</strong>: 目标模型并行计算这 <span class="arithmatex">\(K\)</span> 个 Token 的真实概率分布，并通过修改版拒绝采样算法验证候选 Token：</li>
+</ol>
+<div class="arithmatex">\[
+P(\text{接受 } x_i) = \min\left(1, \frac{p(x_i)}{q(x_i)}\right)
+\]</div>
+<p>只要草稿接受率 <span class="arithmatex">\(\alpha &gt; 70\%\)</span>，每次前向 Pass 就能稳定产出 <span class="arithmatex">\(2 \dots 4\)</span> 个 Token，实现 <strong><span class="arithmatex">\(2.0\times \dots 3.5\times\)</span> 的端到端加速</strong>！</p>
 <pre class="mermaid"><code>flowchart LR
-    CUR_B["Active Batch Size: b = 5 Sequences"] --&gt; BUCKET["Select Next Bucket: b_graph = 8"]
-    BUCKET --&gt; PAD["Pad Input Tensor to 8 Rows&lt;br&gt;(3 Dummy Padding Rows)"]
-    PAD --&gt; REPLAY["Launch Pre-Captured CUDA Graph for b = 8"]</code></pre>
-<p>Before launching the CUDA Graph, vLLM copies input token IDs, block table pointers, and slot mapping indices into pre-allocated static GPU memory buffers using fast <code>in-place</code> memory operations (<code>copy_</code>), ensuring zero memory re-allocations during graph execution.</p>
+    DRAFT["草稿机制 (Draft Model / N-Gram)"] --&gt;|"预测 K 个候选 Tokens"| TARGET["目标模型 (Target Model)"]
+    TARGET --&gt;|"单次并行前向 Pass 验证"| VERIFY{"拒绝采样验证"}
+    VERIFY --&gt;|"接受前 N 个 Tokens"| ACCEPT["🚀 一次 Step 吐出 N 个 Tokens!"]</code></pre>
 <hr />
-<h2 id="part-4-speculative-decoding-multi-token-verification-pipelines">Part 4: Speculative Decoding: Multi-Token Verification Pipelines<a class="headerlink" href="#part-4-speculative-decoding-multi-token-verification-pipelines" title="Permanent link">&para;</a></h2>
-<p>While CUDA Graphs eliminate CPU overhead, single-token decode passes remain memory-bandwidth bound. <strong>Speculative Decoding</strong> alters this trade-off by generating multiple candidate tokens per forward pass.</p>
-<h3 id="41-the-fundamental-principle-of-speculative-decoding">4.1 The Fundamental Principle of Speculative Decoding<a class="headerlink" href="#41-the-fundamental-principle-of-speculative-decoding" title="Permanent link">&para;</a></h3>
-<p>Autoregressive decoding generates tokens one by one because each token depends on the previous token's hidden state. However, <strong>verifying</strong> a sequence of <span class="arithmatex">\(K\)</span> candidate tokens simultaneously requires only a single prefill-style forward pass across all <span class="arithmatex">\(K\)</span> tokens.</p>
-<pre class="mermaid"><code>flowchart TD
-    DRAFT["1. Draft Phase (Fast Mechanism)&lt;br&gt;Generate K Candidate Tokens: [y1, y2, y3, y4, y5]"] --&gt; TARGET["2. Target Phase (Large Engine)&lt;br&gt;Execute Single Verification Forward Pass across all K Candidates"]
-    TARGET --&gt; VERIFY{"3. Statistical Verification Step&lt;br&gt;(Rejection Sampling)"}
-
-    VERIFY --&gt;|"Accept y1..y3"| ACCEPT["Accept 3 Tokens Instantly!&lt;br&gt;Effective Step Speedup = 3x"]
-    VERIFY --&gt;|"Reject y4"| REJECT["Resample y4 from Corrected Distribution&lt;br&gt;Discard y5"]</code></pre>
-<p>By leveraging the memory bandwidth efficiency of batched verification, Speculative Decoding generates <span class="arithmatex">\(\gamma &gt; 1\)</span> accepted tokens per target model forward pass without altering the target model's output probability distribution.</p>
-<h4 id="mathematical-distribution-preservation-modified-rejection-sampling">Mathematical Distribution Preservation (Modified Rejection Sampling)<a class="headerlink" href="#mathematical-distribution-preservation-modified-rejection-sampling" title="Permanent link">&para;</a></h4>
-<p>Let <span class="arithmatex">\(q(x)\)</span> be the draft model probability distribution and <span class="arithmatex">\(p(x)\)</span> be the target model probability distribution for token <span class="arithmatex">\(x\)</span>.</p>
-<p>For candidate token <span class="arithmatex">\(x\)</span>:</p>
-<ol>
-<li>Calculate acceptance probability:</li>
-</ol>
-<div class="arithmatex">\[
-P(\text{accept } x) = \min\left(1, \frac{p(x)}{q(x)}\right)
-\]</div>
-<ol>
-<li>If <span class="arithmatex">\(x\)</span> is accepted, proceed to evaluate the next candidate token <span class="arithmatex">\(x_{i+1}\)</span>.</li>
-<li>If <span class="arithmatex">\(x\)</span> is rejected at index <span class="arithmatex">\(i\)</span>, discard candidate tokens <span class="arithmatex">\(x_i \dots x_K\)</span>, and sample a replacement token <span class="arithmatex">\(x_i'\)</span> from the adjusted distribution:</li>
-</ol>
-<div class="arithmatex">\[
-p'(x) = \max\left(0, \frac{p(x) - q(x)}{1 - \sum_w \min(p(w), q(w))}\right)
-\]</div>
-<p>This sampling rule guarantees that the final output token distribution matches <span class="arithmatex">\(p(x)\)</span> exactly.</p>
-<hr />
-<h3 id="42-speculative-architectures-in-vllm">4.2 Speculative Architectures in vLLM<a class="headerlink" href="#42-speculative-architectures-in-vllm" title="Permanent link">&para;</a></h3>
-<p>vLLM supports four primary speculative drafting mechanisms:</p>
+<h2 id="5">第 5 部分: 量化与精度优化<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>显存带宽是 Decode 阶段的核心瓶颈，通过 <strong>量化 (Quantization)</strong> 降低权重与 KV Cache 的位宽能够直接翻倍带宽效率。</p>
+<h3 id="51">5.1 主要量化方案对比<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Speculative Mechanism</th>
-<th style="text-align: left;">Draft Generation Source</th>
-<th style="text-align: left;">Parameter Overhead</th>
-<th style="text-align: left;">Best Production Use Case</th>
+<th style="text-align: left;">量化方案</th>
+<th style="text-align: left;">作用对象</th>
+<th style="text-align: left;">显存体积缩减</th>
+<th style="text-align: left;">算力提升</th>
+<th style="text-align: left;">精度损耗</th>
+<th style="text-align: left;">适用场景</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><strong>Draft Model Speculation</strong></td>
-<td style="text-align: left;">Separate small LLM (e.g., Llama-3-8B drafting for 70B)</td>
-<td style="text-align: left;">Requires memory for draft model weights</td>
-<td style="text-align: left;">High-concurrency servers with available GPU memory</td>
+<td style="text-align: left;"><strong>AWQ / GPTQ (INT4 / W4A16)</strong></td>
+<td style="text-align: left;">仅权重 Weight-Only</td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(75\%\)</span></strong> (16bit <span class="arithmatex">\(\to\)</span> 4bit)</td>
+<td style="text-align: left;">适中 (解码阶段带宽瓶颈缓解)</td>
+<td style="text-align: left;">极低</td>
+<td style="text-align: left;">显存受限的单卡部署</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>Medusa (Multi-Head)</strong></td>
-<td style="text-align: left;">Extra linear prediction heads on top of Target model</td>
-<td style="text-align: left;"><span class="arithmatex">\(\sim 1\% \dots 2\%\)</span> additional weights</td>
-<td style="text-align: left;">Single-model setups wanting zero extra model loading</td>
+<td style="text-align: left;"><strong>FP8 (W8A8 / <code>e4m3fn</code>)</strong></td>
+<td style="text-align: left;">权重与激活值</td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(50\%\)</span></strong> (16bit <span class="arithmatex">\(\to\)</span> 8bit)</td>
+<td style="text-align: left;"><strong>高</strong> (Ada/Hopper 架构 Tensor Core 算力翻倍)</td>
+<td style="text-align: left;">近乎无损</td>
+<td style="text-align: left;">生产级高并发吞吐服务</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>EAGLE / EAGLE-2</strong></td>
-<td style="text-align: left;">Lightweight Transformer layer processing hidden states</td>
-<td style="text-align: left;">Low overhead (<span class="arithmatex">\(\sim 2\% \dots 5\%\)</span>)</td>
-<td style="text-align: left;">High token acceptance rates (<span class="arithmatex">\(\gamma &gt; 3.0\)</span>) across complex tasks</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Prompt Lookup (N-Gram)</strong></td>
-<td style="text-align: left;">Heuristic string matching against input prompt</td>
-<td style="text-align: left;"><strong>Zero parameter overhead (<span class="arithmatex">\(0 \text{ bytes}\)</span>)</strong></td>
-<td style="text-align: left;">Summarization, document Q&amp;A, and code editing</td>
+<td style="text-align: left;"><strong>FP8 / INT8 KV Cache</strong></td>
+<td style="text-align: left;">仅物理 KV Block</td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(50\%\)</span> 至 <span class="arithmatex">\(75\%\)</span></strong></td>
+<td style="text-align: left;">适中 (提升最大并发 Batch 数)</td>
+<td style="text-align: left;">极低</td>
+<td style="text-align: left;">长上下文与超高并发场景</td>
 </tr>
 </tbody>
 </table>
-<hr />
-<h3 id="43-tree-based-attention-verification-kernels">4.3 Tree-Based Attention Verification Kernels<a class="headerlink" href="#43-tree-based-attention-verification-kernels" title="Permanent link">&para;</a></h3>
-<p>Rather than drafting a single linear candidate chain (<span class="arithmatex">\([y_1, y_2, y_3]\)</span>), advanced speculative algorithms (Medusa, EAGLE, Tree-Drafting) generate a <strong>branching tree of candidate token paths</strong>.</p>
-<pre class="mermaid"><code>flowchart TD
-    ROOT["Root Token (y0)"] --&gt; B1["Branch 1: 'is'"]
-    ROOT --&gt; B2["Branch 2: 'was'"]
-
-    B1 --&gt; B1_1["'a' (Path A)"]
-    B1 --&gt; B1_2["'the' (Path B)"]
-    B2 --&gt; B2_1["'an' (Path C)"]
-
-    subgraph TREE_ATT ["⚡ Tree-Based Attention Verification Kernel"]
-        MASK["Custom Tree Attention Mask&lt;br&gt;Prevents Cross-Branch Information Leakage"]
-    end
-
-    TREE_ATT ==&gt; TARGET_PASS["Target Forward Pass evaluates Paths A, B, and C simultaneously!"]</code></pre>
-<p>To verify candidate trees in a single forward pass without information leaking between non-ancestor branches, vLLM executes custom <strong>Tree Attention Kernels</strong>. The tree mask ensures that candidate token <span class="arithmatex">\(y_{i, j}\)</span> only attends to its exact causal ancestors in the candidate tree.</p>
-<hr />
-<h2 id="part-5-quantization-precision-compression-and-kernel-engineering">Part 5: Quantization: Precision, Compression, and Kernel Engineering<a class="headerlink" href="#part-5-quantization-precision-compression-and-kernel-engineering" title="Permanent link">&para;</a></h2>
-<p>Quantization compresses model weights and activation tensors from 16-bit floating point (<code>FP16</code> / <code>BF16</code>, 2 bytes per parameter) to 8-bit (<code>INT8</code> / <code>FP8</code>, 1 byte) or 4-bit (<code>INT4</code>, 0.5 bytes) representations.</p>
-<h3 id="51-quantization-taxonomy-in-production-inference">5.1 Quantization Taxonomy in Production Inference<a class="headerlink" href="#51-quantization-taxonomy-in-production-inference" title="Permanent link">&para;</a></h3>
-<pre class="mermaid"><code>flowchart TD
-    Q_TYPE["🎯 Quantization Strategies"] --&gt; WO["1. Weight-Only Quantization (W4A16 / W8A16)"]
-    Q_TYPE --&gt; WA["2. Weight-and-Activation Quantization (W8A8)"]
-    Q_TYPE --&gt; KV_Q["3. KV Cache Quantization (FP8 / INT8 KV Blocks)"]
-
-    WO --&gt; WO_DESC["Compresses HBM weights to 4-bit/8-bit&lt;br&gt;Dequantized to FP16 inside SM SRAM before math&lt;br&gt;&lt;b&gt;Goal: Maximize HBM Memory Bandwidth Efficiency&lt;/b&gt;"]
-    WA --&gt; WA_DESC["Quantizes both weights and activation tensors&lt;br&gt;Executes native INT8/FP8 GEMM on Tensor Cores&lt;br&gt;&lt;b&gt;Goal: Maximize Tensor Core TFLOPs Throughput&lt;/b&gt;"]
-    KV_Q --&gt; KV_DESC["Compresses physical KV cache blocks in HBM&lt;br&gt;Halves KV memory footprint per token&lt;br&gt;&lt;b&gt;Goal: Double Maximum Serving Concurrency (b_max)&lt;/b&gt;"]</code></pre>
-<h4 id="1-weight-only-quantization-awq-gptq-marlin">1. Weight-Only Quantization (AWQ / GPTQ / Marlin)<a class="headerlink" href="#1-weight-only-quantization-awq-gptq-marlin" title="Permanent link">&para;</a></h4>
-<p>In Weight-Only quantization (e.g., <strong>AWQ - Activation-aware Weight Quantization</strong>), weights are stored in HBM as 4-bit integers.</p>
-<ul>
-<li><strong>Storage Footprint</strong>: Llama 3 70B compresses from <span class="arithmatex">\(140 \text{ GB}\)</span> (<code>FP16</code>) down to <span class="arithmatex">\(\sim 35 \text{ GB}\)</span> (<code>INT4</code>), enabling 70B model serving on a single GPU (e.g., NVIDIA H100 80GB or A100 80GB).</li>
-<li><strong>Execution Data Flow</strong>: During matrix-vector multiplication (<span class="arithmatex">\(y = x @ W\)</span>), weight tiles are transferred from HBM to SM SRAM at <span class="arithmatex">\(4 \times\)</span> higher bandwidth speed. Inside SRAM, fused CUDA kernels (e.g., <strong>Marlin / AWQ kernels</strong>) dequantize INT4 weights back to FP16 before executing multiplication on Tensor Cores.</li>
-</ul>
-<h4 id="2-weight-and-activation-quantization-fp8-w8a8">2. Weight-and-Activation Quantization (FP8 / W8A8)<a class="headerlink" href="#2-weight-and-activation-quantization-fp8-w8a8" title="Permanent link">&para;</a></h4>
-<p>Modern GPUs (NVIDIA Hopper H100/H200, Ada Lovelace) feature hardware <strong>FP8 Tensor Cores</strong>.</p>
-<p>FP8 defines two 8-bit floating-point formats:</p>
-<ul>
-<li><strong><code>E4M3</code> (1 sign bit, 4 exponent bits, 3 mantissa bits)</strong>: Higher precision, used for weights and activation tensors.</li>
-<li><strong><code>E5M2</code> (1 sign bit, 5 exponent bits, 2 mantissa bits)</strong>: Broader dynamic range, used for gradients and long-range activation scaling.</li>
-</ul>
-<p>Because both weights and activations reside in FP8, the GPU executes matrix multiplication natively using FP8 Tensor Core instructions, doubling peak compute capacity (up to <strong>1,978 TFLOPs</strong> on H100 SXM5).</p>
-<hr />
-<h3 id="52-kv-cache-quantization-fp8-int8-kv-blocks">5.2 KV Cache Quantization (FP8 / INT8 KV Blocks)<a class="headerlink" href="#52-kv-cache-quantization-fp8-int8-kv-blocks" title="Permanent link">&para;</a></h3>
-<p>While weight quantization reduces model memory footprint, long-context serving remains bounded by KV cache memory capacity. vLLM supports <strong>FP8 KV Cache Quantization</strong> (<code>kv_cache_dtype="fp8"</code>).</p>
-<h4 id="1-physical-storage-transformation">1. Physical Storage Transformation<a class="headerlink" href="#1-physical-storage-transformation" title="Permanent link">&para;</a></h4>
-<p>In standard FP16 execution, each element of the Key and Value vectors requires 2 bytes. Under FP8 KV Caching, Key and Value vectors are quantized to 8-bit <code>E4M3</code> floats before being stored inside physical HBM blocks.</p>
-<div class="arithmatex">\[
-\text{Physical_Block_Bytes}_{\text{FP8}} = \frac{\text{Physical_Block_Bytes}_{\text{FP16}}}{2}
-\]</div>
-<p>For Llama 3 70B with <code>block_size = 16</code>:</p>
-<ul>
-<li><strong>FP16 Block Size</strong>: <span class="arithmatex">\(5,242,880 \text{ bytes} \equiv \mathbf{5.00 \text{ MiB}}\)</span></li>
-<li><strong>FP8 Block Size</strong>: <span class="arithmatex">\(2,621,440 \text{ bytes} \equiv \mathbf{2.50 \text{ MiB}}\)</span></li>
-</ul>
-<h4 id="2-impact-on-serving-concurrency">2. Impact on Serving Concurrency<a class="headerlink" href="#2-impact-on-serving-concurrency" title="Permanent link">&para;</a></h4>
-<p>By halving the physical memory footprint of every block, the total number of available physical blocks in the free pool doubles:</p>
-<div class="arithmatex">\[
-\text{Total_Available_Blocks}_{\text{FP8}} = 2 \times \text{Total_Available_Blocks}_{\text{FP16}}
-\]</div>
-<p>This doubles the maximum concurrent batch size (<span class="arithmatex">\(b_{\text{max}}\)</span>) supported by the GPU without requiring additional hardware.</p>
-<hr />
-<h3 id="53-quantitative-performance-and-accuracy-trade-off-matrix">5.3 Quantitative Performance and Accuracy Trade-Off Matrix<a class="headerlink" href="#53-quantitative-performance-and-accuracy-trade-off-matrix" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th style="text-align: left;">Quantization Method</th>
-<th style="text-align: left;">Target Components</th>
-<th style="text-align: left;">Precision</th>
-<th style="text-align: left;">HBM Weight Size (70B Model)</th>
-<th style="text-align: left;">Relative Inference Throughput</th>
-<th style="text-align: left;">Perplexity Impact (<span class="arithmatex">\(\Delta \text{PPL}\)</span>)</th>
-<th style="text-align: left;">Hardware Requirement</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: left;"><strong>Unquantized (FP16/BF16)</strong></td>
-<td style="text-align: left;">Weights, Activations, KV Cache</td>
-<td style="text-align: left;">16-bit Float</td>
-<td style="text-align: left;"><span class="arithmatex">\(140 \text{ GB}\)</span></td>
-<td style="text-align: left;"><span class="arithmatex">\(1.0\times\)</span> (Baseline)</td>
-<td style="text-align: left;"><span class="arithmatex">\(0.00\)</span> (Baseline)</td>
-<td style="text-align: left;">Standard NVIDIA / AMD GPUs</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>AWQ / Marlin (W4A16)</strong></td>
-<td style="text-align: left;">Weights Only</td>
-<td style="text-align: left;">4-bit INT / 16-bit Act</td>
-<td style="text-align: left;"><strong><span class="arithmatex">\(35 \text{ GB (4x smaller)}\)</span></strong></td>
-<td style="text-align: left;"><span class="arithmatex">\(2.2\times \dots 3.2\times\)</span></td>
-<td style="text-align: left;"><span class="arithmatex">\(&lt; +0.10\)</span> (Negligible)</td>
-<td style="text-align: left;">Any Tensor Core GPU</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>FP8 (W8A8 / E4M3)</strong></td>
-<td style="text-align: left;">Weights and Activations</td>
-<td style="text-align: left;">8-bit Float</td>
-<td style="text-align: left;"><span class="arithmatex">\(70 \text{ GB}\)</span></td>
-<td style="text-align: left;"><strong><span class="arithmatex">\(2.5\times \dots 4.0\times\)</span></strong></td>
-<td style="text-align: left;"><span class="arithmatex">\(&lt; +0.05\)</span> (Near-Zero)</td>
-<td style="text-align: left;">NVIDIA Hopper / Ada Lovelace</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>FP8 KV Cache</strong></td>
-<td style="text-align: left;">KV Cache Blocks Only</td>
-<td style="text-align: left;">8-bit Float</td>
-<td style="text-align: left;"><span class="arithmatex">\(140 \text{ GB}\)</span> (Weights)</td>
-<td style="text-align: left;"><strong><span class="arithmatex">\(2.0\times \text{ Max Concurrency}\)</span></strong></td>
-<td style="text-align: left;"><span class="arithmatex">\(&lt; +0.02\)</span> (Imperceptible)</td>
-<td style="text-align: left;">Ampere, Hopper, Ada Lovelace</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="summary-the-integrated-performance-stack">Summary: The Integrated Performance Stack<a class="headerlink" href="#summary-the-integrated-performance-stack" title="Permanent link">&para;</a></h2>
-<p>Modern LLM serving performance relies on the synergistic co-design of software scheduling, host execution, vector verification, and memory quantization:</p>
-<pre class="mermaid"><code>flowchart TD
-    SCHED["1. Advanced Scheduler (Chunked Prefill)"] --&gt; HOST["2. Host Overhead Elimination (CUDA Graphs)"]
-    HOST --&gt; VERIF["3. Algorithmic Verification (Speculative Decoding)"]
-    VERIF --&gt; COMP["4. Memory and Compute Quantization (AWQ / FP8 / FP8 KV)"]
-    COMP --&gt; HARDWARE["⚡ Peak GPU Hardware Efficiency (Maximum Throughput at Bounded ITL)"]</code></pre>
-<p>With <strong>Module 3</strong> complete, we transition to <strong>Module 4: Hardware Interaction and Kernel Co-Design (<code>04_hardware_and_kernel_optimization.md</code>)</strong>, where we examine GPU micro-architecture, SRAM tiling strategies, custom HIP/CUDA kernel implementation, and cross-hardware compilation backends.</p>
+<p>vLLM 原生集成了 AWQ、GPTQ、Marlin 内核以及 FP8 (<code>e4m3fn</code>) 矩阵乘法，帮助企业级服务在保持高精度的同时榨干硬件带宽与 Tensor Core 算力。</p>
 
 
 
