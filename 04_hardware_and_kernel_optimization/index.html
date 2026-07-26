@@ -1,0 +1,1525 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An AI Engineering Textbook and Production Reference">
+      
+      
+        <meta name="author" content="linghuanym">
+      
+      
+      
+        <link rel="prev" href="../03_performance_and_quality/">
+      
+      
+        <link rel="next" href="../appendix_glossary_and_terminology/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="en">
+        
+          <link rel="alternate" href="../zh/04_hardware_and_kernel_optimization/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Module 4 - Hardware and Kernel Optimization - vLLM Core Architecture & Performance Mechanics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#module-4-hardware-interaction-and-kernel-co-design" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-header__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            vLLM Core Architecture & Performance Mechanics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Module 4 - Hardware and Kernel Optimization
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../zh/04_hardware_and_kernel_optimization/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-nav__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    vLLM Core Architecture & Performance Mechanics
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Curriculum & Principles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_llm_inference_fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 1 - Inference Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_vllm_core_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 2 - vLLM Core Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03_performance_and_quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 3 - Performance and Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 4 - Hardware and Kernel Optimization
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 4 - Hardware and Kernel Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-gpu-memory-hierarchy-and-bandwidth-realities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: GPU Memory Hierarchy and Bandwidth Realities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: GPU Memory Hierarchy and Bandwidth Realities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-hardware-memory-pyramid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The Hardware Memory Pyramid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-the-memory-access-latency-penalty" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 The Memory Access Latency Penalty
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-sram-tiling-and-attention-kernel-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: SRAM Tiling and Attention Kernel Mechanics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: SRAM Tiling and Attention Kernel Mechanics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-flashattention-tiling-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 FlashAttention Tiling Strategy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 FlashAttention Tiling Strategy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tiling-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tiling Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-numerical-stability-online-softmax-recurrence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Numerical Stability: Online Softmax Recurrence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-pagedattention-cuda-kernel-engineering-v1-vs-v2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: PagedAttention CUDA Kernel Engineering (V1 vs. V2)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: PagedAttention CUDA Kernel Engineering (V1 vs. V2)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-pagedattention-v1-kernel-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 PagedAttention V1 Kernel Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 PagedAttention V1 Kernel Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#limitations-of-pagedattention-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations of PagedAttention V1
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-pagedattention-v2-architecture-and-split-kv-reduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 PagedAttention V2 Architecture and Split-KV Reduction
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 PagedAttention V2 Architecture and Split-KV Reduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-parallel-block-partitioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Parallel Block Partitioning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-global-workspace-intermediate-staging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Global Workspace Intermediate Staging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-split-kv-reduction-kernel-paged_attention_v2_reduce_kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Split-KV Reduction Kernel (paged_attention_v2_reduce_kernel)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Impact
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-advanced-accelerator-backends-and-cross-hardware-engines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Advanced Accelerator Backends and Cross-Hardware Engines
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Advanced Accelerator Backends and Cross-Hardware Engines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-amd-rocm-hip-execution-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 AMD ROCm (HIP) Execution Engine
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.1 AMD ROCm (HIP) Execution Engine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#micro-architecture-differences-wavefronts-vs-warps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Micro-Architecture Differences: Wavefronts vs. Warps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kernel-adaptations-in-vllm-rocm-vllm_c-hip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kernel Adaptations in vLLM ROCm (vllm._C / HIP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-google-tpu-acceleration-backend-xla" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Google TPU Acceleration Backend (XLA)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 Google TPU Acceleration Backend (XLA)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture-differences-systolic-arrays-vs-simt-cores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Differences: Systolic Arrays vs. SIMT Cores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pagedattention-adaptation-in-xla" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PagedAttention Adaptation in XLA
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-aws-neuron-engine-inferentia2-trainium" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 AWS Neuron Engine (Inferentia2 &amp; Trainium)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.3 AWS Neuron Engine (Inferentia2 &amp; Trainium)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#neuron-kernel-integration-nki" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Neuron Kernel Integration (NKI)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-hardware-backend-capabilities-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: Hardware Backend Capabilities Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix_glossary_and_terminology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix - Master Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-gpu-memory-hierarchy-and-bandwidth-realities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: GPU Memory Hierarchy and Bandwidth Realities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: GPU Memory Hierarchy and Bandwidth Realities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-hardware-memory-pyramid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The Hardware Memory Pyramid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-the-memory-access-latency-penalty" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 The Memory Access Latency Penalty
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-sram-tiling-and-attention-kernel-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: SRAM Tiling and Attention Kernel Mechanics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: SRAM Tiling and Attention Kernel Mechanics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-flashattention-tiling-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 FlashAttention Tiling Strategy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 FlashAttention Tiling Strategy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tiling-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tiling Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-numerical-stability-online-softmax-recurrence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Numerical Stability: Online Softmax Recurrence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-pagedattention-cuda-kernel-engineering-v1-vs-v2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: PagedAttention CUDA Kernel Engineering (V1 vs. V2)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: PagedAttention CUDA Kernel Engineering (V1 vs. V2)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-pagedattention-v1-kernel-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 PagedAttention V1 Kernel Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 PagedAttention V1 Kernel Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#limitations-of-pagedattention-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations of PagedAttention V1
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-pagedattention-v2-architecture-and-split-kv-reduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 PagedAttention V2 Architecture and Split-KV Reduction
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 PagedAttention V2 Architecture and Split-KV Reduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-parallel-block-partitioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Parallel Block Partitioning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-global-workspace-intermediate-staging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Global Workspace Intermediate Staging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-split-kv-reduction-kernel-paged_attention_v2_reduce_kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Split-KV Reduction Kernel (paged_attention_v2_reduce_kernel)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Impact
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-advanced-accelerator-backends-and-cross-hardware-engines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Advanced Accelerator Backends and Cross-Hardware Engines
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Advanced Accelerator Backends and Cross-Hardware Engines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-amd-rocm-hip-execution-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 AMD ROCm (HIP) Execution Engine
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.1 AMD ROCm (HIP) Execution Engine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#micro-architecture-differences-wavefronts-vs-warps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Micro-Architecture Differences: Wavefronts vs. Warps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kernel-adaptations-in-vllm-rocm-vllm_c-hip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kernel Adaptations in vLLM ROCm (vllm._C / HIP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-google-tpu-acceleration-backend-xla" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Google TPU Acceleration Backend (XLA)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 Google TPU Acceleration Backend (XLA)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture-differences-systolic-arrays-vs-simt-cores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Differences: Systolic Arrays vs. SIMT Cores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pagedattention-adaptation-in-xla" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PagedAttention Adaptation in XLA
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-aws-neuron-engine-inferentia2-trainium" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 AWS Neuron Engine (Inferentia2 &amp; Trainium)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.3 AWS Neuron Engine (Inferentia2 &amp; Trainium)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#neuron-kernel-integration-nki" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Neuron Kernel Integration (NKI)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-hardware-backend-capabilities-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: Hardware Backend Capabilities Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="module-4-hardware-interaction-and-kernel-co-design">Module 4: Hardware Interaction and Kernel Co-Design<a class="headerlink" href="#module-4-hardware-interaction-and-kernel-co-design" title="Permanent link">&para;</a></h1>
+<p>High-performance LLM serving engines achieve peak efficiency through tight co-design between software algorithms and hardware micro-architecture. While high-level scheduling algorithms govern request lifecycles, execution speed ultimately depends on how efficiently CUDA/HIP kernels utilize <strong>GPU Memory Hierarchy</strong>, <strong>SRAM Tiling</strong>, <strong>PagedAttention Kernel Mechanics (V1 vs. V2)</strong>, and <strong>Cross-Hardware Accelerator Backends</strong>.</p>
+<p>This module explores the hardware engineering principles underlying vLLM's custom kernel stack across NVIDIA GPUs, AMD ROCm accelerators, Google TPUs, and AWS Neuron hardware.</p>
+<hr />
+<h2 id="part-1-gpu-memory-hierarchy-and-bandwidth-realities">Part 1: GPU Memory Hierarchy and Bandwidth Realities<a class="headerlink" href="#part-1-gpu-memory-hierarchy-and-bandwidth-realities" title="Permanent link">&para;</a></h2>
+<p>To understand kernel optimization, hardware engineers model the GPU as a multi-level memory pyramid. Memory locations differ drastically in <strong>storage capacity</strong>, <strong>transfer bandwidth</strong>, and <strong>access latency</strong>.</p>
+<pre class="mermaid"><code>flowchart TD
+    REG["⚡ Registers (Per-Thread)&lt;br&gt;Capacity: ~65,536 x 32-bit per SM | Latency: 0 Cycles | Bandwidth: Ultra-Fast"] --&gt; SRAM["🔥 Shared Memory / L1 Cache (On-Chip SRAM)&lt;br&gt;Capacity: 228 KB per SM | Latency: ~20..30 Cycles | Bandwidth: ~19 to 33 TB/s"]
+    SRAM --&gt; L2["🚀 L2 Cache (On-Chip Global)&lt;br&gt;Capacity: 50 MB to 256 MB | Latency: ~150..200 Cycles | Bandwidth: ~6 to 12 TB/s"]
+    L2 --&gt; HBM["🐢 High-Bandwidth Memory (Off-Chip HBM3 / HBM3e)&lt;br&gt;Capacity: 80 GB to 141 GB | Latency: ~400..800 Cycles | Bandwidth: 3.35 to 4.8 TB/s"]</code></pre>
+<h3 id="11-the-hardware-memory-pyramid">1.1 The Hardware Memory Pyramid<a class="headerlink" href="#11-the-hardware-memory-pyramid" title="Permanent link">&para;</a></h3>
+<p>On a modern enterprise accelerator like the NVIDIA H100 SXM5:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Memory Tier</th>
+<th style="text-align: left;">Physical Location</th>
+<th style="text-align: left;">Capacity (H100 SXM5)</th>
+<th style="text-align: left;">Peak Bandwidth</th>
+<th style="text-align: left;">Access Latency</th>
+<th style="text-align: left;">Primary Serving Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Registers</strong></td>
+<td style="text-align: left;">On-Chip (SM)</td>
+<td style="text-align: left;"><span class="arithmatex">\(256 \text{ KB}\)</span> per SM</td>
+<td style="text-align: left;"><span class="arithmatex">\(&gt; 100 \text{ TB/s}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(0 \text{ cycles}\)</span></td>
+<td style="text-align: left;">Active thread scalar math &amp; accumulators</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Shared Memory (SRAM)</strong></td>
+<td style="text-align: left;">On-Chip (SM)</td>
+<td style="text-align: left;"><span class="arithmatex">\(228 \text{ KB}\)</span> per SM</td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 33 \text{ TB/s}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 20 \dots 30 \text{ cycles}\)</span></td>
+<td style="text-align: left;">SRAM tiling for <span class="arithmatex">\(Q, K, V\)</span> attention blocks</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>L2 Cache</strong></td>
+<td style="text-align: left;">On-Chip (Global)</td>
+<td style="text-align: left;"><span class="arithmatex">\(50 \text{ MB}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 12 \text{ TB/s}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 150 \dots 200 \text{ cycles}\)</span></td>
+<td style="text-align: left;">Caching frequently accessed metadata &amp; Block Tables</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>HBM3 Memory</strong></td>
+<td style="text-align: left;">Off-Chip (DRAM)</td>
+<td style="text-align: left;"><span class="arithmatex">\(80 \text{ GB}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(3.35 \text{ TB/s}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 400 \dots 800 \text{ cycles}\)</span></td>
+<td style="text-align: left;">Storing model weights &amp; physical KV cache blocks</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="12-the-memory-access-latency-penalty">1.2 The Memory Access Latency Penalty<a class="headerlink" href="#12-the-memory-access-latency-penalty" title="Permanent link">&para;</a></h3>
+<p>When a CUDA thread block requests a data payload (e.g., a Key tile vector) that is not cached in SRAM or L2:</p>
+<ol>
+<li><strong>Global HBM Request</strong>: The Streaming Multiprocessor (SM) issues a global memory fetch command over the HBM memory bus.</li>
+<li><strong>Stall Cycles</strong>: The warp must wait <span class="arithmatex">\(\sim 400 \dots 800 \text{ clock cycles}\)</span> for data to travel from off-chip HBM into registers.</li>
+<li><strong>Warp Scheduler Context Switching</strong>: To prevent SM hardware idle time, the hardware warp scheduler context-switches to an alternate active warp. However, if all active warps are stalled waiting for HBM memory transfers, <strong>the SM stalls completely</strong>.</li>
+</ol>
+<p>Kernel optimization minimizes HBM memory requests by staging matrix tiles inside <strong>On-Chip Shared Memory (SRAM)</strong> and maximizing tile reuse.</p>
+<hr />
+<h2 id="part-2-sram-tiling-and-attention-kernel-mechanics">Part 2: SRAM Tiling and Attention Kernel Mechanics<a class="headerlink" href="#part-2-sram-tiling-and-attention-kernel-mechanics" title="Permanent link">&para;</a></h2>
+<p>In standard Self-Attention (<span class="arithmatex">\(A = \text{Softmax}(Q @ K^T / \sqrt{d}) @ V\)</span>), naive PyTorch implementations instantiate full <span class="arithmatex">\(S \times S\)</span> attention score matrices in global HBM memory.</p>
+<p>For a sequence of length <span class="arithmatex">\(S = 32,768\)</span>:</p>
+<div class="arithmatex">\[
+\text{Memory}_{\text{naive_attn}} = S \times S \times \text{sizeof(float32)} = 32,768 \times 32,768 \times 4 \text{ bytes} \approx \mathbf{4.29 \text{ GB per head!}}
+\]</div>
+<p>Across 64 heads and 80 layers, naive attention requires terabytes of intermediate memory, causing memory overflow (<span class="arithmatex">\(O(S^2)\)</span> memory footprint).</p>
+<h3 id="21-flashattention-tiling-strategy">2.1 FlashAttention Tiling Strategy<a class="headerlink" href="#21-flashattention-tiling-strategy" title="Permanent link">&para;</a></h3>
+<p><strong>FlashAttention</strong> (Dao et al.) and <strong>PagedAttention</strong> overcome <span class="arithmatex">\(O(S^2)\)</span> memory explosion by tiling Query (<span class="arithmatex">\(Q\)</span>), Key (<span class="arithmatex">\(K\)</span>), and Value (<span class="arithmatex">\(V\)</span>) tensors into small blocks that fit entirely inside <strong>On-Chip SRAM (<span class="arithmatex">\(228 \text{ KB}\)</span>)</strong>.</p>
+<pre class="mermaid"><code>flowchart TD
+    HBM_Q["Off-Chip HBM&lt;br&gt;Global Q Tensor"] --&gt;|Load Q Tile [B_M x d]| SRAM_Q["On-Chip SRAM&lt;br&gt;Q Tile (SRAM)"]
+    HBM_K["Off-Chip HBM&lt;br&gt;Global K Tensor"] --&gt;|Load K Tile [B_N x d]| SRAM_K["On-Chip SRAM&lt;br&gt;K Tile (SRAM)"]
+    HBM_V["Off-Chip HBM&lt;br&gt;Global V Tensor"] --&gt;|Load V Tile [B_N x d]| SRAM_V["On-Chip SRAM&lt;br&gt;V Tile (SRAM)"]
+
+    subgraph ON_CHIP ["🔥 SM Shared Memory (SRAM) Compute Loop"]
+        SRAM_Q &amp; SRAM_K --&gt; S_TILE["SRAM Score Matrix Tile&lt;br&gt;S_tile = Q_tile @ K_tile^T / sqrt(d)"]
+        S_TILE &amp; SRAM_V --&gt; O_TILE["Online Softmax &amp; Weighted Sum&lt;br&gt;O_tile = Softmax(S_tile) @ V_tile"]
+    end
+
+    O_TILE --&gt;|Write Final Output Vector| HBM_O["Off-Chip HBM&lt;br&gt;Global Output Tensor O"]</code></pre>
+<h4 id="tiling-parameters">Tiling Parameters<a class="headerlink" href="#tiling-parameters" title="Permanent link">&para;</a></h4>
+<ul>
+<li><span class="arithmatex">\(B_M\)</span>: Query tile block size along sequence dimension (typically <span class="arithmatex">\(B_M = 64\)</span> or <span class="arithmatex">\(128\)</span>).</li>
+<li><span class="arithmatex">\(B_N\)</span>: Key/Value tile block size along sequence dimension (typically <span class="arithmatex">\(B_N = 64\)</span> or <span class="arithmatex">\(128\)</span>).</li>
+<li><span class="arithmatex">\(d\)</span>: Head dimension (<span class="arithmatex">\(d_{\text{head}} = 128\)</span>).</li>
+</ul>
+<p>By executing matrix multiplication (<span class="arithmatex">\(S_{\text{tile}} = Q_{\text{tile}} @ K_{\text{tile}}^T\)</span>) and weighted summation (<span class="arithmatex">\(O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}\)</span>) entirely inside SRAM, <strong>the <span class="arithmatex">\(S \times S\)</span> attention matrix is never materialized in global HBM memory</strong>, reducing memory footprint from <span class="arithmatex">\(O(S^2)\)</span> to <span class="arithmatex">\(O(S)\)</span>.</p>
+<hr />
+<h3 id="22-numerical-stability-online-softmax-recurrence">2.2 Numerical Stability: Online Softmax Recurrence<a class="headerlink" href="#22-numerical-stability-online-softmax-recurrence" title="Permanent link">&para;</a></h3>
+<p>Standard Softmax requires two full passes over the input vector: Pass 1 to find global maximum <span class="arithmatex">\(m = \max(x_i)\)</span>, and Pass 2 to compute normalization denominator <span class="arithmatex">\(d = \sum e^{x_i - m}\)</span>.</p>
+<p>To evaluate Softmax incrementally tile-by-tile inside SRAM without making multiple passes over HBM, attention kernels use <strong>Online Softmax</strong> (Rabe &amp; Dong).</p>
+<p>When transitioning from tile <span class="arithmatex">\(j-1\)</span> to tile <span class="arithmatex">\(j\)</span>:</p>
+<div class="arithmatex">\[
+m^{(j)} = \max\left(m^{(j-1)}, \tilde{m}^{(j)}\right)
+\]</div>
+<div class="arithmatex">\[
+l^{(j)} = l^{(j-1)} \cdot e^{m^{(j-1)} - m^{(j)}} + \tilde{l}^{(j)} \cdot e^{\tilde{m}^{(j)} - m^{(j)}}
+\]</div>
+<div class="arithmatex">\[
+O^{(j)} = O^{(j-1)} \cdot \left(\frac{l^{(j-1)} \cdot e^{m^{(j-1)} - m^{(j)}}}{l^{(j)}}\right) + \tilde{O}^{(j)} \cdot \left(\frac{e^{\tilde{m}^{(j)} - m^{(j)}}}{l^{(j)}}\right)
+\]</div>
+<p>Where:
+- <span class="arithmatex">\(m^{(j)}\)</span>: Running maximum logit score through tile <span class="arithmatex">\(j\)</span>.
+- <span class="arithmatex">\(l^{(j)}\)</span>: Running sum of unnormalized exponentials through tile <span class="arithmatex">\(j\)</span>.
+- <span class="arithmatex">\(O^{(j)}\)</span>: Running unnormalized attention output vector through tile <span class="arithmatex">\(j\)</span>.</p>
+<p>Online Softmax updates the running output vector <span class="arithmatex">\(O^{(j)}\)</span> in SRAM using a single forward pass over KV tiles!</p>
+<hr />
+<h2 id="part-3-pagedattention-cuda-kernel-engineering-v1-vs-v2">Part 3: PagedAttention CUDA Kernel Engineering (V1 vs. V2)<a class="headerlink" href="#part-3-pagedattention-cuda-kernel-engineering-v1-vs-v2" title="Permanent link">&para;</a></h2>
+<p>While FlashAttention assumes contiguous <span class="arithmatex">\(K\)</span> and <span class="arithmatex">\(V\)</span> tensors in HBM, <strong>PagedAttention</strong> accesses physical Key and Value blocks scattered across non-contiguous HBM addresses via <code>Block_Table</code> lookups.</p>
+<h3 id="31-pagedattention-v1-kernel-architecture">3.1 PagedAttention V1 Kernel Architecture<a class="headerlink" href="#31-pagedattention-v1-kernel-architecture" title="Permanent link">&para;</a></h3>
+<p>In <strong>PagedAttention V1</strong> (<code>paged_attention_v1_kernel</code>), the CUDA kernel assigns <strong>one thread block per query head per sequence</strong>.</p>
+<pre class="mermaid"><code>flowchart TD
+    GRID["CUDA Execution Grid&lt;br&gt;gridDim = (num_heads, num_sequences)"] --&gt; TB0["Thread Block (head=0, seq=0)"]
+
+    subgraph V1_LOOP ["Sequential Loop inside Thread Block"]
+        TB0 --&gt; B0["Read Block_Table[0] -&gt; Physical Block 104&lt;br&gt;Fetch K, V Tiles -&gt; Compute SRAM Math"]
+        B0 --&gt; B1["Read Block_Table[1] -&gt; Physical Block 28&lt;br&gt;Fetch K, V Tiles -&gt; Compute SRAM Math"]
+        B1 --&gt; BN["... Loop sequentially through all B Physical Blocks!"]
+    end
+
+    BN --&gt; OUT["Write Final Output O to HBM"]</code></pre>
+<h4 id="limitations-of-pagedattention-v1">Limitations of PagedAttention V1<a class="headerlink" href="#limitations-of-pagedattention-v1" title="Permanent link">&para;</a></h4>
+<p>During autoregressive decoding at long context lengths (e.g., <span class="arithmatex">\(S = 32,768\)</span> tokens <span class="arithmatex">\(\equiv 2,048\)</span> physical blocks):</p>
+<ul>
+<li>Single-request decoding has batch size <span class="arithmatex">\(b = 1\)</span> or small batch sizes.</li>
+<li>A single thread block must loop sequentially through all <span class="arithmatex">\(2,048\)</span> physical blocks.</li>
+<li><strong>SM Wave Under-utilization</strong>: The GPU grid contains very few thread blocks (<span class="arithmatex">\(\text{gridDim} = h_q \times b = 64 \times 1 = 64 \text{ thread blocks}\)</span>). On an NVIDIA H100 SXM5 with 132 SMs, <strong>over half of the GPU's hardware SMs sit completely idle</strong> while a few active SMs loop sequentially through thousands of blocks!</li>
+</ul>
+<hr />
+<h3 id="32-pagedattention-v2-architecture-and-split-kv-reduction">3.2 PagedAttention V2 Architecture and Split-KV Reduction<a class="headerlink" href="#32-pagedattention-v2-architecture-and-split-kv-reduction" title="Permanent link">&para;</a></h3>
+<p>To eliminate SM wave under-utilization during long-context decoding, vLLM engineered <strong>PagedAttention V2 (<code>paged_attention_v2_kernel</code> + Split-KV Reduction)</strong>.</p>
+<p>PagedAttention V2 parallelizes attention evaluation <em>along the sequence length dimension</em> by partitioning physical blocks across multiple parallel thread blocks.</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph PHASE1 ["Phase 1: Parallel Block Partitioning (paged_attention_v2_kernel)"]
+        TB1["Thread Block Partition 0&lt;br&gt;(Blocks 0..255)"] --&gt;|Compute Partial Math| TMP1["Write to Global Workspace Buffer&lt;br&gt;tmp_out[0], tmp_max[0], tmp_exp[0]"]
+        TB2["Thread Block Partition 1&lt;br&gt;(Blocks 256..511)"] --&gt;|Compute Partial Math| TMP2["Write to Global Workspace Buffer&lt;br&gt;tmp_out[1], tmp_max[1], tmp_exp[1]"]
+        TB3["Thread Block Partition P...&lt;br&gt;(Blocks ... 2047)"] --&gt;|Compute Partial Math| TMP3["Write to Global Workspace Buffer&lt;br&gt;tmp_out[P], tmp_max[P], tmp_exp[P]"]
+    end
+
+    subgraph PHASE2 ["Phase 2: Split-KV Reduction Kernel (paged_attention_v2_reduce_kernel)"]
+        TMP1 &amp; TMP2 &amp; TMP3 ==&gt; REDUCE["Launch Reduction Kernel&lt;br&gt;Read P Partitions from Workspace Buffer"]
+        REDUCE --&gt; RESCALE["Rescale &amp; Fuse Partial Outputs via Online Softmax Identity"]
+        RESCALE --&gt; FINAL_O["Write Normalized Output Vector O to HBM"]
+    end</code></pre>
+<h4 id="step-1-parallel-block-partitioning">Step 1: Parallel Block Partitioning<a class="headerlink" href="#step-1-parallel-block-partitioning" title="Permanent link">&para;</a></h4>
+<p>The scheduler sets a partition size parameter <code>partition_size</code> (typically 256 or 512 tokens per partition).</p>
+<div class="arithmatex">\[
+N_{\text{partitions}} = \left\lceil \frac{\text{seq_len}}{\text{partition_size}} \right\rceil
+\]</div>
+<p>The CUDA grid size expands along the partition dimension (<span class="arithmatex">\(\text{gridDim} = h_q \times b \times N_{\text{partitions}}\)</span>). For a 32K context sequence, <span class="arithmatex">\(N_{\text{partitions}} = 32,768 / 256 = 128\)</span> parallel thread blocks.</p>
+<p>Instead of 64 thread blocks, the grid launches <span class="arithmatex">\(64 \times 128 = 8,192\)</span> parallel thread blocks, <strong>fully saturating all 132 SMs on the GPU</strong>!</p>
+<h4 id="step-2-global-workspace-intermediate-staging">Step 2: Global Workspace Intermediate Staging<a class="headerlink" href="#step-2-global-workspace-intermediate-staging" title="Permanent link">&para;</a></h4>
+<p>Each parallel partition thread block evaluates its assigned subset of physical blocks and writes three partial arrays to a temporary global HBM workspace buffer:</p>
+<ol>
+<li><code>tmp_output[partition_idx]</code>: Unnormalized partial attention output vector <span class="arithmatex">\(O_{\text{part}}\)</span>.</li>
+<li><code>tmp_max_logits[partition_idx]</code>: Maximum logit score <span class="arithmatex">\(m_{\text{part}}\)</span> within partition.</li>
+<li><code>tmp_exp_sums[partition_idx]</code>: Unnormalized exponential sum <span class="arithmatex">\(l_{\text{part}}\)</span> within partition.</li>
+</ol>
+<h4 id="step-3-split-kv-reduction-kernel-paged_attention_v2_reduce_kernel">Step 3: Split-KV Reduction Kernel (<code>paged_attention_v2_reduce_kernel</code>)<a class="headerlink" href="#step-3-split-kv-reduction-kernel-paged_attention_v2_reduce_kernel" title="Permanent link">&para;</a></h4>
+<p>Immediately following Phase 1, a lightweight reduction CUDA kernel launches.</p>
+<p>For each sequence head, the reduction kernel reads the <span class="arithmatex">\(N_{\text{partitions}}\)</span> partial vectors from the global workspace buffer, finds the global maximum logit <span class="arithmatex">\(m_{\text{global}} = \max(m_{\text{part}, p})\)</span>, rescales partial outputs using the Online Softmax identity:</p>
+<div class="arithmatex">\[
+\text{Scale}_p = e^{m_{\text{part}, p} - m_{\text{global}}}
+\]</div>
+<div class="arithmatex">\[
+l_{\text{global}} = \sum_{p=1}^{N_{\text{partitions}}} l_{\text{part}, p} \cdot \text{Scale}_p
+\]</div>
+<div class="arithmatex">\[
+O_{\text{final}} = \frac{\sum_{p=1}^{N_{\text{partitions}}} O_{\text{part}, p} \cdot l_{\text{part}, p} \cdot \text{Scale}_p}{l_{\text{global}}}
+\]</div>
+<p>And writes the exact, normalized attention vector <span class="arithmatex">\(O_{\text{final}}\)</span> to global memory.</p>
+<h4 id="performance-impact">Performance Impact<a class="headerlink" href="#performance-impact" title="Permanent link">&para;</a></h4>
+<p>PagedAttention V2 increases long-context decoding speed by <strong><span class="arithmatex">\(2.0\times \dots 5.0\times\)</span></strong> by converting sequential block loops into massive parallel SM execution!</p>
+<hr />
+<h2 id="part-4-advanced-accelerator-backends-and-cross-hardware-engines">Part 4: Advanced Accelerator Backends and Cross-Hardware Engines<a class="headerlink" href="#part-4-advanced-accelerator-backends-and-cross-hardware-engines" title="Permanent link">&para;</a></h2>
+<p>While CUDA powers NVIDIA GPUs, vLLM features a modular backend architecture supporting <strong>AMD ROCm (HIP)</strong>, <strong>Google TPUs</strong>, and <strong>AWS Neuron</strong>.</p>
+<pre class="mermaid"><code>flowchart TD
+    CORE["vLLM Core Architecture &amp; Scheduler"] --&gt; C_BE["NVIDIA CUDA Backend (CUDA C++ / FlashAttention / FlashInfer)"]
+    CORE --&gt; R_BE["AMD ROCm HIP Backend (HIP C++ / Composable Kernel)"]
+    CORE --&gt; T_BE["Google TPU Backend (XLA / Paged KV Custom Calls)"]
+    CORE --&gt; N_BE["AWS Neuron Backend (Neuron Core / NKI Kernels)"]</code></pre>
+<hr />
+<h3 id="41-amd-rocm-hip-execution-engine">4.1 AMD ROCm (HIP) Execution Engine<a class="headerlink" href="#41-amd-rocm-hip-execution-engine" title="Permanent link">&para;</a></h3>
+<p>AMD Instinct GPUs (MI250, MI300X) execute code via the <strong>AMD ROCm</strong> open software stack and <strong>HIP</strong> programming language.</p>
+<h4 id="micro-architecture-differences-wavefronts-vs-warps">Micro-Architecture Differences: Wavefronts vs. Warps<a class="headerlink" href="#micro-architecture-differences-wavefronts-vs-warps" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>NVIDIA CUDA</strong>: Executes threads in groups of 32 called <strong>Warps</strong>.</li>
+<li><strong>AMD ROCm (CDNA Architecture)</strong>: Executes threads in groups of 64 called <strong>Wavefronts</strong> (<code>wave64</code>).</li>
+</ul>
+<h4 id="kernel-adaptations-in-vllm-rocm-vllm_c-hip">Kernel Adaptations in vLLM ROCm (<code>vllm._C</code> / HIP)<a class="headerlink" href="#kernel-adaptations-in-vllm-rocm-vllm_c-hip" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Wavefront Alignment</strong>: Shared memory reduction trees and warp shuffle instructions (<code>__shfl_xor_sync</code>) inside PagedAttention are rewritten for 64-thread wavefront execution using HIP intrinsics (<code>__shfl_xor</code>).</li>
+<li><strong>AMD Composable Kernel (CK)</strong>: vLLM integrates AMD's Composable Kernel library to achieve optimized GEMM matrix multiplication on MI300X <strong>Matrix Core Units</strong>, matching FP16 and FP8 execution throughput.</li>
+<li><strong>MI300X Memory Bandwidth Advantage</strong>: With <span class="arithmatex">\(192 \text{ GB}\)</span> of HBM3 memory providing <strong><span class="arithmatex">\(5.3 \text{ TB/s}\)</span> memory bandwidth</strong>, MI300X handles larger KV cache block pools directly in global memory.</li>
+</ol>
+<hr />
+<h3 id="42-google-tpu-acceleration-backend-xla">4.2 Google TPU Acceleration Backend (XLA)<a class="headerlink" href="#42-google-tpu-acceleration-backend-xla" title="Permanent link">&para;</a></h3>
+<p>Google Tensor Processing Units (TPUs v4, v5e, v5p, Trillium) operate on a fundamentally different execution model governed by the <strong>XLA (Accelerated Linear Algebra) compiler</strong>.</p>
+<h4 id="architecture-differences-systolic-arrays-vs-simt-cores">Architecture Differences: Systolic Arrays vs. SIMT Cores<a class="headerlink" href="#architecture-differences-systolic-arrays-vs-simt-cores" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>GPUs (SIMT)</strong>: Compute matrix multiplication using thousands of independent thread cores.</li>
+<li><strong>TPUs (Systolic Array / MXU)</strong>: Compute matrix multiplication using specialized <strong>Matrix Execution Units (MXU)</strong> that stream activations through static 2D grid ALU arrays.</li>
+</ul>
+<h4 id="pagedattention-adaptation-in-xla">PagedAttention Adaptation in XLA<a class="headerlink" href="#pagedattention-adaptation-in-xla" title="Permanent link">&para;</a></h4>
+<p>Because XLA requires static tensor shapes at compile time:</p>
+<ol>
+<li><strong>Paged KV Custom Calls</strong>: vLLM integrates with Google's XLA PagedAttention custom calls (<code>vllm-tpu</code> backend).</li>
+<li><strong>Static Block Table Padding</strong>: Block tables and physical KV blocks are padded to fixed TPU memory strides (typically block size <span class="arithmatex">\(16\)</span> or <span class="arithmatex">\(32\)</span>).</li>
+<li><strong>XLA Graph Compilation</strong>: Transformer layer execution is compiled into unified XLA HLO graphs, eliminating host overhead and maximizing MXU matrix multiplication throughput.</li>
+</ol>
+<hr />
+<h3 id="43-aws-neuron-engine-inferentia2-trainium">4.3 AWS Neuron Engine (Inferentia2 &amp; Trainium)<a class="headerlink" href="#43-aws-neuron-engine-inferentia2-trainium" title="Permanent link">&para;</a></h3>
+<p>AWS Inferentia2 (<code>inf2</code>) and Trainium (<code>trn1</code>) instances utilize custom <strong>Neuron Cores</strong> managed by the <code>aws-neuron-sdk</code>.</p>
+<h4 id="neuron-kernel-integration-nki">Neuron Kernel Integration (NKI)<a class="headerlink" href="#neuron-kernel-integration-nki" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Neuron Core Architecture</strong>: Each Neuron Core contains a Tensor Engine (matrix math), Vector Engine, and Scalar Engine linked to <span class="arithmatex">\(32 \text{ GB}\)</span> of high-bandwidth memory.</li>
+<li><strong>Neuron Kernel Interface (NKI)</strong>: vLLM leverages AWS NKI to write custom PagedAttention block lookup kernels that execute directly on Neuron Core Vector and Tensor engines.</li>
+<li><strong>Collective Communication</strong>: Inter-core communication for Tensor Parallelism is executed across dedicated <strong>NeuronLink</strong> ring interconnects.</li>
+</ol>
+<hr />
+<h2 id="summary-hardware-backend-capabilities-matrix">Summary: Hardware Backend Capabilities Matrix<a class="headerlink" href="#summary-hardware-backend-capabilities-matrix" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Hardware Platform</th>
+<th style="text-align: left;">Primary Architecture</th>
+<th style="text-align: left;">SIMD Unit</th>
+<th style="text-align: left;">Peak Memory Bandwidth</th>
+<th style="text-align: left;">Primary PagedAttention Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>NVIDIA Hopper (H100/H200)</strong></td>
+<td style="text-align: left;">GPU (Hopper / Ada)</td>
+<td style="text-align: left;">Warp (32 Threads)</td>
+<td style="text-align: left;"><span class="arithmatex">\(3.35 \dots 4.8 \text{ TB/s}\)</span></td>
+<td style="text-align: left;">PagedAttention V2 (CUDA C++) / FlashInfer</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AMD Instinct (MI300X)</strong></td>
+<td style="text-align: left;">GPU (CDNA 3)</td>
+<td style="text-align: left;">Wavefront (64 Threads)</td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(5.3 \text{ TB/s}\)</span></strong></td>
+<td style="text-align: left;">PagedAttention (HIP C++) / Composable Kernel</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Google TPU (v5p / Trillium)</strong></td>
+<td style="text-align: left;">Systolic Array (MXU)</td>
+<td style="text-align: left;">Vector / MXU Tile</td>
+<td style="text-align: left;">High HBM</td>
+<td style="text-align: left;">XLA Paged KV Custom Calls</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AWS Trainium / Inferentia2</strong></td>
+<td style="text-align: left;">Neuron Core</td>
+<td style="text-align: left;">Tensor / Vector Engine</td>
+<td style="text-align: left;"><span class="arithmatex">\(820 \text{ GB/s}\)</span></td>
+<td style="text-align: left;">AWS NKI Custom PagedAttention Kernels</td>
+</tr>
+</tbody>
+</table>
+<p>With <strong>Module 4</strong> complete, we transition to <strong>Module 5: Distributed Parallelism (<code>05_distributed_parallelism.md</code>)</strong>, where we explore how vLLM partitions massive frontier models across multiple GPUs and multi-node clusters using <strong>Tensor Parallelism (Megatron-LM)</strong>, <strong>Pipeline Parallelism</strong>, <strong>Context Parallelism (Ring-Attention)</strong>, and <strong>Expert Parallelism (MoE Routing)</strong>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
