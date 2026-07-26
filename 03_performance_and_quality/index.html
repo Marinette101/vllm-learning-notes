@@ -563,10 +563,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-the-weight-projection-myth-does-prefill-only-compute-kv-cache" class="md-nav__link">
+  <a href="#1-why-prefill-tokens-execute-full-attention-and-ffn-passes-across-all-layers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. The Weight Projection Myth: "Does Prefill only compute KV cache?"
+        1. Why Prefill Tokens Execute Full Attention and FFN Passes Across All Layers
       
     </span>
   </a>
@@ -574,13 +574,52 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-attention-flops-comparison-per-token" class="md-nav__link">
+  <a href="#2-quantitative-flop-breakdown-why-2times-vs-4times-attention-flops-is-negligible-s-8000" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Attention FLOPs Comparison per Token
+        2. Quantitative FLOP Breakdown: Why \(2\times\) vs \(4\times\) Attention FLOPs is Negligible (\(S &lt; 8,000\))
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="2. Quantitative FLOP Breakdown: Why \(2\times\) vs \(4\times\) Attention FLOPs is Negligible (\(S &lt; 8,000\))">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-linear-weight-projection-flops-identical-for-both" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Linear Weight Projection FLOPs (Identical for Both)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-attention-flops-per-token-at-context-length-s-1024" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Attention FLOPs per Token at Context Length \(S = 1,024\)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-total-flops-per-token-comparison-s-1024" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Total FLOPs per Token Comparison (\(S = 1,024\))
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1070,10 +1109,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-the-weight-projection-myth-does-prefill-only-compute-kv-cache" class="md-nav__link">
+  <a href="#1-why-prefill-tokens-execute-full-attention-and-ffn-passes-across-all-layers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. The Weight Projection Myth: "Does Prefill only compute KV cache?"
+        1. Why Prefill Tokens Execute Full Attention and FFN Passes Across All Layers
       
     </span>
   </a>
@@ -1081,13 +1120,52 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-attention-flops-comparison-per-token" class="md-nav__link">
+  <a href="#2-quantitative-flop-breakdown-why-2times-vs-4times-attention-flops-is-negligible-s-8000" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Attention FLOPs Comparison per Token
+        2. Quantitative FLOP Breakdown: Why \(2\times\) vs \(4\times\) Attention FLOPs is Negligible (\(S &lt; 8,000\))
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="2. Quantitative FLOP Breakdown: Why \(2\times\) vs \(4\times\) Attention FLOPs is Negligible (\(S &lt; 8,000\))">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-linear-weight-projection-flops-identical-for-both" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Linear Weight Projection FLOPs (Identical for Both)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-attention-flops-per-token-at-context-length-s-1024" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Attention FLOPs per Token at Context Length \(S = 1,024\)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-total-flops-per-token-comparison-s-1024" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Total FLOPs per Token Comparison (\(S = 1,024\))
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1520,32 +1598,55 @@
 <hr />
 <h3 id="24-systems-analysis-prefill-vs-decode-flops-arithmetic-intensity-and-cost-per-token">2.4 Systems Analysis: Prefill vs. Decode FLOPs, Arithmetic Intensity, and Cost per Token<a class="headerlink" href="#24-systems-analysis-prefill-vs-decode-flops-arithmetic-intensity-and-cost-per-token" title="Permanent link">&para;</a></h3>
 <p>A fundamental question in LLM serving performance is: <strong>Are FLOPs per token and execution costs identical between the Prefill phase and the Decode phase?</strong></p>
-<h4 id="1-the-weight-projection-myth-does-prefill-only-compute-kv-cache">1. The Weight Projection Myth: "Does Prefill only compute KV cache?"<a class="headerlink" href="#1-the-weight-projection-myth-does-prefill-only-compute-kv-cache" title="Permanent link">&para;</a></h4>
-<p>A common misconception is that prefill tokens "only calculate KV cache vectors" while decode tokens execute the model's full forward pass.</p>
-<p><strong>In reality, every single token passing through a Transformer layer—whether in Prefill or Decode—must pass through all linear weight projections</strong>:</p>
+<h4 id="1-why-prefill-tokens-execute-full-attention-and-ffn-passes-across-all-layers">1. Why Prefill Tokens Execute Full Attention and FFN Passes Across All Layers<a class="headerlink" href="#1-why-prefill-tokens-execute-full-attention-and-ffn-passes-across-all-layers" title="Permanent link">&para;</a></h4>
+<p>A common conceptual question is: <em>Why do intermediate prefill tokens compute Queries, Attention, and FFN passes at all if they are not predicting output tokens? Why isn't prefill just computing Key and Value vectors?</em></p>
+<p>There are three fundamental architectural reasons why prefill tokens must execute full Attention and FFN passes across every Transformer layer:</p>
+<ol>
+<li><strong>Layer-by-Layer Contextual Representation Building</strong>:
+    In a multi-layer Transformer (e.g., 80 layers in Llama 3 70B), raw token embeddings (<span class="arithmatex">\(X_0\)</span>) at Layer 0 contain only static dictionary meanings (e.g., the word <code>"Apple"</code>). As tokens pass through Layer 1, Layer 2, ..., Layer 80, attention allows token <span class="arithmatex">\(i\)</span> (<code>"Apple"</code>) to aggregate information from preceding tokens (<code>"introduced"</code>, <code>"new"</code>, <code>"iPhone"</code>), updating its hidden state representation <span class="arithmatex">\(h_i^{(l)}\)</span>.</li>
+<li><strong>KV Cache Vectors for Deeper Layers Depend on Hidden States (<span class="arithmatex">\(h_i^{(l)}\)</span>)</strong>:
+    Key and Value vectors for token <span class="arithmatex">\(i\)</span> at Layer <span class="arithmatex">\(l+1\)</span> are computed directly from token <span class="arithmatex">\(i\)</span>'s hidden state output from Layer <span class="arithmatex">\(l\)</span>:</li>
+</ol>
+<div class="arithmatex">\[
+K_i^{(l+1)} = h_i^{(l)} W_K^{(l+1)}, \quad V_i^{(l+1)} = h_i^{(l)} W_V^{(l+1)}
+\]</div>
+<div class="arithmatex">\[
+\text{where } h_i^{(l)} = h_i^{(l-1)} + \text{FFN}\left(\text{Attention}(h_i^{(l-1)})\right)
+\]</div>
+<p>To compute the KV cache vectors at Layer 40, token <span class="arithmatex">\(i\)</span> <strong>must</strong> execute full Attention and FFN passes at Layer 39. Without layer-by-layer attention and FFN passes, KV cache vectors at deeper layers would be un-contextualized and mathematically meaningless!
+3. <strong>Logit Generation for the Next Token</strong>:
+    The prompt's final token (<span class="arithmatex">\(s_{\text{prompt}}\)</span>) uses the contextual representation <span class="arithmatex">\(h_{s_{\text{prompt}}}^{(80)}\)</span> at Layer 80 to compute the logit distribution for the first generated decode token (<span class="arithmatex">\(s_{\text{prompt}}+1\)</span>). To produce <span class="arithmatex">\(h_{s_{\text{prompt}}}^{(80)}\)</span>, token <span class="arithmatex">\(s_{\text{prompt}}\)</span> must attend to all previous tokens <span class="arithmatex">\(1 \dots s_{\text{prompt}}-1\)</span> across all 80 layers.</p>
+<hr />
+<h4 id="2-quantitative-flop-breakdown-why-2times-vs-4times-attention-flops-is-negligible-s-8000">2. Quantitative FLOP Breakdown: Why <span class="arithmatex">\(2\times\)</span> vs <span class="arithmatex">\(4\times\)</span> Attention FLOPs is Negligible (<span class="arithmatex">\(S &lt; 8,000\)</span>)<a class="headerlink" href="#2-quantitative-flop-breakdown-why-2times-vs-4times-attention-flops-is-negligible-s-8000" title="Permanent link">&para;</a></h4>
+<p>Why do systems engineers state that raw FLOPs per token are nearly identical between Prefill and Decode, even though Prefill Attention FLOPs per token use a <span class="arithmatex">\(2\times\)</span> factor while Decode Attention FLOPs use a <span class="arithmatex">\(4\times\)</span> factor?</p>
+<p>Let's evaluate the exact FLOP breakdown for a <strong>70B parameter model</strong> (<span class="arithmatex">\(N = 70 \times 10^9\)</span>, <span class="arithmatex">\(L = 80\)</span>, <span class="arithmatex">\(h_q = 64\)</span>, <span class="arithmatex">\(d_{\text{head}} = 128\)</span>):</p>
+<h5 id="step-1-linear-weight-projection-flops-identical-for-both">Step 1: Linear Weight Projection FLOPs (Identical for Both)<a class="headerlink" href="#step-1-linear-weight-projection-flops-identical-for-both" title="Permanent link">&para;</a></h5>
+<p>For every token passing through the model in both Prefill and Decode, multiplying against all linear weight matrices (<span class="arithmatex">\(W_Q, W_K, W_V, W_O, W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}\)</span>) requires:</p>
+<div class="arithmatex">\[
+\text{FLOPs}_{\text{weights}} = 2 \cdot N = 2 \times 70 \times 10^9 = \mathbf{140 \text{ GFLOPs / token}}
+\]</div>
+<h5 id="step-2-attention-flops-per-token-at-context-length-s-1024">Step 2: Attention FLOPs per Token at Context Length <span class="arithmatex">\(S = 1,024\)</span><a class="headerlink" href="#step-2-attention-flops-per-token-at-context-length-s-1024" title="Permanent link">&para;</a></h5>
 <ul>
-<li>Query, Key, and Value projections (<span class="arithmatex">\(W_Q, W_K, W_V\)</span>)</li>
-<li>Multi-Head Output projection (<span class="arithmatex">\(W_O\)</span>)</li>
-<li>SwiGLU Feed-Forward Network projections (<span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}\)</span>)</li>
-</ul>
-<p>For an <span class="arithmatex">\(N\)</span>-parameter model (e.g., Llama 3 70B), <strong>both Prefill tokens and Decode tokens execute <span class="arithmatex">\(2 \cdot N\)</span> FLOPs per token for linear weight projections</strong> (<span class="arithmatex">\(\sim 140 \text{ GFLOPs/token}\)</span>).</p>
-<h4 id="2-attention-flops-comparison-per-token">2. Attention FLOPs Comparison per Token<a class="headerlink" href="#2-attention-flops-comparison-per-token" title="Permanent link">&para;</a></h4>
-<p>The difference in FLOPs per token arises solely within the Self-Attention mechanism (<span class="arithmatex">\(Q @ K^T\)</span> and <span class="arithmatex">\(\text{Softmax} @ V\)</span>):</p>
-<ul>
-<li><strong>Prefill Phase (Prompt of length <span class="arithmatex">\(S\)</span>)</strong>:
-  Prompt token <span class="arithmatex">\(i\)</span> (for <span class="arithmatex">\(i \in [1, S]\)</span>) computes attention over previous tokens <span class="arithmatex">\(1 \dots i\)</span>. The average attention FLOPs per token across the prompt is:</li>
+<li><strong>Prefill Phase (Average Attention FLOPs per token)</strong>:
+  In prefill, token <span class="arithmatex">\(i \in [1, S]\)</span> attends to <span class="arithmatex">\(i\)</span> previous tokens. Averaged across the prompt:</li>
 </ul>
 <div class="arithmatex">\[
-\text{FLOPs}_{\text{attn, prefill_per_token}} \approx 2 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S
+\text{FLOPs}_{\text{attn, prefill}} \approx 2 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S = 2 \times 80 \times 64 \times 128 \times 1,024 = \mathbf{1.34 \text{ GFLOPs / token}}
 \]</div>
 <ul>
-<li><strong>Decode Phase (Single token at position <span class="arithmatex">\(S\)</span>)</strong>:
-  The single decode token at position <span class="arithmatex">\(S\)</span> computes attention against all historical <span class="arithmatex">\(S\)</span> tokens stored in the KV cache:</li>
+<li><strong>Decode Phase (Single-Token Attention FLOPs)</strong>:
+  A single decode token at position <span class="arithmatex">\(S = 1,024\)</span> attends to all <span class="arithmatex">\(S\)</span> cached KV tokens (<span class="arithmatex">\(Q @ K^T\)</span> score calculation and <span class="arithmatex">\(\text{Softmax} @ V\)</span> weighted sum):</li>
 </ul>
 <div class="arithmatex">\[
-\text{FLOPs}_{\text{attn, decode_per_token}} \approx 4 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S
+\text{FLOPs}_{\text{attn, decode}} \approx 4 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S = 4 \times 80 \times 64 \times 128 \times 1,024 = \mathbf{2.68 \text{ GFLOPs / token}}
 \]</div>
-<p>For typical context lengths (<span class="arithmatex">\(S &lt; 8,000\)</span>), weight projections account for <span class="arithmatex">\(&gt; 95\%\)</span> of all mathematical FLOPs, making the <strong>raw FLOP count per token nearly identical between Prefill and Decode</strong>.</p>
+<h5 id="step-3-total-flops-per-token-comparison-s-1024">Step 3: Total FLOPs per Token Comparison (<span class="arithmatex">\(S = 1,024\)</span>)<a class="headerlink" href="#step-3-total-flops-per-token-comparison-s-1024" title="Permanent link">&para;</a></h5>
+<ul>
+<li><strong>Prefill Total FLOPs / token</strong>: <span class="arithmatex">\(140.0 + 1.34 = \mathbf{141.34 \text{ GFLOPs / token}}\)</span> (Attention is <span class="arithmatex">\(0.95\%\)</span> of total math).</li>
+<li><strong>Decode Total FLOPs / token</strong>: <span class="arithmatex">\(140.0 + 2.68 = \mathbf{142.68 \text{ GFLOPs / token}}\)</span> (Attention is <span class="arithmatex">\(1.88\%\)</span> of total math).</li>
+</ul>
+<div class="arithmatex">\[\text{Difference} = \frac{142.68 - 141.34}{141.34} = \mathbf{0.948\% \text{ difference!}}\]</div>
+<p>Even though Decode Attention FLOPs (<span class="arithmatex">\(2.68 \text{ GFLOPs}\)</span>) are <span class="arithmatex">\(2\times\)</span> Prefill Attention FLOPs (<span class="arithmatex">\(1.34 \text{ GFLOPs}\)</span>), <strong>Attention FLOPs as a whole are dwarfed by the massive <span class="arithmatex">\(140 \text{ GFLOPs}\)</span> of linear weight projections</strong>. For typical context lengths (<span class="arithmatex">\(S &lt; 8,000\)</span>), total FLOPs per token differ by less than <span class="arithmatex">\(3.6\%\)</span>.</p>
 <h4 id="3-the-true-bottleneck-difference-memory-bandwidth-vs-compute">3. The True Bottleneck Difference: Memory Bandwidth vs. Compute<a class="headerlink" href="#3-the-true-bottleneck-difference-memory-bandwidth-vs-compute" title="Permanent link">&para;</a></h4>
 <p>While raw FLOP counts per token are similar, <strong>the execution time and hardware cost per token are drastically different due to Arithmetic Intensity (<span class="arithmatex">\(I = \text{FLOPs} / \text{Bytes}\)</span>)</strong>:</p>
 <table>
