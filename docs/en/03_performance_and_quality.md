@@ -232,28 +232,46 @@ $$\text{Difference} = \frac{142.68 - 141.34}{141.34} = \mathbf{0.948\% \text{ di
 
 Even though Decode Attention FLOPs ($2.68 \text{ GFLOPs}$) are $2\times$ Prefill Attention FLOPs ($1.34 \text{ GFLOPs}$), **Attention FLOPs as a whole are dwarfed by the massive $140 \text{ GFLOPs}$ of linear weight projections**. For typical context lengths ($S < 8,000$), total FLOPs per token differ by less than $3.6\%$.
 
-#### 3. The True Bottleneck Difference: Memory Bandwidth vs. Compute
-While raw FLOP counts per token are similar, **the execution time and hardware cost per token are drastically different due to Arithmetic Intensity ($I = \text{FLOPs} / \text{Bytes}$)**:
+#### 3. The True Bottleneck Difference: Arithmetic Intensity ($I = \text{FLOPs} / \text{Bytes}$)
+While raw FLOP counts per token are nearly identical, **the execution time and hardware behavior per token are radically different due to Arithmetic Intensity ($I = \text{FLOPs} / \text{Memory Bytes Transferred}$)**:
+
+- **Decode Sequences ($64$ active decodes, $b=64$, $1$ token each)**:
+  For every single decode iteration step, the GPU must read the entire $140 \text{ GB}$ model weight matrix from HBM over the memory bus to process just $64$ tokens.
+  
+$$
+I_{\text{decode}} = \frac{64 \text{ tokens} \times 140 \text{ GFLOPs / token}}{140 \text{ GB weights read}} = \mathbf{64 \text{ FLOPs / Byte}}
+$$
+
+  Because $64 \text{ FLOPs / Byte} \ll I_{\text{ridge}} (295 \text{ FLOPs / Byte on H100})$, **the decode phase is memory-bandwidth bound**. The HBM memory bus is $100\%$ saturated, while GPU Tensor Cores sit **$> 75\%$ IDLE** waiting for weight bytes to arrive!
+
+- **Prefill Chunk ($N_{\text{chunk}} = 512$ prompt tokens processed together)**:
+  All $512$ prompt tokens are packed into a single GEMM matrix multiplication ($y = X @ W$, where $X \in \mathbb{R}^{512 \times d}$). The $140 \text{ GB}$ model weight matrix is read from HBM **once** and multiplied against all $512$ tokens simultaneously.
+
+$$
+I_{\text{prefill}} = \frac{512 \text{ tokens} \times 140 \text{ GFLOPs / token}}{140 \text{ GB weights read}} = \mathbf{512 \text{ FLOPs / Byte}}
+$$
+
+  Because $512 \text{ FLOPs / Byte} > I_{\text{ridge}} (295)$, **the prefill phase is compute-bound**, driving GPU Tensor Cores to **100% Peak Utilization**!
 
 | Execution Dimension | Prefill Phase (Prompt Evaluation) | Decode Phase (Token Generation) |
 | :--- | :--- | :--- |
 | **Operating Regime** | **Compute-Bound** ($I \gg I_{\text{ridge}}$) | **Memory-Bandwidth Bound** ($I \ll I_{\text{ridge}}$) |
-| **Tokens Processed per Weight Read** | $N_{\text{chunk}}$ tokens simultaneously (e.g., $512$) | $1$ token per sequence (e.g., batch size $b$) |
-| **Arithmetic Intensity ($I$)** | $I_{\text{prefill}} \approx \frac{2 \cdot N_{\text{chunk}} \cdot N}{2N} \approx 512 \text{ FLOPs/Byte}$ | $I_{\text{decode}} \approx \frac{2 \cdot b \cdot N}{2N} \approx 1 \dots 64 \text{ FLOPs/Byte}$ |
-| **GPU Tensor Core Utilization** | **100% Peak TFLOPs Capacity** | **$< 5\%$ Utilization** (Tensor Cores sit idle) |
-| **Execution Time Bottleneck** | FLOP Execution Speed on Tensor Cores | HBM Read Speed (Memory Bandwidth Bus) |
+| **Tokens Processed per Weight Read** | $N_{\text{chunk}}$ tokens simultaneously (e.g., $512$) | $1$ token per sequence (e.g., batch size $b = 64$) |
+| **Arithmetic Intensity ($I$)** | $I_{\text{prefill}} \approx \frac{512 \cdot 2N}{2N} \approx \mathbf{512 \text{ FLOPs/Byte}}$ | $I_{\text{decode}} \approx \frac{64 \cdot 2N}{2N} \approx \mathbf{64 \text{ FLOPs/Byte}}$ |
+| **GPU Hardware Bottleneck** | Tensor Core FLOP Compute Speed | HBM Memory Bandwidth Bus Speed |
+| **Tensor Core Utilization** | **100% Peak TFLOPs Capacity** | **$< 25\%$ Utilization** (Tensor Cores sit 75%+ idle) |
 
 ```mermaid
 flowchart TD
     subgraph DECODE_BENEFIT ["⚡ Why Co-Scheduling Prefill and Decode is a Win-Win"]
-        D_IDLE["Decode Phase: Reads 140 GB weights from HBM<br>Saturates Memory Bus | Tensor Cores sit 95% Idle"]
-        P_COMP["Prefill Chunk: Needs Tensor Core FLOPs math<br>Shares the exact same weight read pass from HBM"]
+        D_IDLE["Decode Phase (64 Tokens): Reads 140 GB weights from HBM<br>Saturates Memory Bus | Tensor Cores sit 75% Idle"]
+        P_COMP["Prefill Chunk (448 Tokens): Needs Tensor Core FLOPs math<br>Shares the exact same 140 GB weight read pass from HBM"]
         
-        D_IDLE & P_COMP --> FUSED["Co-Scheduled Iteration Step:<br>Tensor Cores process Prefill FLOPs while Memory Bus streams Decode weights!<br><b>Result: Near-Free Prefill Compute with Zero ITL Spikes</b>"]
+        D_IDLE & P_COMP --> FUSED["Co-Scheduled Batch (512 Total Tokens):<br>Tensor Cores process 448 Prefill FLOPs while Memory Bus streams 64 Decode weights!<br><b>Result: Near-Free Prefill Compute with Zero ITL Spikes</b>"]
     end
 ```
 
-This systems insight explains why Chunked Prefill and Co-Scheduling in vLLM is so effective: **because single-token decode steps leave GPU Tensor Cores mostly idle waiting for memory bandwidth, co-scheduling a prefill chunk alongside decode requests utilizes those idle compute cycles during the exact same memory-streaming pass**.
+This core systems insight explains why Chunked Prefill and Co-Scheduling in vLLM is so powerful: **because single-token decode steps leave GPU Tensor Cores mostly idle waiting for memory bandwidth, co-scheduling a prefill chunk ($448$ tokens) alongside decode requests ($64$ tokens) utilizes those idle compute cycles during the exact same memory-streaming pass, evaluating prefill prompt tokens at near-zero incremental time cost**.
 
 ---
 
