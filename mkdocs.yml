@@ -9,6 +9,7 @@ nav:
   - Module 3 - Performance and Quality: 03_performance_and_quality.md
   - Module 4 - Hardware and Kernel Optimization: 04_hardware_and_kernel_optimization.md
   - Module 5 - Distributed Parallelism: 05_distributed_parallelism.md
+  - Module 6 - Deployment and Orchestration: 06_deployment_and_orchestration.md
   - Appendix - Master Glossary: appendix_glossary_and_terminology.md
 
 theme:
