@@ -1812,18 +1812,22 @@ In GPU programming (CUDA / HIP / C++), a <strong>Kernel</strong> is not an opera
 <h3 id="32-cuda-graph-capture-and-replay-engine-in-vllm">3.2 CUDA Graph Capture and Replay Engine in vLLM<a class="headerlink" href="#32-cuda-graph-capture-and-replay-engine-in-vllm" title="Permanent link">&para;</a></h3>
 <p>To eliminate CPU host launch overhead, vLLM integrates <strong>CUDA Graphs</strong> (<code>torch.cuda.graph</code>).</p>
 <h4 id="1-how-cuda-graphs-work">1. How CUDA Graphs Work<a class="headerlink" href="#1-how-cuda-graphs-work" title="Permanent link">&para;</a></h4>
-<p>During engine initialization, vLLM performs a warm-up phase that records the exact sequence of CUDA kernel launches, memory addresses, and execution dependencies into a static GPU execution graph.</p>
+<p>During engine initialization (the "warm-up" phase), vLLM executes dummy forward passes while CUDA stream capture is active (<code>torch.cuda.graph</code>).</p>
+<p>Instead of executing the pass dynamically, the NVIDIA CUDA driver records:
+1. <strong>The exact sequence of function entry point addresses</strong> for all 400 CUDA kernels.
+2. <strong>The exact pre-allocated static GPU memory buffer pointers</strong> for inputs, intermediate activations, and outputs.
+3. <strong>The exact execution dependency graph</strong> (which kernel depends on which prior kernel).</p>
 <pre class="mermaid"><code>flowchart TD
     subgraph CAPTURE ["1. Warm-Up Phase: Graph Capture"]
-        C_EXEC["Execute Forward Pass for Fixed Batch Size b"] --&gt; C_REC["Record Kernel Launches and Dependencies into Static Graph"]
+        C_EXEC["Execute Forward Pass for Fixed Batch Size b"] --&gt; C_REC["Record Kernel Launch Sequences and Memory Addresses into Static Graph"]
     end
 
     subgraph REPLAY ["2. Production Execution: Single Graph Replay"]
-        R_LAUNCH["CPU Issues Single C-API Launch Call&lt;br&gt;cdata.cudaGraphLaunchGraph()"] --&gt; R_GPU["GPU Hardware Engine Executes Entire 400-Kernel Graph Instantly"]
+        R_LAUNCH["CPU Copies New Tokens to Static Input Buffer &amp; Calls Single C-API:&lt;br&gt;cudaGraphLaunch(graph_exec)"] --&gt; R_GPU["GPU Hardware Command Processor Executes Entire 400-Kernel Graph Autonomously!"]
     end
 
     CAPTURE ==&gt; REPLAY</code></pre>
-<p>During production inference, the CPU does not execute Python code or launch individual PyTorch kernels. Instead, the CPU issues a <strong>single <code>cudaGraphLaunch</code> C-API call (<span class="arithmatex">\(\approx 3 \ \mu\text{s}\)</span>)</strong>, handing full execution control over to the GPU's hardware engine.</p>
+<p>During production inference, the CPU does not construct or evaluate PyTorch code. The CPU simply copies the new token IDs into the static GPU input buffer (<code>in-place copy_</code>), and then issues a <strong>single <code>cudaGraphLaunch</code> C-API call (<span class="arithmatex">\(\approx 3 \ \mu\text{s}\)</span>)</strong>. The GPU hardware's internal command processor autonomously executes all 400 recorded kernels back-to-back at hardware speed!</p>
 <h4 id="2-fixed-size-batch-bucketing-and-static-input-buffers">2. Fixed-Size Batch Bucketing and Static Input Buffers<a class="headerlink" href="#2-fixed-size-batch-bucketing-and-static-input-buffers" title="Permanent link">&para;</a></h4>
 <p>CUDA Graphs require fixed memory addresses and fixed tensor shapes. Because active batch sizes fluctuate dynamically during continuous batching, vLLM maintains a pool of captured CUDA Graphs for discrete batch size buckets (e.g., <span class="arithmatex">\(b \in \{1, 2, 4, 8, 16, 32, 64, 128\}\)</span>).</p>
 <pre class="mermaid"><code>flowchart LR
