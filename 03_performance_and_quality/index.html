@@ -1,0 +1,1692 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An AI Engineering Textbook and Production Reference">
+      
+      
+        <meta name="author" content="linghuanym">
+      
+      
+      
+        <link rel="prev" href="../02_vllm_core_architecture/">
+      
+      
+        <link rel="next" href="../appendix_glossary_and_terminology/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="en">
+        
+          <link rel="alternate" href="../zh/03_performance_and_quality/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Module 3 - Performance and Quality - vLLM Core Architecture & Performance Mechanics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#module-3-performance-quality-and-engine-enhancements" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-header__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            vLLM Core Architecture & Performance Mechanics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Module 3 - Performance and Quality
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../zh/03_performance_and_quality/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-nav__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    vLLM Core Architecture & Performance Mechanics
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Curriculum & Principles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_llm_inference_fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 1 - Inference Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_vllm_core_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 2 - vLLM Core Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 3 - Performance and Quality
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 3 - Performance and Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-inference-performance-metrics-and-systems-trade-offs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: Inference Performance Metrics and Systems Trade-Offs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: Inference Performance Metrics and Systems Trade-Offs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-production-metric-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The Production Metric Hierarchy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.1 The Production Metric Hierarchy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-time-to-first-token-ttft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Time To First Token (TTFT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-inter-token-latency-itl-time-between-tokens-tbt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Inter-Token Latency (ITL / Time Between Tokens - TBT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-system-throughput-tokens-per-second" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. System Throughput (Tokens per Second)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-the-latency-throughput-pareto-frontier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 The Latency-Throughput Pareto Frontier
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-advanced-scheduling-chunked-prefill-and-co-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: Advanced Scheduling: Chunked Prefill and Co-Scheduling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: Advanced Scheduling: Chunked Prefill and Co-Scheduling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-the-head-of-line-hol-blocking-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 The Head-of-Line (HoL) Blocking Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-chunked-prefill-architecture-and-co-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Chunked Prefill Architecture and Co-Scheduling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-mathematical-scheduling-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Mathematical Scheduling Constraints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3 Mathematical Scheduling Constraints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quantitative-scheduling-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quantitative Scheduling Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-execution-overhead-minimization-cuda-graphs-and-compiled-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-the-cpu-gpu-host-overhead-bottleneck" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 The CPU-GPU Host Overhead Bottleneck
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-cuda-graph-capture-and-replay-engine-in-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 CUDA Graph Capture and Replay Engine in vLLM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 CUDA Graph Capture and Replay Engine in vLLM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-how-cuda-graphs-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. How CUDA Graphs Work
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-fixed-size-batch-bucketing-and-static-input-buffers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Fixed-Size Batch Bucketing and Static Input Buffers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-speculative-decoding-multi-token-verification-pipelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Speculative Decoding: Multi-Token Verification Pipelines
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Speculative Decoding: Multi-Token Verification Pipelines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-the-fundamental-principle-of-speculative-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 The Fundamental Principle of Speculative Decoding
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.1 The Fundamental Principle of Speculative Decoding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mathematical-distribution-preservation-modified-rejection-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mathematical Distribution Preservation (Modified Rejection Sampling)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-speculative-architectures-in-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Speculative Architectures in vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-tree-based-attention-verification-kernels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Tree-Based Attention Verification Kernels
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-quantization-precision-compression-and-kernel-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5: Quantization: Precision, Compression, and Kernel Engineering
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 5: Quantization: Precision, Compression, and Kernel Engineering">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-quantization-taxonomy-in-production-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Quantization Taxonomy in Production Inference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 Quantization Taxonomy in Production Inference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-weight-only-quantization-awq-gptq-marlin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Weight-Only Quantization (AWQ / GPTQ / Marlin)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-weight-and-activation-quantization-fp8-w8a8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Weight-and-Activation Quantization (FP8 / W8A8)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-kv-cache-quantization-fp8-int8-kv-blocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 KV Cache Quantization (FP8 / INT8 KV Blocks)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 KV Cache Quantization (FP8 / INT8 KV Blocks)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-physical-storage-transformation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Physical Storage Transformation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-impact-on-serving-concurrency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Impact on Serving Concurrency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-quantitative-performance-and-accuracy-trade-off-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Quantitative Performance and Accuracy Trade-Off Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-the-integrated-performance-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: The Integrated Performance Stack
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix_glossary_and_terminology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix - Master Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-inference-performance-metrics-and-systems-trade-offs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: Inference Performance Metrics and Systems Trade-Offs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: Inference Performance Metrics and Systems Trade-Offs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-production-metric-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The Production Metric Hierarchy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.1 The Production Metric Hierarchy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-time-to-first-token-ttft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Time To First Token (TTFT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-inter-token-latency-itl-time-between-tokens-tbt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Inter-Token Latency (ITL / Time Between Tokens - TBT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-system-throughput-tokens-per-second" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. System Throughput (Tokens per Second)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-the-latency-throughput-pareto-frontier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 The Latency-Throughput Pareto Frontier
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-advanced-scheduling-chunked-prefill-and-co-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: Advanced Scheduling: Chunked Prefill and Co-Scheduling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: Advanced Scheduling: Chunked Prefill and Co-Scheduling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-the-head-of-line-hol-blocking-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 The Head-of-Line (HoL) Blocking Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-chunked-prefill-architecture-and-co-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Chunked Prefill Architecture and Co-Scheduling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-mathematical-scheduling-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Mathematical Scheduling Constraints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3 Mathematical Scheduling Constraints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quantitative-scheduling-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quantitative Scheduling Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-execution-overhead-minimization-cuda-graphs-and-compiled-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-the-cpu-gpu-host-overhead-bottleneck" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 The CPU-GPU Host Overhead Bottleneck
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-cuda-graph-capture-and-replay-engine-in-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 CUDA Graph Capture and Replay Engine in vLLM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 CUDA Graph Capture and Replay Engine in vLLM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-how-cuda-graphs-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. How CUDA Graphs Work
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-fixed-size-batch-bucketing-and-static-input-buffers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Fixed-Size Batch Bucketing and Static Input Buffers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-speculative-decoding-multi-token-verification-pipelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Speculative Decoding: Multi-Token Verification Pipelines
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Speculative Decoding: Multi-Token Verification Pipelines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-the-fundamental-principle-of-speculative-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 The Fundamental Principle of Speculative Decoding
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.1 The Fundamental Principle of Speculative Decoding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mathematical-distribution-preservation-modified-rejection-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mathematical Distribution Preservation (Modified Rejection Sampling)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-speculative-architectures-in-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Speculative Architectures in vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-tree-based-attention-verification-kernels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Tree-Based Attention Verification Kernels
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-quantization-precision-compression-and-kernel-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5: Quantization: Precision, Compression, and Kernel Engineering
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 5: Quantization: Precision, Compression, and Kernel Engineering">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-quantization-taxonomy-in-production-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Quantization Taxonomy in Production Inference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 Quantization Taxonomy in Production Inference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-weight-only-quantization-awq-gptq-marlin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Weight-Only Quantization (AWQ / GPTQ / Marlin)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-weight-and-activation-quantization-fp8-w8a8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Weight-and-Activation Quantization (FP8 / W8A8)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-kv-cache-quantization-fp8-int8-kv-blocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 KV Cache Quantization (FP8 / INT8 KV Blocks)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 KV Cache Quantization (FP8 / INT8 KV Blocks)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-physical-storage-transformation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Physical Storage Transformation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-impact-on-serving-concurrency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Impact on Serving Concurrency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-quantitative-performance-and-accuracy-trade-off-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Quantitative Performance and Accuracy Trade-Off Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-the-integrated-performance-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: The Integrated Performance Stack
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="module-3-performance-quality-and-engine-enhancements">Module 3: Performance, Quality and Engine Enhancements<a class="headerlink" href="#module-3-performance-quality-and-engine-enhancements" title="Permanent link">&para;</a></h1>
+<p>To achieve high-throughput, low-latency Large Language Model (LLM) serving in production, modern inference engines must optimize beyond basic virtual memory management. While PagedAttention resolves Key-Value (KV) cache memory fragmentation, serving systems face three fundamental performance bottlenecks: <strong>inter-token latency spikes caused by long prompt pre-fills</strong>, <strong>CPU host execution overhead during repetitive kernel launches</strong>, and <strong>memory bandwidth saturation during autoregressive decoding</strong>.</p>
+<p>This module explores the core performance mechanics and engine enhancements designed into vLLM to overcome these bottlenecks, covering <strong>Inference Performance Metrics</strong>, <strong>Chunked Prefill</strong>, <strong>CUDA Graph Execution</strong>, <strong>Speculative Decoding</strong>, and <strong>Model/KV Cache Quantization</strong>.</p>
+<hr />
+<h2 id="part-1-inference-performance-metrics-and-systems-trade-offs">Part 1: Inference Performance Metrics and Systems Trade-Offs<a class="headerlink" href="#part-1-inference-performance-metrics-and-systems-trade-offs" title="Permanent link">&para;</a></h2>
+<p>To evaluate and optimize serving performance, AI systems engineers distinguish between <strong>responsiveness (latency)</strong> and <strong>capacity (throughput)</strong>. In LLM serving, single-request latency is split into two distinct execution phases.</p>
+<pre class="mermaid"><code>flowchart LR
+    REQ["📥 User Request Arrives"] --&gt; PREFILL["⚡ Prefill Phase (Prompt Evaluation)&lt;br&gt;Compute-Bound | Parallel Tensor Pass"]
+    PREFILL --&gt; TTFT_MARK["⏱️ TTFT (Time To First Token)"]
+    TTFT_MARK --&gt; DECODE["🔄 Decode Phase (Autoregressive Token Generation)&lt;br&gt;Memory-Bound | Sequential Forward Passes"]
+    DECODE --&gt; ITL_MARK["⏱️ ITL / TBT (Inter-Token Latency)"]</code></pre>
+<h3 id="11-the-production-metric-hierarchy">1.1 The Production Metric Hierarchy<a class="headerlink" href="#11-the-production-metric-hierarchy" title="Permanent link">&para;</a></h3>
+<h4 id="1-time-to-first-token-ttft">1. Time To First Token (TTFT)<a class="headerlink" href="#1-time-to-first-token-ttft" title="Permanent link">&para;</a></h4>
+<p><strong>Time To First Token (TTFT)</strong> measures the elapsed time from when a user submits a prompt to when the engine emits the very first generated token.</p>
+<div class="arithmatex">\[
+\text{TTFT} = t_{\text{queue}} + t_{\text{prefill}}
+\]</div>
+<p>Where:</p>
+<ul>
+<li><span class="arithmatex">\(t_{\text{queue}}\)</span>: Time spent waiting in the engine's <code>Waiting</code> queue for free High-Bandwidth Memory (HBM) KV blocks and execution budget.</li>
+<li><span class="arithmatex">\(t_{\text{prefill}}\)</span>: Time required to execute the compute-bound prompt prefill pass across all <span class="arithmatex">\(s_{\text{prompt}}\)</span> input tokens.</li>
+</ul>
+<p>TTFT is the primary metric for user-perceived engine responsiveness. Long prompt evaluations (e.g., 32,768 tokens) or heavy queue contention degrade TTFT.</p>
+<h4 id="2-inter-token-latency-itl-time-between-tokens-tbt">2. Inter-Token Latency (ITL / Time Between Tokens - TBT)<a class="headerlink" href="#2-inter-token-latency-itl-time-between-tokens-tbt" title="Permanent link">&para;</a></h4>
+<p><strong>Inter-Token Latency (ITL)</strong>, also known as <strong>Time Between Tokens (TBT)</strong>, measures the time elapsed between generating consecutive output tokens during the autoregressive decoding phase.</p>
+<div class="arithmatex">\[
+\text{ITL} = t_{\text{decode_step}} = \frac{\text{Total Bytes Transferred}}{\text{Memory Bandwidth}} + \frac{\text{FLOPs}}{\text{Peak Compute Capacity}}
+\]</div>
+<p>Because single-token decoding is memory-bandwidth bound (<span class="arithmatex">\(I \approx 1.0 \text{ FLOPs/Byte}\)</span>), ITL is governed by how fast the GPU reads model weights and KV cache blocks from off-chip HBM into on-chip SRAM. Consistent ITL is required for smooth streaming user experiences (typically targeting <span class="arithmatex">\(20 \text{ to } 50 \text{ ms/token}\)</span>).</p>
+<h4 id="3-system-throughput-tokens-per-second">3. System Throughput (Tokens per Second)<a class="headerlink" href="#3-system-throughput-tokens-per-second" title="Permanent link">&para;</a></h4>
+<p><strong>System Throughput</strong> measures the total aggregate number of output tokens generated across all active requests per unit time.</p>
+<div class="arithmatex">\[
+\text{Throughput} = \frac{\sum_{i=1}^{b} N_{\text{gen_tokens}, i}}{\Delta t} = \frac{b}{\text{Average ITL}}
+\]</div>
+<p>Where:</p>
+<ul>
+<li><span class="arithmatex">\(b\)</span>: Concurrent batch size (number of actively generating sequences).</li>
+<li><span class="arithmatex">\(N_{\text{gen_tokens}, i}\)</span>: Output tokens produced by sequence <span class="arithmatex">\(i\)</span>.</li>
+</ul>
+<hr />
+<h3 id="12-the-latency-throughput-pareto-frontier">1.2 The Latency-Throughput Pareto Frontier<a class="headerlink" href="#12-the-latency-throughput-pareto-frontier" title="Permanent link">&para;</a></h3>
+<p>In high-concurrency production serving, latency and throughput stand in direct conflict.</p>
+<pre class="mermaid"><code>flowchart TD
+    CONFIG["⚙️ Batch Size Configuration"] --&gt; SMALL_B["Small Batch Size (b = 1..8)"]
+    CONFIG --&gt; LARGE_B["Large Batch Size (b = 64..256)"]
+
+    SMALL_B --&gt; S_PERF["⚡ Low ITL (Ultra-Fast Response)&lt;br&gt;❌ Low Throughput (GPU Compute Under-utilized)"]
+    LARGE_B --&gt; L_PERF["🚀 High Aggregate Throughput (Max Tokens/sec)&lt;br&gt;⚠️ Higher ITL (Memory Bus Competition)"]</code></pre>
+<p>When batch size <span class="arithmatex">\(b\)</span> increases:</p>
+<ul>
+<li><strong>HBM Weight Reuse</strong>: The engine reads model weights from HBM once and reuses them across <span class="arithmatex">\(b\)</span> sequences, increasing arithmetic intensity <span class="arithmatex">\(I\)</span> toward the GPU Ridge Point.</li>
+<li><strong>Aggregate Throughput Increases</strong>: Total token generation capacity scales near-linearly with <span class="arithmatex">\(b\)</span>.</li>
+<li><strong>Per-User ITL Increases</strong>: The total KV cache bytes read from HBM increase (<span class="arithmatex">\(2 \cdot b \cdot s \cdot L \cdot h_{\text{kv}} \cdot d_{\text{head}} \cdot \text{sizeof(dtype)}\)</span>), causing each decoding iteration step to take slightly longer.</li>
+</ul>
+<p>Systems engineers select operating points on the <strong>Latency-Throughput Pareto Frontier</strong> based on application requirements: real-time conversational agents prioritize low ITL (<span class="arithmatex">\(b = 4 \dots 16\)</span>), while offline batch processing prioritizes maximum throughput (<span class="arithmatex">\(b = 64 \dots 256\)</span>).</p>
+<hr />
+<h2 id="part-2-advanced-scheduling-chunked-prefill-and-co-scheduling">Part 2: Advanced Scheduling: Chunked Prefill and Co-Scheduling<a class="headerlink" href="#part-2-advanced-scheduling-chunked-prefill-and-co-scheduling" title="Permanent link">&para;</a></h2>
+<p>In traditional LLM engines, prompt prefill passes and token decode steps are executed separately. This design creates a severe performance hazard known as <strong>Head-of-Line (HoL) Blocking</strong>.</p>
+<h3 id="21-the-head-of-line-hol-blocking-problem">2.1 The Head-of-Line (HoL) Blocking Problem<a class="headerlink" href="#21-the-head-of-line-hol-blocking-problem" title="Permanent link">&para;</a></h3>
+<p>Suppose an engine is actively generating tokens for 64 concurrent user requests with a smooth ITL of <span class="arithmatex">\(25 \text{ ms/token}\)</span>. Suddenly, a new request arrives containing a massive <span class="arithmatex">\(32,768\)</span>-token document prompt.</p>
+<p>If the engine schedules the entire <span class="arithmatex">\(32,768\)</span>-token prompt prefill in a single un-chunked forward pass:</p>
+<ol>
+<li>The prefill pass requires a large forward computation across all 32.7K tokens simultaneously.</li>
+<li>On an NVIDIA H100, a 32.7K prefill forward pass on a 70B model requires <span class="arithmatex">\(\sim 500 \text{ ms}\)</span> of continuous GPU compute.</li>
+<li><strong>The Consequence</strong>: All 64 generating decode requests are blocked waiting for the prefill pass to conclude, causing an ITL spike from <span class="arithmatex">\(25 \text{ ms}\)</span> to <span class="arithmatex">\(&gt; 500 \text{ ms}\)</span>—creating a visible freeze in user-facing streaming output.</li>
+</ol>
+<hr />
+<h3 id="22-chunked-prefill-architecture-and-co-scheduling">2.2 Chunked Prefill Architecture and Co-Scheduling<a class="headerlink" href="#22-chunked-prefill-architecture-and-co-scheduling" title="Permanent link">&para;</a></h3>
+<p>To eliminate HoL blocking, vLLM implements <strong>Chunked Prefill</strong> (<code>v0.4+</code>).</p>
+<p>Rather than executing a long prompt prefill in a single forward pass, the scheduler breaks incoming prompts into smaller, budget-bounded logical segments called <strong>Prefill Chunks</strong> (controlled by <code>max_num_batched_tokens</code>, typically set to <span class="arithmatex">\(512\)</span> or <span class="arithmatex">\(2,048\)</span> tokens).</p>
+<pre class="mermaid"><code>flowchart TD
+    PROMPT["📄 Incoming Long Request (32,768 Tokens)"] --&gt; CHUNKER["✂️ vLLM Chunking Engine"]
+
+    CHUNKER --&gt; C1["Chunk 0 (Tokens 0..511)"]
+    CHUNKER --&gt; C2["Chunk 1 (Tokens 512..1023)"]
+    CHUNKER --&gt; C3["... Chunk 63 (Tokens 32256..32767)"]
+
+    subgraph CO_SCHED ["⚡ Iteration t: Prefill-Decode Co-Scheduling"]
+        C1 --&gt; BATCH["Dynamic Forward Pass Batch"]
+        D_REQS["64 Active Single-Token Decode Requests"] --&gt; BATCH
+        BATCH --&gt; KERNEL["PagedAttention Co-Execution Kernel&lt;br&gt;Total Tokens = 512 Prefill + 64 Decode = 576 Tokens"]
+    end</code></pre>
+<p>During each iteration step <span class="arithmatex">\(t\)</span>, the scheduler co-schedules:</p>
+<ol>
+<li><strong>Active Decode Tokens</strong>: <span class="arithmatex">\(b_{\text{decode}}\)</span> single tokens from running requests.</li>
+<li><strong>Partial Prefill Chunk</strong>: <span class="arithmatex">\(N_{\text{chunk}}\)</span> tokens from an incoming prompt.</li>
+</ol>
+<p>By bounding total tokens per iteration step (<span class="arithmatex">\(\text{Tokens}_{\text{total}} = N_{\text{chunk}} + b_{\text{decode}} \le \text{max_num_batched_tokens}\)</span>), iteration step latency remains bounded, guaranteeing strict ITL SLAs while continuously advancing long prompt prefills in the background.</p>
+<hr />
+<h3 id="23-mathematical-scheduling-constraints">2.3 Mathematical Scheduling Constraints<a class="headerlink" href="#23-mathematical-scheduling-constraints" title="Permanent link">&para;</a></h3>
+<p>During iteration step <span class="arithmatex">\(t\)</span>, the vLLM iteration scheduler evaluates three quantitative budget constraints:</p>
+<div class="arithmatex">\[
+\sum_{i \in \text{Prefills}} N_{\text{chunk}, i} + \sum_{j \in \text{Decodes}} 1 \le \text{max_num_batched_tokens}
+\]</div>
+<div class="arithmatex">\[
+|\text{Prefills}| + |\text{Decodes}| \le \text{max_num_seqs}
+\]</div>
+<div class="arithmatex">\[
+\text{Required_Blocks}(\text{Prefills}) + \text{Required_Blocks}(\text{Decodes}) \le \text{Free_HBM_Blocks}
+\]</div>
+<h4 id="quantitative-scheduling-example">Quantitative Scheduling Example<a class="headerlink" href="#quantitative-scheduling-example" title="Permanent link">&para;</a></h4>
+<p>Consider a vLLM configuration with:</p>
+<ul>
+<li><code>max_num_batched_tokens = 512</code></li>
+<li><code>max_num_seqs = 256</code></li>
+<li>Active Running Decode Requests: <span class="arithmatex">\(b_{\text{decode}} = 64\)</span> tokens</li>
+<li>Incoming Waiting Request Prompt Length: <span class="arithmatex">\(s_{\text{prompt}} = 2,048\)</span> tokens</li>
+</ul>
+<p>The scheduler executes the following budget allocation:</p>
+<ol>
+<li><strong>Decode Reservation</strong>: Allocates <span class="arithmatex">\(64\)</span> tokens for active decode requests (<span class="arithmatex">\(512 - 64 = 448\)</span> remaining token budget).</li>
+<li><strong>Chunked Prefill Allocation</strong>: Takes <span class="arithmatex">\(448\)</span> tokens from the incoming <span class="arithmatex">\(2,048\)</span>-token prompt (Chunk 0).</li>
+<li><strong>Execution Batch</strong>: Schedules <span class="arithmatex">\(448\)</span> prompt prefill tokens <span class="arithmatex">\(+ \ 64\)</span> decode tokens <span class="arithmatex">\(= 512\)</span> total tokens in the iteration step.</li>
+<li><strong>State Tracking</strong>: The incoming request moves to <code>Running</code> state. In the next iteration step <span class="arithmatex">\(t+1\)</span>, Chunk 1 (<span class="arithmatex">\(448\)</span> tokens) is scheduled alongside the active decodes until the full <span class="arithmatex">\(2,048\)</span> prompt tokens are evaluated.</li>
+</ol>
+<hr />
+<h2 id="part-3-execution-overhead-minimization-cuda-graphs-and-compiled-workflows">Part 3: Execution Overhead Minimization: CUDA Graphs and Compiled Workflows<a class="headerlink" href="#part-3-execution-overhead-minimization-cuda-graphs-and-compiled-workflows" title="Permanent link">&para;</a></h2>
+<p>While memory bandwidth bounds GPU execution during single-token decoding, CPU-side execution overhead presents a distinct performance bottleneck at small batch sizes.</p>
+<h3 id="31-the-cpu-gpu-host-overhead-bottleneck">3.1 The CPU-GPU Host Overhead Bottleneck<a class="headerlink" href="#31-the-cpu-gpu-host-overhead-bottleneck" title="Permanent link">&para;</a></h3>
+<p>Executing a single Transformer forward pass requires launching dozens of CUDA kernels per layer (RMSNorm, QKV projection, RoPE rotation, PagedAttention, SwiGLU Gate/Up/Down projections, Residual additions). For an 80-layer model like Llama 3 70B, a single forward pass executes <strong>over 400 individual CUDA kernel launches</strong>.</p>
+<pre class="mermaid"><code>flowchart LR
+    subgraph CPU_LAUNCH ["🐢 CPU Host Launch Bottleneck (Without CUDA Graphs)"]
+        CPU["CPU Python Interpreter"] --&gt;|"Launch Kernel 1 (10 us)"| K1["GPU Kernel 1"]
+        CPU --&gt;|"Launch Kernel 2 (10 us)"| K2["GPU Kernel 2"]
+        CPU --&gt;|"Launch Kernel 400..."| K400["GPU Kernel 400"]
+        NOTE1["CPU Launch Overhead: 400 kernels * 10 us = 4,000 us (4.0 ms)&lt;br&gt;Actual GPU Execution Time: 1.5 ms&lt;br&gt;&lt;b&gt;Result: GPU sits idle waiting for CPU!&lt;/b&gt;"]
+    end</code></pre>
+<p>At small batch sizes (<span class="arithmatex">\(b = 1 \dots 4\)</span>), GPU kernel execution time for a layer is extremely fast (<span class="arithmatex">\(&lt; 2 \ \mu\text{s}\)</span>). If CPU PyTorch launch overhead takes <span class="arithmatex">\(10 \dots 15 \ \mu\text{s}\)</span> per kernel, <strong>the GPU spends over 70% of its time completely idle waiting for the CPU to issue the next launch command</strong>.</p>
+<hr />
+<h3 id="32-cuda-graph-capture-and-replay-engine-in-vllm">3.2 CUDA Graph Capture and Replay Engine in vLLM<a class="headerlink" href="#32-cuda-graph-capture-and-replay-engine-in-vllm" title="Permanent link">&para;</a></h3>
+<p>To eliminate CPU host launch overhead, vLLM integrates <strong>CUDA Graphs</strong> (<code>torch.cuda.graph</code>).</p>
+<h4 id="1-how-cuda-graphs-work">1. How CUDA Graphs Work<a class="headerlink" href="#1-how-cuda-graphs-work" title="Permanent link">&para;</a></h4>
+<p>During engine initialization, vLLM performs a warm-up phase that records the exact sequence of CUDA kernel launches, memory addresses, and execution dependencies into a static GPU execution graph.</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph CAPTURE ["1. Warm-Up Phase: Graph Capture"]
+        C_EXEC["Execute Forward Pass for Fixed Batch Size b"] --&gt; C_REC["Record Kernel Launches and Dependencies into Static Graph"]
+    end
+
+    subgraph REPLAY ["2. Production Execution: Single Graph Replay"]
+        R_LAUNCH["CPU Issues Single C-API Launch Call&lt;br&gt;cdata.cudaGraphLaunchGraph()"] --&gt; R_GPU["GPU Hardware Engine Executes Entire 400-Kernel Graph Instantly"]
+    end
+
+    CAPTURE ==&gt; REPLAY</code></pre>
+<p>During production inference, the CPU does not execute Python code or launch individual PyTorch kernels. Instead, the CPU issues a <strong>single <code>cudaGraphLaunch</code> C-API call (<span class="arithmatex">\(\approx 3 \ \mu\text{s}\)</span>)</strong>, handing full execution control over to the GPU's hardware engine.</p>
+<h4 id="2-fixed-size-batch-bucketing-and-static-input-buffers">2. Fixed-Size Batch Bucketing and Static Input Buffers<a class="headerlink" href="#2-fixed-size-batch-bucketing-and-static-input-buffers" title="Permanent link">&para;</a></h4>
+<p>CUDA Graphs require fixed memory addresses and fixed tensor shapes. Because active batch sizes fluctuate dynamically during continuous batching, vLLM maintains a pool of captured CUDA Graphs for discrete batch size buckets (e.g., <span class="arithmatex">\(b \in \{1, 2, 4, 8, 16, 32, 64, 128\}\)</span>).</p>
+<pre class="mermaid"><code>flowchart LR
+    CUR_B["Active Batch Size: b = 5 Sequences"] --&gt; BUCKET["Select Next Bucket: b_graph = 8"]
+    BUCKET --&gt; PAD["Pad Input Tensor to 8 Rows&lt;br&gt;(3 Dummy Padding Rows)"]
+    PAD --&gt; REPLAY["Launch Pre-Captured CUDA Graph for b = 8"]</code></pre>
+<p>Before launching the CUDA Graph, vLLM copies input token IDs, block table pointers, and slot mapping indices into pre-allocated static GPU memory buffers using fast <code>in-place</code> memory operations (<code>copy_</code>), ensuring zero memory re-allocations during graph execution.</p>
+<hr />
+<h2 id="part-4-speculative-decoding-multi-token-verification-pipelines">Part 4: Speculative Decoding: Multi-Token Verification Pipelines<a class="headerlink" href="#part-4-speculative-decoding-multi-token-verification-pipelines" title="Permanent link">&para;</a></h2>
+<p>While CUDA Graphs eliminate CPU overhead, single-token decode passes remain memory-bandwidth bound. <strong>Speculative Decoding</strong> alters this trade-off by generating multiple candidate tokens per forward pass.</p>
+<h3 id="41-the-fundamental-principle-of-speculative-decoding">4.1 The Fundamental Principle of Speculative Decoding<a class="headerlink" href="#41-the-fundamental-principle-of-speculative-decoding" title="Permanent link">&para;</a></h3>
+<p>Autoregressive decoding generates tokens one by one because each token depends on the previous token's hidden state. However, <strong>verifying</strong> a sequence of <span class="arithmatex">\(K\)</span> candidate tokens simultaneously requires only a single prefill-style forward pass across all <span class="arithmatex">\(K\)</span> tokens.</p>
+<pre class="mermaid"><code>flowchart TD
+    DRAFT["1. Draft Phase (Fast Mechanism)&lt;br&gt;Generate K Candidate Tokens: [y1, y2, y3, y4, y5]"] --&gt; TARGET["2. Target Phase (Large Engine)&lt;br&gt;Execute Single Verification Forward Pass across all K Candidates"]
+    TARGET --&gt; VERIFY{"3. Statistical Verification Step&lt;br&gt;(Rejection Sampling)"}
+
+    VERIFY --&gt;|"Accept y1..y3"| ACCEPT["Accept 3 Tokens Instantly!&lt;br&gt;Effective Step Speedup = 3x"]
+    VERIFY --&gt;|"Reject y4"| REJECT["Resample y4 from Corrected Distribution&lt;br&gt;Discard y5"]</code></pre>
+<p>By leveraging the memory bandwidth efficiency of batched verification, Speculative Decoding generates <span class="arithmatex">\(\gamma &gt; 1\)</span> accepted tokens per target model forward pass without altering the target model's output probability distribution.</p>
+<h4 id="mathematical-distribution-preservation-modified-rejection-sampling">Mathematical Distribution Preservation (Modified Rejection Sampling)<a class="headerlink" href="#mathematical-distribution-preservation-modified-rejection-sampling" title="Permanent link">&para;</a></h4>
+<p>Let <span class="arithmatex">\(q(x)\)</span> be the draft model probability distribution and <span class="arithmatex">\(p(x)\)</span> be the target model probability distribution for token <span class="arithmatex">\(x\)</span>.</p>
+<p>For candidate token <span class="arithmatex">\(x\)</span>:</p>
+<ol>
+<li>Calculate acceptance probability:</li>
+</ol>
+<div class="arithmatex">\[
+P(\text{accept } x) = \min\left(1, \frac{p(x)}{q(x)}\right)
+\]</div>
+<ol>
+<li>If <span class="arithmatex">\(x\)</span> is accepted, proceed to evaluate the next candidate token <span class="arithmatex">\(x_{i+1}\)</span>.</li>
+<li>If <span class="arithmatex">\(x\)</span> is rejected at index <span class="arithmatex">\(i\)</span>, discard candidate tokens <span class="arithmatex">\(x_i \dots x_K\)</span>, and sample a replacement token <span class="arithmatex">\(x_i'\)</span> from the adjusted distribution:</li>
+</ol>
+<div class="arithmatex">\[
+p'(x) = \max\left(0, \frac{p(x) - q(x)}{1 - \sum_w \min(p(w), q(w))}\right)
+\]</div>
+<p>This sampling rule guarantees that the final output token distribution matches <span class="arithmatex">\(p(x)\)</span> exactly.</p>
+<hr />
+<h3 id="42-speculative-architectures-in-vllm">4.2 Speculative Architectures in vLLM<a class="headerlink" href="#42-speculative-architectures-in-vllm" title="Permanent link">&para;</a></h3>
+<p>vLLM supports four primary speculative drafting mechanisms:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Speculative Mechanism</th>
+<th style="text-align: left;">Draft Generation Source</th>
+<th style="text-align: left;">Parameter Overhead</th>
+<th style="text-align: left;">Best Production Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Draft Model Speculation</strong></td>
+<td style="text-align: left;">Separate small LLM (e.g., Llama-3-8B drafting for 70B)</td>
+<td style="text-align: left;">Requires memory for draft model weights</td>
+<td style="text-align: left;">High-concurrency servers with available GPU memory</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Medusa (Multi-Head)</strong></td>
+<td style="text-align: left;">Extra linear prediction heads on top of Target model</td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 1\% \dots 2\%\)</span> additional weights</td>
+<td style="text-align: left;">Single-model setups wanting zero extra model loading</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>EAGLE / EAGLE-2</strong></td>
+<td style="text-align: left;">Lightweight Transformer layer processing hidden states</td>
+<td style="text-align: left;">Low overhead (<span class="arithmatex">\(\sim 2\% \dots 5\%\)</span>)</td>
+<td style="text-align: left;">High token acceptance rates (<span class="arithmatex">\(\gamma &gt; 3.0\)</span>) across complex tasks</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Prompt Lookup (N-Gram)</strong></td>
+<td style="text-align: left;">Heuristic string matching against input prompt</td>
+<td style="text-align: left;"><strong>Zero parameter overhead (<span class="arithmatex">\(0 \text{ bytes}\)</span>)</strong></td>
+<td style="text-align: left;">Summarization, document Q&amp;A, and code editing</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="43-tree-based-attention-verification-kernels">4.3 Tree-Based Attention Verification Kernels<a class="headerlink" href="#43-tree-based-attention-verification-kernels" title="Permanent link">&para;</a></h3>
+<p>Rather than drafting a single linear candidate chain (<span class="arithmatex">\([y_1, y_2, y_3]\)</span>), advanced speculative algorithms (Medusa, EAGLE, Tree-Drafting) generate a <strong>branching tree of candidate token paths</strong>.</p>
+<pre class="mermaid"><code>flowchart TD
+    ROOT["Root Token (y0)"] --&gt; B1["Branch 1: 'is'"]
+    ROOT --&gt; B2["Branch 2: 'was'"]
+
+    B1 --&gt; B1_1["'a' (Path A)"]
+    B1 --&gt; B1_2["'the' (Path B)"]
+    B2 --&gt; B2_1["'an' (Path C)"]
+
+    subgraph TREE_ATT ["⚡ Tree-Based Attention Verification Kernel"]
+        MASK["Custom Tree Attention Mask&lt;br&gt;Prevents Cross-Branch Information Leakage"]
+    end
+
+    TREE_ATT ==&gt; TARGET_PASS["Target Forward Pass evaluates Paths A, B, and C simultaneously!"]</code></pre>
+<p>To verify candidate trees in a single forward pass without information leaking between non-ancestor branches, vLLM executes custom <strong>Tree Attention Kernels</strong>. The tree mask ensures that candidate token <span class="arithmatex">\(y_{i, j}\)</span> only attends to its exact causal ancestors in the candidate tree.</p>
+<hr />
+<h2 id="part-5-quantization-precision-compression-and-kernel-engineering">Part 5: Quantization: Precision, Compression, and Kernel Engineering<a class="headerlink" href="#part-5-quantization-precision-compression-and-kernel-engineering" title="Permanent link">&para;</a></h2>
+<p>Quantization compresses model weights and activation tensors from 16-bit floating point (<code>FP16</code> / <code>BF16</code>, 2 bytes per parameter) to 8-bit (<code>INT8</code> / <code>FP8</code>, 1 byte) or 4-bit (<code>INT4</code>, 0.5 bytes) representations.</p>
+<h3 id="51-quantization-taxonomy-in-production-inference">5.1 Quantization Taxonomy in Production Inference<a class="headerlink" href="#51-quantization-taxonomy-in-production-inference" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart TD
+    Q_TYPE["🎯 Quantization Strategies"] --&gt; WO["1. Weight-Only Quantization (W4A16 / W8A16)"]
+    Q_TYPE --&gt; WA["2. Weight-and-Activation Quantization (W8A8)"]
+    Q_TYPE --&gt; KV_Q["3. KV Cache Quantization (FP8 / INT8 KV Blocks)"]
+
+    WO --&gt; WO_DESC["Compresses HBM weights to 4-bit/8-bit&lt;br&gt;Dequantized to FP16 inside SM SRAM before math&lt;br&gt;&lt;b&gt;Goal: Maximize HBM Memory Bandwidth Efficiency&lt;/b&gt;"]
+    WA --&gt; WA_DESC["Quantizes both weights and activation tensors&lt;br&gt;Executes native INT8/FP8 GEMM on Tensor Cores&lt;br&gt;&lt;b&gt;Goal: Maximize Tensor Core TFLOPs Throughput&lt;/b&gt;"]
+    KV_Q --&gt; KV_DESC["Compresses physical KV cache blocks in HBM&lt;br&gt;Halves KV memory footprint per token&lt;br&gt;&lt;b&gt;Goal: Double Maximum Serving Concurrency (b_max)&lt;/b&gt;"]</code></pre>
+<h4 id="1-weight-only-quantization-awq-gptq-marlin">1. Weight-Only Quantization (AWQ / GPTQ / Marlin)<a class="headerlink" href="#1-weight-only-quantization-awq-gptq-marlin" title="Permanent link">&para;</a></h4>
+<p>In Weight-Only quantization (e.g., <strong>AWQ - Activation-aware Weight Quantization</strong>), weights are stored in HBM as 4-bit integers.</p>
+<ul>
+<li><strong>Storage Footprint</strong>: Llama 3 70B compresses from <span class="arithmatex">\(140 \text{ GB}\)</span> (<code>FP16</code>) down to <span class="arithmatex">\(\sim 35 \text{ GB}\)</span> (<code>INT4</code>), enabling 70B model serving on a single GPU (e.g., NVIDIA H100 80GB or A100 80GB).</li>
+<li><strong>Execution Data Flow</strong>: During matrix-vector multiplication (<span class="arithmatex">\(y = x @ W\)</span>), weight tiles are transferred from HBM to SM SRAM at <span class="arithmatex">\(4 \times\)</span> higher bandwidth speed. Inside SRAM, fused CUDA kernels (e.g., <strong>Marlin / AWQ kernels</strong>) dequantize INT4 weights back to FP16 before executing multiplication on Tensor Cores.</li>
+</ul>
+<h4 id="2-weight-and-activation-quantization-fp8-w8a8">2. Weight-and-Activation Quantization (FP8 / W8A8)<a class="headerlink" href="#2-weight-and-activation-quantization-fp8-w8a8" title="Permanent link">&para;</a></h4>
+<p>Modern GPUs (NVIDIA Hopper H100/H200, Ada Lovelace) feature hardware <strong>FP8 Tensor Cores</strong>.</p>
+<p>FP8 defines two 8-bit floating-point formats:</p>
+<ul>
+<li><strong><code>E4M3</code> (1 sign bit, 4 exponent bits, 3 mantissa bits)</strong>: Higher precision, used for weights and activation tensors.</li>
+<li><strong><code>E5M2</code> (1 sign bit, 5 exponent bits, 2 mantissa bits)</strong>: Broader dynamic range, used for gradients and long-range activation scaling.</li>
+</ul>
+<p>Because both weights and activations reside in FP8, the GPU executes matrix multiplication natively using FP8 Tensor Core instructions, doubling peak compute capacity (up to <strong>1,978 TFLOPs</strong> on H100 SXM5).</p>
+<hr />
+<h3 id="52-kv-cache-quantization-fp8-int8-kv-blocks">5.2 KV Cache Quantization (FP8 / INT8 KV Blocks)<a class="headerlink" href="#52-kv-cache-quantization-fp8-int8-kv-blocks" title="Permanent link">&para;</a></h3>
+<p>While weight quantization reduces model memory footprint, long-context serving remains bounded by KV cache memory capacity. vLLM supports <strong>FP8 KV Cache Quantization</strong> (<code>kv_cache_dtype="fp8"</code>).</p>
+<h4 id="1-physical-storage-transformation">1. Physical Storage Transformation<a class="headerlink" href="#1-physical-storage-transformation" title="Permanent link">&para;</a></h4>
+<p>In standard FP16 execution, each element of the Key and Value vectors requires 2 bytes. Under FP8 KV Caching, Key and Value vectors are quantized to 8-bit <code>E4M3</code> floats before being stored inside physical HBM blocks.</p>
+<div class="arithmatex">\[
+\text{Physical_Block_Bytes}_{\text{FP8}} = \frac{\text{Physical_Block_Bytes}_{\text{FP16}}}{2}
+\]</div>
+<p>For Llama 3 70B with <code>block_size = 16</code>:</p>
+<ul>
+<li><strong>FP16 Block Size</strong>: <span class="arithmatex">\(5,242,880 \text{ bytes} \equiv \mathbf{5.00 \text{ MiB}}\)</span></li>
+<li><strong>FP8 Block Size</strong>: <span class="arithmatex">\(2,621,440 \text{ bytes} \equiv \mathbf{2.50 \text{ MiB}}\)</span></li>
+</ul>
+<h4 id="2-impact-on-serving-concurrency">2. Impact on Serving Concurrency<a class="headerlink" href="#2-impact-on-serving-concurrency" title="Permanent link">&para;</a></h4>
+<p>By halving the physical memory footprint of every block, the total number of available physical blocks in the free pool doubles:</p>
+<div class="arithmatex">\[
+\text{Total_Available_Blocks}_{\text{FP8}} = 2 \times \text{Total_Available_Blocks}_{\text{FP16}}
+\]</div>
+<p>This doubles the maximum concurrent batch size (<span class="arithmatex">\(b_{\text{max}}\)</span>) supported by the GPU without requiring additional hardware.</p>
+<hr />
+<h3 id="53-quantitative-performance-and-accuracy-trade-off-matrix">5.3 Quantitative Performance and Accuracy Trade-Off Matrix<a class="headerlink" href="#53-quantitative-performance-and-accuracy-trade-off-matrix" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Quantization Method</th>
+<th style="text-align: left;">Target Components</th>
+<th style="text-align: left;">Precision</th>
+<th style="text-align: left;">HBM Weight Size (70B Model)</th>
+<th style="text-align: left;">Relative Inference Throughput</th>
+<th style="text-align: left;">Perplexity Impact (<span class="arithmatex">\(\Delta \text{PPL}\)</span>)</th>
+<th style="text-align: left;">Hardware Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Unquantized (FP16/BF16)</strong></td>
+<td style="text-align: left;">Weights, Activations, KV Cache</td>
+<td style="text-align: left;">16-bit Float</td>
+<td style="text-align: left;"><span class="arithmatex">\(140 \text{ GB}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(1.0\times\)</span> (Baseline)</td>
+<td style="text-align: left;"><span class="arithmatex">\(0.00\)</span> (Baseline)</td>
+<td style="text-align: left;">Standard NVIDIA / AMD GPUs</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AWQ / Marlin (W4A16)</strong></td>
+<td style="text-align: left;">Weights Only</td>
+<td style="text-align: left;">4-bit INT / 16-bit Act</td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(35 \text{ GB (4x smaller)}\)</span></strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(2.2\times \dots 3.2\times\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(&lt; +0.10\)</span> (Negligible)</td>
+<td style="text-align: left;">Any Tensor Core GPU</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FP8 (W8A8 / E4M3)</strong></td>
+<td style="text-align: left;">Weights and Activations</td>
+<td style="text-align: left;">8-bit Float</td>
+<td style="text-align: left;"><span class="arithmatex">\(70 \text{ GB}\)</span></td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(2.5\times \dots 4.0\times\)</span></strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(&lt; +0.05\)</span> (Near-Zero)</td>
+<td style="text-align: left;">NVIDIA Hopper / Ada Lovelace</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FP8 KV Cache</strong></td>
+<td style="text-align: left;">KV Cache Blocks Only</td>
+<td style="text-align: left;">8-bit Float</td>
+<td style="text-align: left;"><span class="arithmatex">\(140 \text{ GB}\)</span> (Weights)</td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(2.0\times \text{ Max Concurrency}\)</span></strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(&lt; +0.02\)</span> (Imperceptible)</td>
+<td style="text-align: left;">Ampere, Hopper, Ada Lovelace</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="summary-the-integrated-performance-stack">Summary: The Integrated Performance Stack<a class="headerlink" href="#summary-the-integrated-performance-stack" title="Permanent link">&para;</a></h2>
+<p>Modern LLM serving performance relies on the synergistic co-design of software scheduling, host execution, vector verification, and memory quantization:</p>
+<pre class="mermaid"><code>flowchart TD
+    SCHED["1. Advanced Scheduler (Chunked Prefill)"] --&gt; HOST["2. Host Overhead Elimination (CUDA Graphs)"]
+    HOST --&gt; VERIF["3. Algorithmic Verification (Speculative Decoding)"]
+    VERIF --&gt; COMP["4. Memory and Compute Quantization (AWQ / FP8 / FP8 KV)"]
+    COMP --&gt; HARDWARE["⚡ Peak GPU Hardware Efficiency (Maximum Throughput at Bounded ITL)"]</code></pre>
+<p>With <strong>Module 3</strong> complete, we transition to <strong>Module 4: Hardware Interaction and Kernel Co-Design (<code>04_hardware_and_kernel_optimization.md</code>)</strong>, where we examine GPU micro-architecture, SRAM tiling strategies, custom HIP/CUDA kernel implementation, and cross-hardware compilation backends.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
