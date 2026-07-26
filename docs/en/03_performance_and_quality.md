@@ -311,7 +311,13 @@ While memory bandwidth bounds GPU execution during single-token decoding, CPU-si
 
 ### 3.1 The CPU-GPU Host Overhead Bottleneck
 
-Executing a single Transformer forward pass requires launching dozens of CUDA kernels per layer (RMSNorm, QKV projection, RoPE rotation, PagedAttention, SwiGLU Gate/Up/Down projections, Residual additions). For an 80-layer model like Llama 3 70B, a single forward pass executes **over 400 individual CUDA kernel launches**.
+> [!NOTE]
+> **What is a "GPU Kernel"?**
+> In GPU programming (CUDA / HIP / C++), a **Kernel** is not an operating system kernel. A GPU Kernel is a specialized C++/CUDA function designed to execute massively parallel computations across thousands of GPU cores (e.g., an `rmsnorm_kernel`, a `gemm_projection_kernel`, or a `paged_attention_kernel`).
+> 
+> "400 GPU kernels" does **not** mean 400 separate physical GPUs working together! It means that in an 80-layer model, a **single GPU** must execute 400 distinct CUDA kernel functions in sequence to complete one single-token forward pass.
+
+Executing a single Transformer forward pass requires launching dozens of CUDA kernels per layer (RMSNorm, QKV projection, RoPE rotation, PagedAttention, SwiGLU Gate/Up/Down projections, Residual additions). For an 80-layer model like Llama 3 70B, a single forward pass executes **over 400 individual CUDA kernel launches** in series on a single GPU.
 
 ```mermaid
 flowchart LR
