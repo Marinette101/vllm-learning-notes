@@ -1263,16 +1263,18 @@
 <h3 id="21-flashattention">2.1 FlashAttention 分块策略<a class="headerlink" href="#21-flashattention" title="Permanent link">&para;</a></h3>
 <p><strong>FlashAttention</strong> 与 <strong>PagedAttention</strong> 通过将 Query (<span class="arithmatex">\(Q\)</span>)、Key (<span class="arithmatex">\(K\)</span>)、Value (<span class="arithmatex">\(V\)</span>) 张量切分为能够完整放入 <strong>片上 SRAM (<span class="arithmatex">\(228 \text{ KB}\)</span>)</strong> 的小块，彻底解决了 <span class="arithmatex">\(O(S^2)\)</span> 显存问题。</p>
 <pre class="mermaid"><code>flowchart TD
-    HBM_Q["片外 HBM&lt;br&gt;全局 Q 张量"] --&gt;|加载 Q 块 [B_M x d]| SRAM_Q["片上 SRAM&lt;br&gt;Q 分块"]
-    HBM_K["片外 HBM&lt;br&gt;全局 K 张量"] --&gt;|加载 K 块 [B_N x d]| SRAM_K["片上 SRAM&lt;br&gt;K 分块"]
-    HBM_V["片外 HBM&lt;br&gt;全局 V 张量"] --&gt;|加载 V 块 [B_N x d]| SRAM_V["片上 SRAM&lt;br&gt;V 分块"]
+    HBM_Q["片外 HBM&lt;br&gt;全局 Q 张量"] --&gt;|"加载 Q 块 (B_M x d)"| SRAM_Q["片上 SRAM&lt;br&gt;Q 分块"]
+    HBM_K["片外 HBM&lt;br&gt;全局 K 张量"] --&gt;|"加载 K 块 (B_N x d)"| SRAM_K["片上 SRAM&lt;br&gt;K 分块"]
+    HBM_V["片外 HBM&lt;br&gt;全局 V 张量"] --&gt;|"加载 V 块 (B_N x d)"| SRAM_V["片上 SRAM&lt;br&gt;V 分块"]
 
-    subgraph ON_CHIP ["🔥 SM 共享内存 (SRAM) 计算循环"]
-        SRAM_Q &amp; SRAM_K --&gt; S_TILE["SRAM 注意力分数块&lt;br&gt;S_tile = Q_tile @ K_tile^T / sqrt(d)"]
-        S_TILE &amp; SRAM_V --&gt; O_TILE["Online Softmax &amp; 加权求和&lt;br&gt;O_tile = Softmax(S_tile) @ V_tile"]
+    subgraph ON_CHIP ["🔥 SM 共享内存 SRAM 计算循环"]
+        SRAM_Q --&gt; S_TILE["SRAM 注意力分数块&lt;br&gt;S_tile = Q_tile @ K_tile^T / sqrt(d)"]
+        SRAM_K --&gt; S_TILE
+        S_TILE --&gt; O_TILE["Online Softmax 与加权求和&lt;br&gt;O_tile = Softmax(S_tile) @ V_tile"]
+        SRAM_V --&gt; O_TILE
     end
 
-    O_TILE --&gt;|写回最终输出向量| HBM_O["片外 HBM&lt;br&gt;全局输出张量 O"]</code></pre>
+    O_TILE --&gt;|"写回最终输出向量"| HBM_O["片外 HBM&lt;br&gt;全局输出张量 O"]</code></pre>
 <h4 id="tiling">Tiling 分块参数<a class="headerlink" href="#tiling" title="Permanent link">&para;</a></h4>
 <ul>
 <li><span class="arithmatex">\(B_M\)</span>: Query 沿序列维度切分块大小 (通常 <span class="arithmatex">\(B_M = 64\)</span> 或 <span class="arithmatex">\(128\)</span>)。</li>
@@ -1327,13 +1329,15 @@ O^{(j)} = O^{(j-1)} \cdot \left(\frac{l^{(j-1)} \cdot e^{m^{(j-1)} - m^{(j)}}}{l
 <p>PagedAttention V2 将物理 Block <em>沿时间/序列长度维度切分</em>，分发给多个并行 Thread Block 同时处理。</p>
 <pre class="mermaid"><code>flowchart TD
     subgraph PHASE1 ["阶段 1: 并行 Block 切分 (paged_attention_v2_kernel)"]
-        TB1["Thread Block 分区 0&lt;br&gt;(Block 0..255)"] --&gt;|计算局部数学| TMP1["写入 Global Workspace 缓冲区&lt;br&gt;tmp_out[0], tmp_max[0], tmp_exp[0]"]
-        TB2["Thread Block 分区 1&lt;br&gt;(Block 256..511)"] --&gt;|计算局部数学| TMP2["写入 Global Workspace 缓冲区&lt;br&gt;tmp_out[1], tmp_max[1], tmp_exp[1]"]
-        TB3["Thread Block 分区 P...&lt;br&gt;(Block ... 2047)"] --&gt;|计算局部数学| TMP3["写入 Global Workspace 缓冲区&lt;br&gt;tmp_out[P], tmp_max[P], tmp_exp[P]"]
+        TB1["Thread Block 分区 0&lt;br&gt;(Block 0..255)"] --&gt;|"计算局部数学"| TMP1["写入 Global Workspace 缓冲区&lt;br&gt;tmp_out[0], tmp_max[0], tmp_exp[0]"]
+        TB2["Thread Block 分区 1&lt;br&gt;(Block 256..511)"] --&gt;|"计算局部数学"| TMP2["写入 Global Workspace 缓冲区&lt;br&gt;tmp_out[1], tmp_max[1], tmp_exp[1]"]
+        TB3["Thread Block 分区 P...&lt;br&gt;(Block ... 2047)"] --&gt;|"计算局部数学"| TMP3["写入 Global Workspace 缓冲区&lt;br&gt;tmp_out[P], tmp_max[P], tmp_exp[P]"]
     end
 
     subgraph PHASE2 ["阶段 2: Split-KV 规约 Kernel (paged_attention_v2_reduce_kernel)"]
-        TMP1 &amp; TMP2 &amp; TMP3 ==&gt; REDUCE["启动 Reduction Kernel&lt;br&gt;从 Workspace 缓冲区读取 P 个分区数据"]
+        TMP1 ==&gt; REDUCE
+        TMP2 ==&gt; REDUCE
+        TMP3 ==&gt; REDUCE["启动 Reduction Kernel&lt;br&gt;从 Workspace 缓冲区读取 P 个分区数据"]
         REDUCE --&gt; RESCALE["利用 Online Softmax 恒等式重缩放并融合局部输出"]
         RESCALE --&gt; FINAL_O["将精确归一化的输出向量 O 写回 HBM"]
     end</code></pre>

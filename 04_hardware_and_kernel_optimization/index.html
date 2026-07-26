@@ -1263,16 +1263,18 @@
 <h3 id="21-flashattention-tiling-strategy">2.1 FlashAttention Tiling Strategy<a class="headerlink" href="#21-flashattention-tiling-strategy" title="Permanent link">&para;</a></h3>
 <p><strong>FlashAttention</strong> (Dao et al.) and <strong>PagedAttention</strong> overcome <span class="arithmatex">\(O(S^2)\)</span> memory explosion by tiling Query (<span class="arithmatex">\(Q\)</span>), Key (<span class="arithmatex">\(K\)</span>), and Value (<span class="arithmatex">\(V\)</span>) tensors into small blocks that fit entirely inside <strong>On-Chip SRAM (<span class="arithmatex">\(228 \text{ KB}\)</span>)</strong>.</p>
 <pre class="mermaid"><code>flowchart TD
-    HBM_Q["Off-Chip HBM&lt;br&gt;Global Q Tensor"] --&gt;|Load Q Tile [B_M x d]| SRAM_Q["On-Chip SRAM&lt;br&gt;Q Tile (SRAM)"]
-    HBM_K["Off-Chip HBM&lt;br&gt;Global K Tensor"] --&gt;|Load K Tile [B_N x d]| SRAM_K["On-Chip SRAM&lt;br&gt;K Tile (SRAM)"]
-    HBM_V["Off-Chip HBM&lt;br&gt;Global V Tensor"] --&gt;|Load V Tile [B_N x d]| SRAM_V["On-Chip SRAM&lt;br&gt;V Tile (SRAM)"]
+    HBM_Q["Off-Chip HBM&lt;br&gt;Global Q Tensor"] --&gt;|"Load Q Tile (B_M x d)"| SRAM_Q["On-Chip SRAM&lt;br&gt;Q Tile"]
+    HBM_K["Off-Chip HBM&lt;br&gt;Global K Tensor"] --&gt;|"Load K Tile (B_N x d)"| SRAM_K["On-Chip SRAM&lt;br&gt;K Tile"]
+    HBM_V["Off-Chip HBM&lt;br&gt;Global V Tensor"] --&gt;|"Load V Tile (B_N x d)"| SRAM_V["On-Chip SRAM&lt;br&gt;V Tile"]
 
-    subgraph ON_CHIP ["🔥 SM Shared Memory (SRAM) Compute Loop"]
-        SRAM_Q &amp; SRAM_K --&gt; S_TILE["SRAM Score Matrix Tile&lt;br&gt;S_tile = Q_tile @ K_tile^T / sqrt(d)"]
-        S_TILE &amp; SRAM_V --&gt; O_TILE["Online Softmax &amp; Weighted Sum&lt;br&gt;O_tile = Softmax(S_tile) @ V_tile"]
+    subgraph ON_CHIP ["🔥 SM Shared Memory SRAM Compute Loop"]
+        SRAM_Q --&gt; S_TILE["SRAM Score Matrix Tile&lt;br&gt;S_tile = Q_tile @ K_tile^T / sqrt(d)"]
+        SRAM_K --&gt; S_TILE
+        S_TILE --&gt; O_TILE["Online Softmax and Weighted Sum&lt;br&gt;O_tile = Softmax(S_tile) @ V_tile"]
+        SRAM_V --&gt; O_TILE
     end
 
-    O_TILE --&gt;|Write Final Output Vector| HBM_O["Off-Chip HBM&lt;br&gt;Global Output Tensor O"]</code></pre>
+    O_TILE --&gt;|"Write Final Output Vector"| HBM_O["Off-Chip HBM&lt;br&gt;Global Output Tensor O"]</code></pre>
 <h4 id="tiling-parameters">Tiling Parameters<a class="headerlink" href="#tiling-parameters" title="Permanent link">&para;</a></h4>
 <ul>
 <li><span class="arithmatex">\(B_M\)</span>: Query tile block size along sequence dimension (typically <span class="arithmatex">\(B_M = 64\)</span> or <span class="arithmatex">\(128\)</span>).</li>
@@ -1327,14 +1329,16 @@ O^{(j)} = O^{(j-1)} \cdot \left(\frac{l^{(j-1)} \cdot e^{m^{(j-1)} - m^{(j)}}}{l
 <p>PagedAttention V2 parallelizes attention evaluation <em>along the sequence length dimension</em> by partitioning physical blocks across multiple parallel thread blocks.</p>
 <pre class="mermaid"><code>flowchart TD
     subgraph PHASE1 ["Phase 1: Parallel Block Partitioning (paged_attention_v2_kernel)"]
-        TB1["Thread Block Partition 0&lt;br&gt;(Blocks 0..255)"] --&gt;|Compute Partial Math| TMP1["Write to Global Workspace Buffer&lt;br&gt;tmp_out[0], tmp_max[0], tmp_exp[0]"]
-        TB2["Thread Block Partition 1&lt;br&gt;(Blocks 256..511)"] --&gt;|Compute Partial Math| TMP2["Write to Global Workspace Buffer&lt;br&gt;tmp_out[1], tmp_max[1], tmp_exp[1]"]
-        TB3["Thread Block Partition P...&lt;br&gt;(Blocks ... 2047)"] --&gt;|Compute Partial Math| TMP3["Write to Global Workspace Buffer&lt;br&gt;tmp_out[P], tmp_max[P], tmp_exp[P]"]
+        TB1["Thread Block Partition 0&lt;br&gt;(Blocks 0..255)"] --&gt;|"Compute Partial Math"| TMP1["Write to Global Workspace Buffer&lt;br&gt;tmp_out[0], tmp_max[0], tmp_exp[0]"]
+        TB2["Thread Block Partition 1&lt;br&gt;(Blocks 256..511)"] --&gt;|"Compute Partial Math"| TMP2["Write to Global Workspace Buffer&lt;br&gt;tmp_out[1], tmp_max[1], tmp_exp[1]"]
+        TB3["Thread Block Partition P...&lt;br&gt;(Blocks ... 2047)"] --&gt;|"Compute Partial Math"| TMP3["Write to Global Workspace Buffer&lt;br&gt;tmp_out[P], tmp_max[P], tmp_exp[P]"]
     end
 
     subgraph PHASE2 ["Phase 2: Split-KV Reduction Kernel (paged_attention_v2_reduce_kernel)"]
-        TMP1 &amp; TMP2 &amp; TMP3 ==&gt; REDUCE["Launch Reduction Kernel&lt;br&gt;Read P Partitions from Workspace Buffer"]
-        REDUCE --&gt; RESCALE["Rescale &amp; Fuse Partial Outputs via Online Softmax Identity"]
+        TMP1 ==&gt; REDUCE["Launch Reduction Kernel&lt;br&gt;Read P Partitions from Workspace Buffer"]
+        TMP2 ==&gt; REDUCE
+        TMP3 ==&gt; REDUCE
+        REDUCE --&gt; RESCALE["Rescale and Fuse Partial Outputs via Online Softmax Identity"]
         RESCALE --&gt; FINAL_O["Write Normalized Output Vector O to HBM"]
     end</code></pre>
 <h4 id="step-1-parallel-block-partitioning">Step 1: Parallel Block Partitioning<a class="headerlink" href="#step-1-parallel-block-partitioning" title="Permanent link">&para;</a></h4>
@@ -1370,7 +1374,7 @@ O_{\text{final}} = \frac{\sum_{p=1}^{N_{\text{partitions}}} O_{\text{part}, p} \
 <h2 id="part-4-advanced-accelerator-backends-and-cross-hardware-engines">Part 4: Advanced Accelerator Backends and Cross-Hardware Engines<a class="headerlink" href="#part-4-advanced-accelerator-backends-and-cross-hardware-engines" title="Permanent link">&para;</a></h2>
 <p>While CUDA powers NVIDIA GPUs, vLLM features a modular backend architecture supporting <strong>AMD ROCm (HIP)</strong>, <strong>Google TPUs</strong>, and <strong>AWS Neuron</strong>.</p>
 <pre class="mermaid"><code>flowchart TD
-    CORE["vLLM Core Architecture &amp; Scheduler"] --&gt; C_BE["NVIDIA CUDA Backend (CUDA C++ / FlashAttention / FlashInfer)"]
+    CORE["vLLM Core Architecture and Scheduler"] --&gt; C_BE["NVIDIA CUDA Backend (CUDA C++ / FlashAttention / FlashInfer)"]
     CORE --&gt; R_BE["AMD ROCm HIP Backend (HIP C++ / Composable Kernel)"]
     CORE --&gt; T_BE["Google TPU Backend (XLA / Paged KV Custom Calls)"]
     CORE --&gt; N_BE["AWS Neuron Backend (Neuron Core / NKI Kernels)"]</code></pre>
