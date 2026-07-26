@@ -10,7 +10,7 @@ This module explores the core performance mechanics and engine enhancements desi
 
 To evaluate and optimize serving performance, AI systems engineers distinguish between **responsiveness (latency)** and **capacity (throughput)**. In LLM serving, single-request latency is split into two distinct execution phases.
 
-```mermaid
+
 flowchart LR
     REQ["📥 User Request Arrives"] --> PREFILL["⚡ Prefill Phase (Prompt Evaluation)<br>Compute-Bound | Parallel Tensor Pass"]
     PREFILL --> TTFT_MARK["⏱️ TTFT (Time To First Token)"]
@@ -61,7 +61,7 @@ Where:
 
 In high-concurrency production serving, latency and throughput stand in direct conflict.
 
-```mermaid
+
 flowchart TD
     CONFIG["⚙️ Batch Size Configuration"] --> SMALL_B["Small Batch Size (b = 1..8)"]
     CONFIG --> LARGE_B["Large Batch Size (b = 64..256)"]
@@ -102,7 +102,7 @@ To eliminate HoL blocking, vLLM implements **Chunked Prefill** (`v0.4+`).
 
 Rather than executing a long prompt prefill in a single forward pass, the scheduler breaks incoming prompts into smaller, budget-bounded logical segments called **Prefill Chunks** (controlled by `max_num_batched_tokens`, typically set to $512$ or $2,048$ tokens).
 
-```mermaid
+
 flowchart TD
     PROMPT["📄 Incoming Long Request (32,768 Tokens)"] --> CHUNKER["✂️ vLLM Chunking Engine"]
     
@@ -147,15 +147,84 @@ Consider a vLLM configuration with:
 
 - `max_num_batched_tokens = 512`
 - `max_num_seqs = 256`
-- Active Running Decode Requests: $b_{\text{decode}} = 64$ tokens
+- Active Running Decode Requests: $b_{\text{decode}} = 64$ sequences (1 token each = $64$ tokens)
 - Incoming Waiting Request Prompt Length: $s_{\text{prompt}} = 2,048$ tokens
 
-The scheduler executes the following budget allocation:
+The scheduler executes the following budget evaluation:
 
-1. **Decode Reservation**: Allocates $64$ tokens for active decode requests ($512 - 64 = 448$ remaining token budget).
-2. **Chunked Prefill Allocation**: Takes $448$ tokens from the incoming $2,048$-token prompt (Chunk 0).
-3. **Execution Batch**: Schedules $448$ prompt prefill tokens $+ \ 64$ decode tokens $= 512$ total tokens in the iteration step.
-4. **State Tracking**: The incoming request moves to `Running` state. In the next iteration step $t+1$, Chunk 1 ($448$ tokens) is scheduled alongside the active decodes until the full $2,048$ prompt tokens are evaluated.
+1. **Sequence Count Check (`max_num_seqs`)**:
+    - Current active decode sequences: $|\text{Decodes}| = 64$.
+    - Adding 1 new waiting prefill request: $|\text{Prefills}| = 1$.
+    - Total concurrent sequences $= 64 + 1 = 65 \le 256$ (`max_num_seqs`). The sequence concurrency budget is satisfied!
+2. **Token Budget Reservation (`max_num_batched_tokens`)**:
+    - Reserve $64$ tokens for active decode requests ($512 - 64 = 448$ remaining token budget).
+3. **Chunked Prefill Allocation**:
+    - Takes $448$ tokens from the incoming $2,048$-token prompt (Chunk 0).
+4. **Memory Block Check (`Free_HBM_Blocks`)**:
+    - The Block Manager verifies that the free pool holds sufficient physical blocks for $448$ new prefill tokens ($448 / 16 = 28$ physical blocks) plus active decode tail block expansions.
+5. **Execution Batch**:
+    - Schedules $448$ prompt prefill tokens $+ \ 64$ decode tokens $= 512$ total tokens in the iteration step.
+6. **State Tracking**:
+    - The incoming request transitions to `Running` state. In iteration step $t+1$, Chunk 1 ($448$ tokens) is co-scheduled alongside active decodes until the full $2,048$ prompt tokens are evaluated.
+
+---
+
+### 2.4 Systems Analysis: Prefill vs. Decode FLOPs, Arithmetic Intensity, and Cost per Token
+
+A fundamental question in LLM serving performance is: **Are FLOPs per token and execution costs identical between the Prefill phase and the Decode phase?**
+
+#### 1. The Weight Projection Myth: "Does Prefill only compute KV cache?"
+A common misconception is that prefill tokens "only calculate KV cache vectors" while decode tokens execute the model's full forward pass.
+
+**In reality, every single token passing through a Transformer layer—whether in Prefill or Decode—must pass through all linear weight projections**:
+
+- Query, Key, and Value projections ($W_Q, W_K, W_V$)
+- Multi-Head Output projection ($W_O$)
+- SwiGLU Feed-Forward Network projections ($W_{\text{Gate}}, W_{\text{Up}}, W_{\text{Down}}$)
+
+For an $N$-parameter model (e.g., Llama 3 70B), **both Prefill tokens and Decode tokens execute $2 \cdot N$ FLOPs per token for linear weight projections** ($\sim 140 \text{ GFLOPs/token}$).
+
+#### 2. Attention FLOPs Comparison per Token
+The difference in FLOPs per token arises solely within the Self-Attention mechanism ($Q @ K^T$ and $\text{Softmax} @ V$):
+
+- **Prefill Phase (Prompt of length $S$)**:
+  Prompt token $i$ (for $i \in [1, S]$) computes attention over previous tokens $1 \dots i$. The average attention FLOPs per token across the prompt is:
+
+$$
+\text{FLOPs}_{\text{attn, prefill_per_token}} \approx 2 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S
+$$
+
+- **Decode Phase (Single token at position $S$)**:
+  The single decode token at position $S$ computes attention against all historical $S$ tokens stored in the KV cache:
+
+$$
+\text{FLOPs}_{\text{attn, decode_per_token}} \approx 4 \cdot L \cdot h_q \cdot d_{\text{head}} \cdot S
+$$
+
+For typical context lengths ($S < 8,000$), weight projections account for $> 95\%$ of all mathematical FLOPs, making the **raw FLOP count per token nearly identical between Prefill and Decode**.
+
+#### 3. The True Bottleneck Difference: Memory Bandwidth vs. Compute
+While raw FLOP counts per token are similar, **the execution time and hardware cost per token are drastically different due to Arithmetic Intensity ($I = \text{FLOPs} / \text{Bytes}$)**:
+
+| Execution Dimension | Prefill Phase (Prompt Evaluation) | Decode Phase (Token Generation) |
+| :--- | :--- | :--- |
+| **Operating Regime** | **Compute-Bound** ($I \gg I_{\text{ridge}}$) | **Memory-Bandwidth Bound** ($I \ll I_{\text{ridge}}$) |
+| **Tokens Processed per Weight Read** | $N_{\text{chunk}}$ tokens simultaneously (e.g., $512$) | $1$ token per sequence (e.g., batch size $b$) |
+| **Arithmetic Intensity ($I$)** | $I_{\text{prefill}} \approx \frac{2 \cdot N_{\text{chunk}} \cdot N}{2N} \approx 512 \text{ FLOPs/Byte}$ | $I_{\text{decode}} \approx \frac{2 \cdot b \cdot N}{2N} \approx 1 \dots 64 \text{ FLOPs/Byte}$ |
+| **GPU Tensor Core Utilization** | **100% Peak TFLOPs Capacity** | **$< 5\%$ Utilization** (Tensor Cores sit idle) |
+| **Execution Time Bottleneck** | FLOP Execution Speed on Tensor Cores | HBM Read Speed (Memory Bandwidth Bus) |
+
+
+flowchart TD
+    subgraph DECODE_BENEFIT ["⚡ Why Co-Scheduling Prefill and Decode is a Win-Win"]
+        D_IDLE["Decode Phase: Reads 140 GB weights from HBM<br>Saturates Memory Bus | Tensor Cores sit 95% Idle"]
+        P_COMP["Prefill Chunk: Needs Tensor Core FLOPs math<br>Shares the exact same weight read pass from HBM"]
+        
+        D_IDLE & P_COMP --> FUSED["Co-Scheduled Iteration Step:<br>Tensor Cores process Prefill FLOPs while Memory Bus streams Decode weights!<br><b>Result: Near-Free Prefill Compute with Zero ITL Spikes</b>"]
+    end
+```
+
+This systems insight explains why Chunked Prefill and Co-Scheduling in vLLM is so effective: **because single-token decode steps leave GPU Tensor Cores mostly idle waiting for memory bandwidth, co-scheduling a prefill chunk alongside decode requests utilizes those idle compute cycles during the exact same memory-streaming pass**.
 
 ---
 
@@ -167,7 +236,7 @@ While memory bandwidth bounds GPU execution during single-token decoding, CPU-si
 
 Executing a single Transformer forward pass requires launching dozens of CUDA kernels per layer (RMSNorm, QKV projection, RoPE rotation, PagedAttention, SwiGLU Gate/Up/Down projections, Residual additions). For an 80-layer model like Llama 3 70B, a single forward pass executes **over 400 individual CUDA kernel launches**.
 
-```mermaid
+
 flowchart LR
     subgraph CPU_LAUNCH ["🐢 CPU Host Launch Bottleneck (Without CUDA Graphs)"]
         CPU["CPU Python Interpreter"] -->|"Launch Kernel 1 (10 us)"| K1["GPU Kernel 1"]
@@ -188,7 +257,7 @@ To eliminate CPU host launch overhead, vLLM integrates **CUDA Graphs** (`torch.c
 #### 1. How CUDA Graphs Work
 During engine initialization, vLLM performs a warm-up phase that records the exact sequence of CUDA kernel launches, memory addresses, and execution dependencies into a static GPU execution graph.
 
-```mermaid
+
 flowchart TD
     subgraph CAPTURE ["1. Warm-Up Phase: Graph Capture"]
         C_EXEC["Execute Forward Pass for Fixed Batch Size b"] --> C_REC["Record Kernel Launches and Dependencies into Static Graph"]
@@ -206,7 +275,7 @@ During production inference, the CPU does not execute Python code or launch indi
 #### 2. Fixed-Size Batch Bucketing and Static Input Buffers
 CUDA Graphs require fixed memory addresses and fixed tensor shapes. Because active batch sizes fluctuate dynamically during continuous batching, vLLM maintains a pool of captured CUDA Graphs for discrete batch size buckets (e.g., $b \in \{1, 2, 4, 8, 16, 32, 64, 128\}$).
 
-```mermaid
+
 flowchart LR
     CUR_B["Active Batch Size: b = 5 Sequences"] --> BUCKET["Select Next Bucket: b_graph = 8"]
     BUCKET --> PAD["Pad Input Tensor to 8 Rows<br>(3 Dummy Padding Rows)"]
@@ -225,7 +294,7 @@ While CUDA Graphs eliminate CPU overhead, single-token decode passes remain memo
 
 Autoregressive decoding generates tokens one by one because each token depends on the previous token's hidden state. However, **verifying** a sequence of $K$ candidate tokens simultaneously requires only a single prefill-style forward pass across all $K$ tokens.
 
-```mermaid
+
 flowchart TD
     DRAFT["1. Draft Phase (Fast Mechanism)<br>Generate K Candidate Tokens: [y1, y2, y3, y4, y5]"] --> TARGET["2. Target Phase (Large Engine)<br>Execute Single Verification Forward Pass across all K Candidates"]
     TARGET --> VERIFY{"3. Statistical Verification Step<br>(Rejection Sampling)"}
@@ -275,7 +344,7 @@ vLLM supports four primary speculative drafting mechanisms:
 
 Rather than drafting a single linear candidate chain ($[y_1, y_2, y_3]$), advanced speculative algorithms (Medusa, EAGLE, Tree-Drafting) generate a **branching tree of candidate token paths**.
 
-```mermaid
+
 flowchart TD
     ROOT["Root Token (y0)"] --> B1["Branch 1: 'is'"]
     ROOT --> B2["Branch 2: 'was'"]
@@ -301,7 +370,7 @@ Quantization compresses model weights and activation tensors from 16-bit floatin
 
 ### 5.1 Quantization Taxonomy in Production Inference
 
-```mermaid
+
 flowchart TD
     Q_TYPE["🎯 Quantization Strategies"] --> WO["1. Weight-Only Quantization (W4A16 / W8A16)"]
     Q_TYPE --> WA["2. Weight-and-Activation Quantization (W8A8)"]
@@ -372,7 +441,7 @@ This doubles the maximum concurrent batch size ($b_{\text{max}}$) supported by t
 
 Modern LLM serving performance relies on the synergistic co-design of software scheduling, host execution, vector verification, and memory quantization:
 
-```mermaid
+
 flowchart TD
     SCHED["1. Advanced Scheduler (Chunked Prefill)"] --> HOST["2. Host Overhead Elimination (CUDA Graphs)"]
     HOST --> VERIF["3. Algorithmic Verification (Speculative Decoding)"]
