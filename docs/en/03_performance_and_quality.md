@@ -2,7 +2,7 @@
 
 To achieve high-throughput, low-latency Large Language Model (LLM) serving in production, modern inference engines must optimize beyond basic virtual memory management. While PagedAttention resolves Key-Value (KV) cache memory fragmentation, serving systems face three fundamental performance bottlenecks: **inter-token latency spikes caused by long prompt pre-fills**, **CPU host execution overhead during repetitive kernel launches**, and **memory bandwidth saturation during autoregressive decoding**.
 
-This module explores the core performance mechanics and engine enhancements designed into vLLM to overcome these bottlenecks, covering **Inference Performance Metrics**, **Chunked Prefill**, **CUDA Graph Execution**, **Speculative Decoding**, and **Model/KV Cache Quantization**.
+This module explores the core performance mechanics and engine enhancements designed into vLLM to overcome these bottlenecks, covering **Inference Performance Metrics**, **Chunked Prefill**, **Systems Economics of Prefill vs. Decode**, **CUDA Graph Execution**, **Speculative Decoding**, and **Model/KV Cache Quantization**.
 
 ---
 
@@ -10,7 +10,7 @@ This module explores the core performance mechanics and engine enhancements desi
 
 To evaluate and optimize serving performance, AI systems engineers distinguish between **responsiveness (latency)** and **capacity (throughput)**. In LLM serving, single-request latency is split into two distinct execution phases.
 
-
+```mermaid
 flowchart LR
     REQ["📥 User Request Arrives"] --> PREFILL["⚡ Prefill Phase (Prompt Evaluation)<br>Compute-Bound | Parallel Tensor Pass"]
     PREFILL --> TTFT_MARK["⏱️ TTFT (Time To First Token)"]
@@ -61,7 +61,7 @@ Where:
 
 In high-concurrency production serving, latency and throughput stand in direct conflict.
 
-
+```mermaid
 flowchart TD
     CONFIG["⚙️ Batch Size Configuration"] --> SMALL_B["Small Batch Size (b = 1..8)"]
     CONFIG --> LARGE_B["Large Batch Size (b = 64..256)"]
@@ -102,7 +102,7 @@ To eliminate HoL blocking, vLLM implements **Chunked Prefill** (`v0.4+`).
 
 Rather than executing a long prompt prefill in a single forward pass, the scheduler breaks incoming prompts into smaller, budget-bounded logical segments called **Prefill Chunks** (controlled by `max_num_batched_tokens`, typically set to $512$ or $2,048$ tokens).
 
-
+```mermaid
 flowchart TD
     PROMPT["📄 Incoming Long Request (32,768 Tokens)"] --> CHUNKER["✂️ vLLM Chunking Engine"]
     
@@ -214,7 +214,7 @@ While raw FLOP counts per token are similar, **the execution time and hardware c
 | **GPU Tensor Core Utilization** | **100% Peak TFLOPs Capacity** | **$< 5\%$ Utilization** (Tensor Cores sit idle) |
 | **Execution Time Bottleneck** | FLOP Execution Speed on Tensor Cores | HBM Read Speed (Memory Bandwidth Bus) |
 
-
+```mermaid
 flowchart TD
     subgraph DECODE_BENEFIT ["⚡ Why Co-Scheduling Prefill and Decode is a Win-Win"]
         D_IDLE["Decode Phase: Reads 140 GB weights from HBM<br>Saturates Memory Bus | Tensor Cores sit 95% Idle"]
@@ -236,7 +236,7 @@ While memory bandwidth bounds GPU execution during single-token decoding, CPU-si
 
 Executing a single Transformer forward pass requires launching dozens of CUDA kernels per layer (RMSNorm, QKV projection, RoPE rotation, PagedAttention, SwiGLU Gate/Up/Down projections, Residual additions). For an 80-layer model like Llama 3 70B, a single forward pass executes **over 400 individual CUDA kernel launches**.
 
-
+```mermaid
 flowchart LR
     subgraph CPU_LAUNCH ["🐢 CPU Host Launch Bottleneck (Without CUDA Graphs)"]
         CPU["CPU Python Interpreter"] -->|"Launch Kernel 1 (10 us)"| K1["GPU Kernel 1"]
@@ -257,7 +257,7 @@ To eliminate CPU host launch overhead, vLLM integrates **CUDA Graphs** (`torch.c
 #### 1. How CUDA Graphs Work
 During engine initialization, vLLM performs a warm-up phase that records the exact sequence of CUDA kernel launches, memory addresses, and execution dependencies into a static GPU execution graph.
 
-
+```mermaid
 flowchart TD
     subgraph CAPTURE ["1. Warm-Up Phase: Graph Capture"]
         C_EXEC["Execute Forward Pass for Fixed Batch Size b"] --> C_REC["Record Kernel Launches and Dependencies into Static Graph"]
@@ -275,7 +275,7 @@ During production inference, the CPU does not execute Python code or launch indi
 #### 2. Fixed-Size Batch Bucketing and Static Input Buffers
 CUDA Graphs require fixed memory addresses and fixed tensor shapes. Because active batch sizes fluctuate dynamically during continuous batching, vLLM maintains a pool of captured CUDA Graphs for discrete batch size buckets (e.g., $b \in \{1, 2, 4, 8, 16, 32, 64, 128\}$).
 
-
+```mermaid
 flowchart LR
     CUR_B["Active Batch Size: b = 5 Sequences"] --> BUCKET["Select Next Bucket: b_graph = 8"]
     BUCKET --> PAD["Pad Input Tensor to 8 Rows<br>(3 Dummy Padding Rows)"]
@@ -294,7 +294,7 @@ While CUDA Graphs eliminate CPU overhead, single-token decode passes remain memo
 
 Autoregressive decoding generates tokens one by one because each token depends on the previous token's hidden state. However, **verifying** a sequence of $K$ candidate tokens simultaneously requires only a single prefill-style forward pass across all $K$ tokens.
 
-
+```mermaid
 flowchart TD
     DRAFT["1. Draft Phase (Fast Mechanism)<br>Generate K Candidate Tokens: [y1, y2, y3, y4, y5]"] --> TARGET["2. Target Phase (Large Engine)<br>Execute Single Verification Forward Pass across all K Candidates"]
     TARGET --> VERIFY{"3. Statistical Verification Step<br>(Rejection Sampling)"}
@@ -344,7 +344,7 @@ vLLM supports four primary speculative drafting mechanisms:
 
 Rather than drafting a single linear candidate chain ($[y_1, y_2, y_3]$), advanced speculative algorithms (Medusa, EAGLE, Tree-Drafting) generate a **branching tree of candidate token paths**.
 
-
+```mermaid
 flowchart TD
     ROOT["Root Token (y0)"] --> B1["Branch 1: 'is'"]
     ROOT --> B2["Branch 2: 'was'"]
@@ -370,7 +370,7 @@ Quantization compresses model weights and activation tensors from 16-bit floatin
 
 ### 5.1 Quantization Taxonomy in Production Inference
 
-
+```mermaid
 flowchart TD
     Q_TYPE["🎯 Quantization Strategies"] --> WO["1. Weight-Only Quantization (W4A16 / W8A16)"]
     Q_TYPE --> WA["2. Weight-and-Activation Quantization (W8A8)"]
@@ -441,7 +441,7 @@ This doubles the maximum concurrent batch size ($b_{\text{max}}$) supported by t
 
 Modern LLM serving performance relies on the synergistic co-design of software scheduling, host execution, vector verification, and memory quantization:
 
-
+```mermaid
 flowchart TD
     SCHED["1. Advanced Scheduler (Chunked Prefill)"] --> HOST["2. Host Overhead Elimination (CUDA Graphs)"]
     HOST --> VERIF["3. Algorithmic Verification (Speculative Decoding)"]
