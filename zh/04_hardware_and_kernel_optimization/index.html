@@ -453,7 +453,7 @@
   <a href="#11" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1.1 硬件内存金字塔
+        1.1 完整的加速器节点存储金字塔
       
     </span>
   </a>
@@ -465,6 +465,17 @@
     <span class="md-ellipsis">
       
         1.2 内存访问延迟惩罚
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-hbm-host-cpu-nvme-ssd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 拓展 HBM 之外: Host CPU 内存与 NVMe SSD 存储层
       
     </span>
   </a>
@@ -849,7 +860,7 @@
   <a href="#11" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1.1 硬件内存金字塔
+        1.1 完整的加速器节点存储金字塔
       
     </span>
   </a>
@@ -861,6 +872,17 @@
     <span class="md-ellipsis">
       
         1.2 内存访问延迟惩罚
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-hbm-host-cpu-nvme-ssd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 拓展 HBM 之外: Host CPU 内存与 NVMe SSD 存储层
       
     </span>
   </a>
@@ -1190,19 +1212,21 @@
 <p>本模块将系统探索 vLLM 在 NVIDIA GPU、AMD ROCm 加速卡、Google TPU 以及 AWS Neuron 硬件上的自定义 Kernel 优化机制。</p>
 <hr />
 <h2 id="1-gpu">第 1 部分: GPU 内存层级结构与带宽现实<a class="headerlink" href="#1-gpu" title="Permanent link">&para;</a></h2>
-<p>在 GPU 硬件体系中，内存由多级金字塔结构组成。不同层级的物理位置在<strong>容量</strong>、<strong>传输带宽</strong>和<strong>访问延迟</strong>上存在极大差异。</p>
+<p>为了理解 Kernel 优化，硬件工程师将整个加速器节点抽象为多级存储金字塔。不同层级的物理位置在<strong>存储容量</strong>、<strong>传输带宽</strong>和<strong>访问延迟</strong>上存在极大差异，涵盖从片上超高速 GPU 寄存器到 Host 端 CPU 系统内存与 NVMe SSD Flash 存储。</p>
 <pre class="mermaid"><code>flowchart TD
     REG["⚡ 寄存器 Registers (每个 SM)&lt;br&gt;容量: ~65,536 x 32-bit/SM | 延迟: 0 周期 | 带宽: 极高"] --&gt; SRAM["🔥 共享内存 Shared Memory / L1 Cache (片上 SRAM)&lt;br&gt;容量: 228 KB/SM | 延迟: ~20..30 周期 | 带宽: ~19 至 33 TB/s"]
     SRAM --&gt; L2["🚀 L2 Cache (片上全局缓存)&lt;br&gt;容量: 50 MB 至 256 MB | 延迟: ~150..200 周期 | 带宽: ~6 至 12 TB/s"]
-    L2 --&gt; HBM["🐢 高带宽内存 High-Bandwidth Memory (片外 HBM3 / HBM3e)&lt;br&gt;容量: 80 GB 至 141 GB | 延迟: ~400..800 周期 | 带宽: 3.35 至 4.8 TB/s"]</code></pre>
-<h3 id="11">1.1 硬件内存金字塔<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
-<p>以 NVIDIA H100 SXM5 加速卡为例：</p>
+    L2 --&gt; HBM["🐢 高带宽内存 High-Bandwidth Memory (片外 HBM3 / HBM3e)&lt;br&gt;容量: 80 GB 至 141 GB | 延迟: ~400..800 周期 | 带宽: 3.35 至 4.8 TB/s"]
+    HBM --&gt;|"PCIe 5.0 x16 / NVLink-C2C 总线"| CPU_RAM["💻 Host 端 CPU 系统内存 (DDR5)&lt;br&gt;容量: 512 GB 至 2 TB | 延迟: ~100 ns | 带宽: ~64 GB/s (PCIe) / ~900 GB/s (NVLink-C2C)"]
+    CPU_RAM --&gt;|"PCIe Gen5 NVMe 控制器"| NVME["💾 Host 端 NVMe SSD Flash 闪存 (NAND)&lt;br&gt;容量: 1 TB 至 30 TB | 延迟: ~10..100 us | 带宽: 7 至 14 GB/s"]</code></pre>
+<h3 id="11">1.1 完整的加速器节点存储金字塔<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<p>以现代企业级 LLM 服务节点 (例如 NVIDIA H100 SXM5 服务器) 为例：</p>
 <table>
 <thead>
 <tr>
 <th style="text-align: left;">内存层级</th>
 <th style="text-align: left;">物理位置</th>
-<th style="text-align: left;">容量 (H100 SXM5)</th>
+<th style="text-align: left;">容量 (H100 节点)</th>
 <th style="text-align: left;">理论峰值带宽</th>
 <th style="text-align: left;">访问延迟</th>
 <th style="text-align: left;">主要服务用途</th>
@@ -1239,7 +1263,23 @@
 <td style="text-align: left;"><span class="arithmatex">\(80 \text{ GB}\)</span></td>
 <td style="text-align: left;"><span class="arithmatex">\(3.35 \text{ TB/s}\)</span></td>
 <td style="text-align: left;"><span class="arithmatex">\(\sim 400 \dots 800 \text{ 周期}\)</span></td>
-<td style="text-align: left;">存放模型权重与物理 KV Cache Block</td>
+<td style="text-align: left;">活跃模型权重与物理 KV Cache Block</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>CPU 系统内存 (DDR5)</strong></td>
+<td style="text-align: left;">Host 主板</td>
+<td style="text-align: left;"><span class="arithmatex">\(512 \text{ GB} \dots 2 \text{ TB}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 64 \text{ GB/s}\)</span> (PCIe 5.0)</td>
+<td style="text-align: left;"><span class="arithmatex">\(\sim 100 \text{ ns}\)</span></td>
+<td style="text-align: left;"><strong>vLLM CPU KV Cache 换页/Swap 空间</strong> (<code>cpu_swap_space</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>NVMe SSD 闪存 (NAND)</strong></td>
+<td style="text-align: left;">PCIe NVMe 插槽</td>
+<td style="text-align: left;"><span class="arithmatex">\(1 \text{ TB} \dots 30 \text{ TB}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(7 \dots 14 \text{ GB/s}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(10 \dots 100 \ \mu\text{s}\)</span></td>
+<td style="text-align: left;">冷启动模型权重加载与磁盘 Prefix 缓存</td>
 </tr>
 </tbody>
 </table>
@@ -1252,6 +1292,18 @@
 <li><strong>Warp 调度器切换</strong>: 硬件 Warp 调度器会上下文切换到其他活跃 Warp。但若所有 Warp 都在等待 HBM 数据传输，<strong>SM 将完全处于停顿 (Stall) 状态</strong>。</li>
 </ol>
 <p>Kernel 优化的核心目标就是通过将矩阵块暂存到<strong>片上共享内存 (SRAM)</strong> 中，大幅减少片外 HBM 的读取次数。</p>
+<hr />
+<h3 id="13-hbm-host-cpu-nvme-ssd">1.3 拓展 HBM 之外: Host CPU 内存与 NVMe SSD 存储层<a class="headerlink" href="#13-hbm-host-cpu-nvme-ssd" title="Permanent link">&para;</a></h3>
+<p>尽管高速张量计算完全在 GPU HBM 与 SRAM 内部完成，vLLM 依然充分利用了更低层级的存储介质 (Host CPU 内存与 NVMe SSD) 来做专门的内存管理：</p>
+<ol>
+<li><strong>Host CPU 系统内存 (DDR5) 与 KV Cache 换页 (Swapping)</strong>:
+   当 GPU HBM 显存被高并发请求挤爆触发抢占 (Preemption) 时，vLLM Block Manager 不会直接丢弃请求的物理 KV 块。相反，它通过 PCIe 5.0 x16 总线 (<span class="arithmatex">\(\sim 64 \text{ GB/s}\)</span>) 调用异步 CUDA 内存拷贝 (<code>cudaMemcpyAsync</code>)，将物理 KV 块安全置换 (Swap Out) 到 Host CPU 内存中。当 GPU 显存空闲时再 Swap In 回 GPU HBM。</li>
+<li><strong>Grace Hopper / Grace Blackwell (NVLink-C2C 架构)</strong>:
+   在统一芯片架构 (如 NVIDIA GH200 / GB200) 上，CPU 内存与 GPU HBM 通过 <strong>NVLink-C2C</strong> 总线相连，提供高达 <strong><span class="arithmatex">\(900 \text{ GB/s}\)</span> 的双向带宽</strong>。这使得 CPU-GPU 间的 KV 换页延迟相比传统 PCIe Gen5 降低了 <span class="arithmatex">\(&gt; 14\times\)</span>！</li>
+<li><strong>NVMe SSD 闪存 (NAND) 与磁盘存储</strong>:
+   NAND Flash NVMe SSD 在 <span class="arithmatex">\(7 \dots 14 \text{ GB/s}\)</span> 的带宽下提供多 TB 级巨大容量。vLLM 利用 NVMe 闪存进行<strong>冷启动模型权重快速加载</strong> (启动时通过 <code>safetensors</code> 将权重流式载入 HBM) 以及<strong>持久化磁盘级 Prefix 缓存</strong> (跨服务重启保存静态 System Prompt KV 块)。</li>
+</ol>
+<hr />
 <hr />
 <h2 id="2-sram-tiling-kernel">第 2 部分: SRAM 分块 (Tiling) 与注意力 Kernel 机制<a class="headerlink" href="#2-sram-tiling-kernel" title="Permanent link">&para;</a></h2>
 <p>在标准 Self-Attention 计算 (<span class="arithmatex">\(A = \text{Softmax}(Q @ K^T / \sqrt{d}) @ V\)</span>) 中，原生 PyTorch 会在全局 HBM 显存中实例化完整的 <span class="arithmatex">\(S \times S\)</span> 注意力分数矩阵。</p>
