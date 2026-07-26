@@ -1,0 +1,1279 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An AI Engineering Textbook and Production Reference">
+      
+      
+        <meta name="author" content="linghuanym">
+      
+      
+      
+        <link rel="prev" href="../05_distributed_parallelism/">
+      
+      
+        <link rel="next" href="../appendix_glossary_and_terminology/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="en">
+        
+          <link rel="alternate" href="../zh/06_deployment_and_orchestration/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Module 6 - Deployment and Orchestration - vLLM Core Architecture & Performance Mechanics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#module-6-production-deployment-cloud-orchestration-and-observability" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-header__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            vLLM Core Architecture & Performance Mechanics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Module 6 - Deployment and Orchestration
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../zh/06_deployment_and_orchestration/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="vLLM Core Architecture &amp; Performance Mechanics" class="md-nav__button md-logo" aria-label="vLLM Core Architecture & Performance Mechanics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    vLLM Core Architecture & Performance Mechanics
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Curriculum & Principles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_llm_inference_fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 1 - Inference Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_vllm_core_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 2 - vLLM Core Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03_performance_and_quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 3 - Performance and Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04_hardware_and_kernel_optimization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 4 - Hardware and Kernel Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05_distributed_parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 5 - Distributed Parallelism
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 6 - Deployment and Orchestration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module 6 - Deployment and Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-openai-api-server-and-async-engine-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: OpenAI API Server and Async Engine Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: OpenAI API Server and Async Engine Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-non-blocking-asyncllmengine-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Non-Blocking AsyncLLMEngine Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-multi-node-distributed-cluster-orchestration-with-ray-core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: Multi-Node Distributed Cluster Orchestration with Ray Core
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: Multi-Node Distributed Cluster Orchestration with Ray Core">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-ray-actor-placement-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Ray Actor Placement Groups
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-kubernetes-production-deployment-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Kubernetes Production Deployment Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Kubernetes Production Deployment Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-critical-pod-configuration-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Critical Pod Configuration Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Critical Pod Configuration Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-shared-memory-devshm-volume-mounting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Shared Memory (/dev/shm) Volume Mounting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-gpu-resource-allocation-and-drivers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. GPU Resource Allocation and Drivers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-health-checks-and-graceful-termination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Health Checks and Graceful Termination
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-production-observability-metrics-and-keda-autoscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Production Observability, Metrics, and KEDA Autoscaling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Production Observability, Metrics, and KEDA Autoscaling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-key-vllm-prometheus-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Key vLLM Prometheus Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-keda-event-driven-horizontal-pod-autoscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 KEDA Event-Driven Horizontal Pod Autoscaling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 KEDA Event-Driven Horizontal Pod Autoscaling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-keda-scaledobject-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example KEDA ScaledObject Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-complete-production-reference-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5: Complete Production Reference Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-production-readiness-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: Production Readiness Checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix_glossary_and_terminology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix - Master Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-openai-api-server-and-async-engine-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: OpenAI API Server and Async Engine Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: OpenAI API Server and Async Engine Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-non-blocking-asyncllmengine-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Non-Blocking AsyncLLMEngine Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-multi-node-distributed-cluster-orchestration-with-ray-core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: Multi-Node Distributed Cluster Orchestration with Ray Core
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: Multi-Node Distributed Cluster Orchestration with Ray Core">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-ray-actor-placement-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Ray Actor Placement Groups
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-kubernetes-production-deployment-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Kubernetes Production Deployment Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Kubernetes Production Deployment Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-critical-pod-configuration-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Critical Pod Configuration Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Critical Pod Configuration Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-shared-memory-devshm-volume-mounting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Shared Memory (/dev/shm) Volume Mounting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-gpu-resource-allocation-and-drivers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. GPU Resource Allocation and Drivers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-health-checks-and-graceful-termination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Health Checks and Graceful Termination
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-production-observability-metrics-and-keda-autoscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Production Observability, Metrics, and KEDA Autoscaling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Production Observability, Metrics, and KEDA Autoscaling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-key-vllm-prometheus-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Key vLLM Prometheus Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-keda-event-driven-horizontal-pod-autoscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 KEDA Event-Driven Horizontal Pod Autoscaling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 KEDA Event-Driven Horizontal Pod Autoscaling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-keda-scaledobject-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example KEDA ScaledObject Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-complete-production-reference-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5: Complete Production Reference Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-production-readiness-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: Production Readiness Checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="module-6-production-deployment-cloud-orchestration-and-observability">Module 6: Production Deployment, Cloud Orchestration, and Observability<a class="headerlink" href="#module-6-production-deployment-cloud-orchestration-and-observability" title="Permanent link">&para;</a></h1>
+<p>Moving a high-performance LLM engine from a single local GPU server to enterprise-grade production requires robust deployment, cloud orchestration, and real-time observability. Production LLM serving endpoints must deliver low-latency API response streaming, scale elastically under fluctuating traffic spikes, isolate hardware failures gracefully, and expose detailed operational metrics for autoscaling.</p>
+<p>This module explores the production engineering architecture of vLLM, covering the <strong>OpenAI API Server Architecture</strong>, <strong>Ray Distributed Clusters</strong>, <strong>Kubernetes Pod Deployment Best Practices</strong>, <strong>Prometheus Metrics and KEDA Autoscaling</strong>, and a <strong>Complete Production Reference Architecture</strong>.</p>
+<hr />
+<h2 id="part-1-openai-api-server-and-async-engine-architecture">Part 1: OpenAI API Server and Async Engine Architecture<a class="headerlink" href="#part-1-openai-api-server-and-async-engine-architecture" title="Permanent link">&para;</a></h2>
+<p>vLLM provides an enterprise-ready HTTP server compatible with the <strong>OpenAI API specification</strong> (<code>vllm.entrypoints.openai.api_server</code>), supporting streaming endpoints for text completions (<code>/v1/completions</code>) and chat completions (<code>/v1/chat/completions</code>).</p>
+<pre class="mermaid"><code>flowchart TD
+    CLIENT["🌐 Client Request (HTTP POST)"] --&gt; FASTAPI["FastAPI / Uvicorn Server Layer"]
+    FASTAPI --&gt; PROTOCOL["OpenAI Protocol Handler (/v1/chat/completions)"]
+    PROTOCOL --&gt; ASYNC_ENG["AsyncLLMEngine (AsyncIO Event Loop)"]
+
+    subgraph ENGINE_CORE ["⚡ Non-Blocking Async Engine Loop"]
+        ASYNC_ENG --&gt; ADD_REQ["Engine.add_request_async()"]
+        ADD_REQ --&gt; LOOP["step_async() Iteration Loop"]
+        LOOP --&gt; SCHED["Scheduler Step -&gt; GPU Forward Pass"]
+    end
+
+    SCHED --&gt; STREAM["Server-Sent Events (SSE)&lt;br&gt;text/event-stream"]
+    STREAM --&gt; CLIENT</code></pre>
+<h3 id="11-non-blocking-asyncllmengine-architecture">1.1 Non-Blocking <code>AsyncLLMEngine</code> Architecture<a class="headerlink" href="#11-non-blocking-asyncllmengine-architecture" title="Permanent link">&para;</a></h3>
+<p>To serve thousands of concurrent HTTP clients simultaneously without blocking the CPU, vLLM decouples HTTP request handling from GPU inference using <strong><code>AsyncLLMEngine</code></strong>:</p>
+<ol>
+<li><strong>AsyncIO Event Loop</strong>: The HTTP server runs on Python's <code>asyncio</code> event loop. When a client sends a JSON payload, FastAPI parses the input and forwards it to <code>AsyncLLMEngine.add_request_async()</code>.</li>
+<li><strong>Request Queueing</strong>: Requests are pushed into an asynchronous queue (<code>AsyncStream</code>) and mapped to a unique request ID.</li>
+<li><strong>Background Worker Loop (<code>step_async()</code>)</strong>: A background task executes a continuous <code>while</code> loop calling <code>engine.step_async()</code>. In each iteration step, the scheduler selects active requests, launches the batched GPU forward pass, and streams generated token IDs back to individual client response generators.</li>
+<li><strong>Server-Sent Events (SSE) Streaming</strong>: As new tokens are generated in each GPU step, the API server formats them into <code>text/event-stream</code> chunks (<code>data: {"choices": [{"delta": {"content": "..."}}]}</code>) and streams them back to clients over HTTP instantly.</li>
+</ol>
+<hr />
+<h2 id="part-2-multi-node-distributed-cluster-orchestration-with-ray-core">Part 2: Multi-Node Distributed Cluster Orchestration with Ray Core<a class="headerlink" href="#part-2-multi-node-distributed-cluster-orchestration-with-ray-core" title="Permanent link">&para;</a></h2>
+<p>When running multi-GPU or multi-node distributed serving (e.g. Tensor Parallelism <span class="arithmatex">\(\text{TP} = 8\)</span> across 4 nodes), vLLM uses <strong>Ray Core</strong> (<code>vllm.engine.ray_utils</code>) to orchestrate worker processes.</p>
+<pre class="mermaid"><code>flowchart TD
+    DRIVER["vLLM Engine Driver Process (Head Node)"] --&gt; RAY_EXEC["Ray Worker Executor"]
+
+    subgraph RAY_CLUSTER ["Ray Cluster Placement Group (PACK Strategy)"]
+        RAY_EXEC --&gt; W0["Ray Actor Worker 0 (GPU 0 - Master)"]
+        RAY_EXEC --&gt; W1["Ray Actor Worker 1 (GPU 1)"]
+        RAY_EXEC --&gt; W7["Ray Actor Worker 7 (GPU 7)"]
+    end
+
+    W0 --&gt;|"Custom NVLink All-Reduce / Ray IPC"| W1
+    W1 --&gt;|"Custom NVLink All-Reduce / Ray IPC"| W7</code></pre>
+<h3 id="21-ray-actor-placement-groups">2.1 Ray Actor Placement Groups<a class="headerlink" href="#21-ray-actor-placement-groups" title="Permanent link">&para;</a></h3>
+<p>To ensure multi-GPU worker processes achieve physical locality and high NVLink bandwidth:</p>
+<ol>
+<li><strong>Ray Actors</strong>: vLLM wraps each GPU worker in a <strong>Ray Actor</strong> (<code>Worker</code> class). Each actor runs on a dedicated GPU.</li>
+<li><strong>Placement Groups (<code>PACK</code> Strategy)</strong>: vLLM requests Ray Placement Groups with the <code>PACK</code> bundles strategy, forcing Ray to pack GPU worker actors onto the same physical server node before spreading across nodes.</li>
+<li><strong>PyTorch Distributed Initialization</strong>: Once Ray actors are instantiated, Ray initializes <code>torch.distributed</code> process groups across the actors, enabling direct low-latency NVLink and InfiniBand transfers (<code>vllm._C.custom_ar</code>).</li>
+</ol>
+<hr />
+<h2 id="part-3-kubernetes-production-deployment-best-practices">Part 3: Kubernetes Production Deployment Best Practices<a class="headerlink" href="#part-3-kubernetes-production-deployment-best-practices" title="Permanent link">&para;</a></h2>
+<p>In enterprise cloud environments (GKE, EKS, AKS), vLLM instances are deployed as <strong>Kubernetes Pods</strong> managed by Deployment or StatefulSet controllers.</p>
+<pre class="mermaid"><code>flowchart TD
+    K8S_SVC["Kubernetes Service / Ingress"] --&gt; POD1["vLLM Pod Instance 1"]
+    K8S_SVC --&gt; POD2["vLLM Pod Instance 2"]
+
+    subgraph POD_SPEC ["📦 vLLM Pod Specification"]
+        LIMITS["NVIDIA GPU Resource Limits&lt;br&gt;nvidia.com/gpu: 8"]
+        SHM["Shared Memory Volume (/dev/shm)&lt;br&gt;emptyDir: medium: Memory | size: 16Gi"]
+        PROBES["Readiness and Liveness Probes&lt;br&gt;GET /health"]
+    end
+
+    POD1 --&gt; POD_SPEC</code></pre>
+<h3 id="31-critical-pod-configuration-requirements">3.1 Critical Pod Configuration Requirements<a class="headerlink" href="#31-critical-pod-configuration-requirements" title="Permanent link">&para;</a></h3>
+<h4 id="1-shared-memory-devshm-volume-mounting">1. Shared Memory (<code>/dev/shm</code>) Volume Mounting<a class="headerlink" href="#1-shared-memory-devshm-volume-mounting" title="Permanent link">&para;</a></h4>
+<p>By default, Docker and Kubernetes restrict the container <code>/dev/shm</code> shared memory size to a tiny <span class="arithmatex">\(64 \text{ MB}\)</span>. </p>
+<p>Because vLLM's custom NVLink All-Reduce CUDA kernels (<code>vllm._C.custom_ar</code>) and PyTorch Distributed IPC use POSIX shared memory buffers, <strong>a <span class="arithmatex">\(64 \text{ MB}\)</span> <code>/dev/shm</code> will cause immediate kernel crashes (<code>SIGBUS</code> or CUDA Out of Memory)</strong>.</p>
+<p><strong>Kubernetes Fix</strong>: Mount an <code>emptyDir</code> memory volume to <code>/dev/shm</code> with at least <span class="arithmatex">\(16 \text{ GB}\)</span> capacity:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
+<span class="w">    </span><span class="nt">emptyDir</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Memory</span>
+<span class="w">      </span><span class="nt">sizeLimit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16Gi</span>
+<span class="nt">volumeMounts</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/dev/shm</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
+</code></pre></div>
+<h4 id="2-gpu-resource-allocation-and-drivers">2. GPU Resource Allocation and Drivers<a class="headerlink" href="#2-gpu-resource-allocation-and-drivers" title="Permanent link">&para;</a></h4>
+<p>Specify exact GPU resource requests and limits using the <strong>NVIDIA GPU Operator</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">resources</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">limits</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+<span class="w">  </span><span class="nt">requests</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+</code></pre></div>
+<h4 id="3-health-checks-and-graceful-termination">3. Health Checks and Graceful Termination<a class="headerlink" href="#3-health-checks-and-graceful-termination" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Readiness Probe</strong>: Query <code>GET /health</code> to ensure the model has finished warm-up CUDA Graph capture before the Kubernetes Service routes live traffic.</li>
+<li><strong>Graceful Termination (<code>terminationGracePeriodSeconds: 120</code>)</strong>: Allows active streaming requests to complete before the pod receives <code>SIGKILL</code>.</li>
+</ul>
+<hr />
+<h2 id="part-4-production-observability-metrics-and-keda-autoscaling">Part 4: Production Observability, Metrics, and KEDA Autoscaling<a class="headerlink" href="#part-4-production-observability-metrics-and-keda-autoscaling" title="Permanent link">&para;</a></h2>
+<p>vLLM exposes a built-in Prometheus metrics endpoint (<code>/metrics</code>) for real-time monitoring and event-driven autoscaling.</p>
+<h3 id="41-key-vllm-prometheus-metrics">4.1 Key vLLM Prometheus Metrics<a class="headerlink" href="#41-key-vllm-prometheus-metrics" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric Name</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: left;">Operational Significance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>vllm:num_requests_running</code></td>
+<td style="text-align: left;">Gauge</td>
+<td style="text-align: left;">Count of active requests currently executing GPU forward passes</td>
+<td style="text-align: left;">High value indicates heavy GPU load</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>vllm:num_requests_waiting</code></td>
+<td style="text-align: left;">Gauge</td>
+<td style="text-align: left;">Count of requests queued in the scheduler waiting queue</td>
+<td style="text-align: left;"><strong>Primary trigger for Horizontal Autoscaling</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>vllm:gpu_cache_usage_perc</code></td>
+<td style="text-align: left;">Gauge</td>
+<td style="text-align: left;">Percentage of physical GPU KV cache blocks currently allocated</td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(&gt; 85\%\)</span> indicates impending preemption/swapping</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>vllm:cpu_cache_usage_perc</code></td>
+<td style="text-align: left;">Gauge</td>
+<td style="text-align: left;">Percentage of physical CPU swap KV cache blocks allocated</td>
+<td style="text-align: left;"><span class="arithmatex">\(&gt; 0\%\)</span> indicates GPU memory saturation</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>vllm:time_to_first_token_seconds</code></td>
+<td style="text-align: left;">Histogram</td>
+<td style="text-align: left;">Time To First Token (TTFT) latency distribution</td>
+<td style="text-align: left;">Key SLA metric for prompt processing</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>vllm:time_per_output_token_seconds</code></td>
+<td style="text-align: left;">Histogram</td>
+<td style="text-align: left;">Inter-Token Latency (ITL) distribution</td>
+<td style="text-align: left;">Key SLA metric for token generation speed</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="42-keda-event-driven-horizontal-pod-autoscaling">4.2 KEDA Event-Driven Horizontal Pod Autoscaling<a class="headerlink" href="#42-keda-event-driven-horizontal-pod-autoscaling" title="Permanent link">&para;</a></h3>
+<p>Standard Kubernetes Horizontal Pod Autoscalers (HPA) scale pods based on CPU or RAM usage, which is completely ineffective for GPU workloads.</p>
+<p>Production deployments use <strong>KEDA (Kubernetes Event-driven Autoscaling)</strong> to scale vLLM pod replicas dynamically based on <strong>KV Cache Usage</strong> and <strong>Waiting Queue Depth</strong>.</p>
+<pre class="mermaid"><code>flowchart TD
+    VLLM_METRICS["vLLM Pod /metrics Endpoint"] --&gt; PROM["Prometheus Monitoring Server"]
+    PROM --&gt; KEDA["KEDA ScaledObject Controller"]
+
+    subgraph SCALING_RULES ["Scaling Rule Metrics"]
+        RULE1["vllm:num_requests_waiting &gt; 5"]
+        RULE2["vllm:gpu_cache_usage_perc &gt; 0.80"]
+    end
+
+    KEDA --&gt; HPA
+    SCALING_RULES --&gt; HPA["Scale Up vLLM Pod Replicas (e.g. 2 -&gt; 10 Pods)"]</code></pre>
+<h4 id="example-keda-scaledobject-configuration">Example KEDA <code>ScaledObject</code> Configuration<a class="headerlink" href="#example-keda-scaledobject-configuration" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keda.sh/v1alpha1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ScaledObject</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-autoscaler</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">scaleTargetRef</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-deployment</span>
+<span class="w">  </span><span class="nt">minReplicaCount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">  </span><span class="nt">maxReplicaCount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">  </span><span class="nt">triggers</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prometheus</span>
+<span class="w">      </span><span class="nt">metadata</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">serverAddress</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://prometheus-k8s.monitoring:9090</span>
+<span class="w">        </span><span class="nt">metricName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm_num_requests_waiting</span>
+<span class="w">        </span><span class="nt">query</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sum(vllm:num_requests_waiting)</span>
+<span class="w">        </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;5&#39;</span>
+</code></pre></div>
+<hr />
+<h2 id="part-5-complete-production-reference-architecture">Part 5: Complete Production Reference Architecture<a class="headerlink" href="#part-5-complete-production-reference-architecture" title="Permanent link">&para;</a></h2>
+<p>The complete end-to-end enterprise serving architecture combines API gateways, KEDA autoscaling, Ray distributed clusters, and multi-tier memory management into a unified deployment topology.</p>
+<pre class="mermaid"><code>flowchart TD
+    USERS["📱 Clients and Web Applications"] --&gt; INGRESS["🌐 Cloud Ingress / Load Balancer (Envoy / NGINX)"]
+    INGRESS --&gt; GATEWAY["🚪 API Gateway (Authentication / Rate Limiting / Token Counting)"]
+
+    GATEWAY --&gt; K8S_CLUSTER["☸️ Kubernetes vLLM Serving Cluster"]
+
+    subgraph K8S_CLUSTER
+        POD_A["vLLM Pod Instance 1 (8 x H100 GPUs)&lt;br&gt;OpenAI FastApi + AsyncLLMEngine"]
+        POD_B["vLLM Pod Instance 2 (8 x H100 GPUs)&lt;br&gt;OpenAI FastApi + AsyncLLMEngine"]
+    end
+
+    subgraph POD_INTERNALS ["📦 Inside Each vLLM Pod"]
+        RAY_HEAD["Ray Cluster Manager"]
+        TP_WORKERS["TP=8 Distributed Workers (NVLink custom_ar)"]
+        BLOCK_MGR["PagedAttention Block Manager (GPU HBM + CPU Swap)"]
+        METRICS_EP["Prometheus /metrics Endpoint"]
+    end
+
+    POD_A --&gt; POD_INTERNALS
+    POD_B --&gt; POD_INTERNALS
+    METRICS_EP --&gt; PROM_SRV["📊 Prometheus Monitoring Server"]
+    PROM_SRV --&gt; KEDA_CTRL["⚡ KEDA ScaledObject Controller"]
+    KEDA_CTRL --&gt;|"Auto-scale Pod Replicas"| K8S_CLUSTER</code></pre>
+<hr />
+<h2 id="summary-production-readiness-checklist">Summary: Production Readiness Checklist<a class="headerlink" href="#summary-production-readiness-checklist" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Category</th>
+<th style="text-align: left;">Best Practice Requirement</th>
+<th style="text-align: left;">Verification Metric / Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Shared Memory</strong></td>
+<td style="text-align: left;">Mount <code>emptyDir</code> memory volume to <code>/dev/shm</code> (<span class="arithmatex">\(\ge 16 \text{ GB}\)</span>)</td>
+<td style="text-align: left;">Prevents <code>SIGBUS</code> IPC crashes during NVLink All-Reduce</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>CUDA Graphs</strong></td>
+<td style="text-align: left;">Warm-up captured CUDA Graphs for fixed batch buckets</td>
+<td style="text-align: left;">Verify <code>vllm:num_requests_running</code> latency drop at <span class="arithmatex">\(b \in \{1 \dots 128\}\)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Probes</strong></td>
+<td style="text-align: left;">Set Readiness Probe to <code>GET /health</code></td>
+<td style="text-align: left;">Ensures traffic routes only after model loading &amp; graph capture</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Autoscaling</strong></td>
+<td style="text-align: left;">Scale on <code>vllm:num_requests_waiting</code> via KEDA</td>
+<td style="text-align: left;">Prevents TTFT degradation during prompt traffic spikes</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Observability</strong></td>
+<td style="text-align: left;">Scraping Prometheus <code>/metrics</code> every 5 seconds</td>
+<td style="text-align: left;">Track TTFT (<code>vllm:time_to_first_token_seconds</code>) and GPU Cache usage</td>
+</tr>
+</tbody>
+</table>
+<p>Congratulations on completing the <strong>vLLM Core Architecture and Performance Mechanics</strong> textbook! You now possess an end-to-end mastery of LLM inference fundamentals, memory management, kernel optimization, distributed parallelism, and enterprise cloud deployment.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
