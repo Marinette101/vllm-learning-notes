@@ -8,25 +8,29 @@ This module explores the hardware engineering principles underlying vLLM's custo
 
 ## Part 1: GPU Memory Hierarchy and Bandwidth Realities
 
-To understand kernel optimization, hardware engineers model the GPU as a multi-level memory pyramid. Memory locations differ drastically in **storage capacity**, **transfer bandwidth**, and **access latency**.
+To understand kernel optimization, hardware engineers model the full accelerator node as a multi-level storage pyramid. Memory locations differ drastically in **storage capacity**, **transfer bandwidth**, and **access latency**, extending from ultra-fast on-chip GPU registers all the way down to host CPU system RAM and NVMe SSD storage.
 
 ```mermaid
 flowchart TD
     REG["⚡ Registers (Per-Thread)<br>Capacity: ~65,536 x 32-bit per SM | Latency: 0 Cycles | Bandwidth: Ultra-Fast"] --> SRAM["🔥 Shared Memory / L1 Cache (On-Chip SRAM)<br>Capacity: 228 KB per SM | Latency: ~20..30 Cycles | Bandwidth: ~19 to 33 TB/s"]
     SRAM --> L2["🚀 L2 Cache (On-Chip Global)<br>Capacity: 50 MB to 256 MB | Latency: ~150..200 Cycles | Bandwidth: ~6 to 12 TB/s"]
     L2 --> HBM["🐢 High-Bandwidth Memory (Off-Chip HBM3 / HBM3e)<br>Capacity: 80 GB to 141 GB | Latency: ~400..800 Cycles | Bandwidth: 3.35 to 4.8 TB/s"]
+    HBM -->|"PCIe 5.0 x16 / NVLink-C2C Bus"| CPU_RAM["💻 Host CPU System RAM (DDR5)<br>Capacity: 512 GB to 2 TB | Latency: ~100 ns | Bandwidth: ~64 GB/s (PCIe) / ~900 GB/s (NVLink-C2C)"]
+    CPU_RAM -->|"PCIe Gen5 NVMe Controller"| NVME["💾 Host NVMe SSD Flash (NAND)<br>Capacity: 1 TB to 30 TB | Latency: ~10..100 us | Bandwidth: 7 to 14 GB/s"]
 ```
 
-### 1.1 The Hardware Memory Pyramid
+### 1.1 The Complete Accelerator Storage Pyramid
 
-On a modern enterprise accelerator like the NVIDIA H100 SXM5:
+On a modern enterprise LLM node (e.g., NVIDIA H100 SXM5 server node):
 
-| Memory Tier | Physical Location | Capacity (H100 SXM5) | Peak Bandwidth | Access Latency | Primary Serving Purpose |
+| Memory Tier | Physical Location | Capacity (H100 Node) | Peak Bandwidth | Access Latency | Primary Serving Purpose |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Registers** | On-Chip (SM) | $256 \text{ KB}$ per SM | $> 100 \text{ TB/s}$ | $0 \text{ cycles}$ | Active thread scalar math & accumulators |
 | **Shared Memory (SRAM)** | On-Chip (SM) | $228 \text{ KB}$ per SM | $\sim 33 \text{ TB/s}$ | $\sim 20 \dots 30 \text{ cycles}$ | SRAM tiling for $Q, K, V$ attention blocks |
 | **L2 Cache** | On-Chip (Global) | $50 \text{ MB}$ | $\sim 12 \text{ TB/s}$ | $\sim 150 \dots 200 \text{ cycles}$ | Caching frequently accessed metadata & Block Tables |
-| **HBM3 Memory** | Off-Chip (DRAM) | $80 \text{ GB}$ | $3.35 \text{ TB/s}$ | $\sim 400 \dots 800 \text{ cycles}$ | Storing model weights & physical KV cache blocks |
+| **HBM3 Memory** | Off-Chip (DRAM) | $80 \text{ GB}$ | $3.35 \text{ TB/s}$ | $\sim 400 \dots 800 \text{ cycles}$ | Active model weights & physical KV cache blocks |
+| **CPU System RAM (DDR5)** | Host Motherboard | $512 \text{ GB} \dots 2 \text{ TB}$ | $\sim 64 \text{ GB/s}$ (PCIe 5.0) | $\sim 100 \text{ ns}$ | **vLLM CPU KV Cache Swapping** (`cpu_swap_space`) |
+| **NVMe SSD Flash (NAND)** | PCIe NVMe Slot | $1 \text{ TB} \dots 30 \text{ TB}$ | $7 \dots 14 \text{ GB/s}$ | $10 \dots 100 \ \mu\text{s}$ | Cold-start weight loading & disk prefix cache |
 
 ---
 
@@ -39,6 +43,19 @@ When a CUDA thread block requests a data payload (e.g., a Key tile vector) that 
 3. **Warp Scheduler Context Switching**: To prevent SM hardware idle time, the hardware warp scheduler context-switches to an alternate active warp. However, if all active warps are stalled waiting for HBM memory transfers, **the SM stalls completely**.
 
 Kernel optimization minimizes HBM memory requests by staging matrix tiles inside **On-Chip Shared Memory (SRAM)** and maximizing tile reuse.
+
+---
+
+### 1.3 Beyond HBM: Host CPU RAM and NVMe SSD Storage Tiers
+
+While high-speed computation takes place entirely inside GPU HBM and SRAM, vLLM utilizes the lower storage tiers (Host CPU System RAM and NVMe SSD Flash) for specialized memory management:
+
+1. **Host CPU System RAM (DDR5) and KV Cache Swapping**:
+   When GPU HBM is fully saturated under heavy preemption, vLLM's Block Manager does not discard active request KV blocks. Instead, it evacuates physical KV blocks from GPU HBM to Host CPU RAM via asynchronous CUDA transfers (`cudaMemcpyAsync`) over the PCIe 5.0 x16 bus ($\sim 64 \text{ GB/s}$). When GPU memory frees up, the blocks are swapped back to GPU HBM.
+2. **Grace Hopper / Grace Blackwell (NVLink-C2C Integration)**:
+   On unified architecture chips (e.g., NVIDIA GH200 / GB200), CPU System RAM and GPU HBM are connected via **NVLink-C2C** providing **$900 \text{ GB/s}$ bidirectional bandwidth**. This reduces CPU-GPU swapping latency by $> 14\times$ compared to standard PCIe Gen5.
+3. **NVMe SSD Flash (NAND) and Disk Storage**:
+   NAND Flash NVMe SSDs provide massive multi-terabyte capacity at $7 \dots 14 \text{ GB/s}$. vLLM uses NVMe Flash for **cold-start model weight loading** (streaming weights into HBM during startup via `safetensors`) and **persistent disk-level prefix caching** (storing static system prompt KV blocks across server restarts).
 
 ---
 

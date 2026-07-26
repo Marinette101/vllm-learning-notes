@@ -8,25 +8,29 @@
 
 ## 第 1 部分: GPU 内存层级结构与带宽现实
 
-在 GPU 硬件体系中，内存由多级金字塔结构组成。不同层级的物理位置在**容量**、**传输带宽**和**访问延迟**上存在极大差异。
+为了理解 Kernel 优化，硬件工程师将整个加速器节点抽象为多级存储金字塔。不同层级的物理位置在**存储容量**、**传输带宽**和**访问延迟**上存在极大差异，涵盖从片上超高速 GPU 寄存器到 Host 端 CPU 系统内存与 NVMe SSD Flash 存储。
 
 ```mermaid
 flowchart TD
     REG["⚡ 寄存器 Registers (每个 SM)<br>容量: ~65,536 x 32-bit/SM | 延迟: 0 周期 | 带宽: 极高"] --> SRAM["🔥 共享内存 Shared Memory / L1 Cache (片上 SRAM)<br>容量: 228 KB/SM | 延迟: ~20..30 周期 | 带宽: ~19 至 33 TB/s"]
     SRAM --> L2["🚀 L2 Cache (片上全局缓存)<br>容量: 50 MB 至 256 MB | 延迟: ~150..200 周期 | 带宽: ~6 至 12 TB/s"]
     L2 --> HBM["🐢 高带宽内存 High-Bandwidth Memory (片外 HBM3 / HBM3e)<br>容量: 80 GB 至 141 GB | 延迟: ~400..800 周期 | 带宽: 3.35 至 4.8 TB/s"]
+    HBM -->|"PCIe 5.0 x16 / NVLink-C2C 总线"| CPU_RAM["💻 Host 端 CPU 系统内存 (DDR5)<br>容量: 512 GB 至 2 TB | 延迟: ~100 ns | 带宽: ~64 GB/s (PCIe) / ~900 GB/s (NVLink-C2C)"]
+    CPU_RAM -->|"PCIe Gen5 NVMe 控制器"| NVME["💾 Host 端 NVMe SSD Flash 闪存 (NAND)<br>容量: 1 TB 至 30 TB | 延迟: ~10..100 us | 带宽: 7 至 14 GB/s"]
 ```
 
-### 1.1 硬件内存金字塔
+### 1.1 完整的加速器节点存储金字塔
 
-以 NVIDIA H100 SXM5 加速卡为例：
+以现代企业级 LLM 服务节点 (例如 NVIDIA H100 SXM5 服务器) 为例：
 
-| 内存层级 | 物理位置 | 容量 (H100 SXM5) | 理论峰值带宽 | 访问延迟 | 主要服务用途 |
+| 内存层级 | 物理位置 | 容量 (H100 节点) | 理论峰值带宽 | 访问延迟 | 主要服务用途 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **寄存器 Registers** | 片上 (SM) | $256 \text{ KB}$ / SM | $> 100 \text{ TB/s}$ | $0 \text{ 周期}$ | 活跃线程标量计算与累加器 |
 | **共享内存 SRAM** | 片上 (SM) | $228 \text{ KB}$ / SM | $\sim 33 \text{ TB/s}$ | $\sim 20 \dots 30 \text{ 周期}$ | $Q, K, V$ 注意力分块 SRAM Tiling 暂存 |
 | **L2 Cache** | 片上 (Global) | $50 \text{ MB}$ | $\sim 12 \text{ TB/s}$ | $\sim 150 \dots 200 \text{ 周期}$ | 缓存高频 Block Table 元数据 |
-| **HBM3 显存** | 片外 (DRAM) | $80 \text{ GB}$ | $3.35 \text{ TB/s}$ | $\sim 400 \dots 800 \text{ 周期}$ | 存放模型权重与物理 KV Cache Block |
+| **HBM3 显存** | 片外 (DRAM) | $80 \text{ GB}$ | $3.35 \text{ TB/s}$ | $\sim 400 \dots 800 \text{ 周期}$ | 活跃模型权重与物理 KV Cache Block |
+| **CPU 系统内存 (DDR5)** | Host 主板 | $512 \text{ GB} \dots 2 \text{ TB}$ | $\sim 64 \text{ GB/s}$ (PCIe 5.0) | $\sim 100 \text{ ns}$ | **vLLM CPU KV Cache 换页/Swap 空间** (`cpu_swap_space`) |
+| **NVMe SSD 闪存 (NAND)** | PCIe NVMe 插槽 | $1 \text{ TB} \dots 30 \text{ TB}$ | $7 \dots 14 \text{ GB/s}$ | $10 \dots 100 \ \mu\text{s}$ | 冷启动模型权重加载与磁盘 Prefix 缓存 |
 
 ---
 
@@ -39,6 +43,21 @@ flowchart TD
 3. **Warp 调度器切换**: 硬件 Warp 调度器会上下文切换到其他活跃 Warp。但若所有 Warp 都在等待 HBM 数据传输，**SM 将完全处于停顿 (Stall) 状态**。
 
 Kernel 优化的核心目标就是通过将矩阵块暂存到**片上共享内存 (SRAM)** 中，大幅减少片外 HBM 的读取次数。
+
+---
+
+### 1.3 拓展 HBM 之外: Host CPU 内存与 NVMe SSD 存储层
+
+尽管高速张量计算完全在 GPU HBM 与 SRAM 内部完成，vLLM 依然充分利用了更低层级的存储介质 (Host CPU 内存与 NVMe SSD) 来做专门的内存管理：
+
+1. **Host CPU 系统内存 (DDR5) 与 KV Cache 换页 (Swapping)**:
+   当 GPU HBM 显存被高并发请求挤爆触发抢占 (Preemption) 时，vLLM Block Manager 不会直接丢弃请求的物理 KV 块。相反，它通过 PCIe 5.0 x16 总线 ($\sim 64 \text{ GB/s}$) 调用异步 CUDA 内存拷贝 (`cudaMemcpyAsync`)，将物理 KV 块安全置换 (Swap Out) 到 Host CPU 内存中。当 GPU 显存空闲时再 Swap In 回 GPU HBM。
+2. **Grace Hopper / Grace Blackwell (NVLink-C2C 架构)**:
+   在统一芯片架构 (如 NVIDIA GH200 / GB200) 上，CPU 内存与 GPU HBM 通过 **NVLink-C2C** 总线相连，提供高达 **$900 \text{ GB/s}$ 的双向带宽**。这使得 CPU-GPU 间的 KV 换页延迟相比传统 PCIe Gen5 降低了 $> 14\times$！
+3. **NVMe SSD 闪存 (NAND) 与磁盘存储**:
+   NAND Flash NVMe SSD 在 $7 \dots 14 \text{ GB/s}$ 的带宽下提供多 TB 级巨大容量。vLLM 利用 NVMe 闪存进行**冷启动模型权重快速加载** (启动时通过 `safetensors` 将权重流式载入 HBM) 以及**持久化磁盘级 Prefix 缓存** (跨服务重启保存静态 System Prompt KV 块)。
+
+---
 
 ---
 
