@@ -338,22 +338,27 @@ At small batch sizes ($b = 1 \dots 4$), GPU kernel execution time for a layer is
 To eliminate CPU host launch overhead, vLLM integrates **CUDA Graphs** (`torch.cuda.graph`).
 
 #### 1. How CUDA Graphs Work
-During engine initialization, vLLM performs a warm-up phase that records the exact sequence of CUDA kernel launches, memory addresses, and execution dependencies into a static GPU execution graph.
+During engine initialization (the "warm-up" phase), vLLM executes dummy forward passes while CUDA stream capture is active (`torch.cuda.graph`).
+
+Instead of executing the pass dynamically, the NVIDIA CUDA driver records:
+1. **The exact sequence of function entry point addresses** for all 400 CUDA kernels.
+2. **The exact pre-allocated static GPU memory buffer pointers** for inputs, intermediate activations, and outputs.
+3. **The exact execution dependency graph** (which kernel depends on which prior kernel).
 
 ```mermaid
 flowchart TD
     subgraph CAPTURE ["1. Warm-Up Phase: Graph Capture"]
-        C_EXEC["Execute Forward Pass for Fixed Batch Size b"] --> C_REC["Record Kernel Launches and Dependencies into Static Graph"]
+        C_EXEC["Execute Forward Pass for Fixed Batch Size b"] --> C_REC["Record Kernel Launch Sequences and Memory Addresses into Static Graph"]
     end
 
     subgraph REPLAY ["2. Production Execution: Single Graph Replay"]
-        R_LAUNCH["CPU Issues Single C-API Launch Call<br>cdata.cudaGraphLaunchGraph()"] --> R_GPU["GPU Hardware Engine Executes Entire 400-Kernel Graph Instantly"]
+        R_LAUNCH["CPU Copies New Tokens to Static Input Buffer & Calls Single C-API:<br>cudaGraphLaunch(graph_exec)"] --> R_GPU["GPU Hardware Command Processor Executes Entire 400-Kernel Graph Autonomously!"]
     end
 
     CAPTURE ==> REPLAY
 ```
 
-During production inference, the CPU does not execute Python code or launch individual PyTorch kernels. Instead, the CPU issues a **single `cudaGraphLaunch` C-API call ($\approx 3 \ \mu\text{s}$)**, handing full execution control over to the GPU's hardware engine.
+During production inference, the CPU does not construct or evaluate PyTorch code. The CPU simply copies the new token IDs into the static GPU input buffer (`in-place copy_`), and then issues a **single `cudaGraphLaunch` C-API call ($\approx 3 \ \mu\text{s}$)**. The GPU hardware's internal command processor autonomously executes all 400 recorded kernels back-to-back at hardware speed!
 
 #### 2. Fixed-Size Batch Bucketing and Static Input Buffers
 CUDA Graphs require fixed memory addresses and fixed tensor shapes. Because active batch sizes fluctuate dynamically during continuous batching, vLLM maintains a pool of captured CUDA Graphs for discrete batch size buckets (e.g., $b \in \{1, 2, 4, 8, 16, 32, 64, 128\}$).
