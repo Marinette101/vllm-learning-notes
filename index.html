@@ -1108,7 +1108,7 @@
 </li>
 <li><strong>PagedAttention CUDA Kernel Engineering (V1 vs. V2)</strong><ul>
 <li>PagedAttention V1: One thread block per head per sequence; SM wave under-utilization during single-user long-context decoding.</li>
-<li>PagedAttention V2 &amp; Split-KV Reduction: Parallel sequence partitioning along the time axis (<span class="arithmatex">\(N_{\text{partitions}} = \text{seq\_len} / 256\)</span>), intermediate global workspace staging (<code>tmp_output</code>, <code>tmp_max_logits</code>, <code>tmp_exp_sums</code>), and <code>paged_attention_v2_reduce_kernel</code> (<span class="arithmatex">\(2.0\times \dots 5.0\times\)</span> speedup).</li>
+<li>PagedAttention V2 &amp; Split-KV Reduction: Parallel sequence partitioning along the time axis (<span class="arithmatex">\(N_{\text{partitions}} = \text{seq_len} / 256\)</span>), intermediate global workspace staging (<code>tmp_output</code>, <code>tmp_max_logits</code>, <code>tmp_exp_sums</code>), and <code>paged_attention_v2_reduce_kernel</code> (<span class="arithmatex">\(2.0\times \dots 5.0\times\)</span> speedup).</li>
 </ul>
 </li>
 <li><strong>Cross-Hardware Ecosystem Abstraction</strong><ul>

@@ -1500,7 +1500,7 @@
 <ol>
 <li><strong>Batch &amp; Head Parallelism Grid Assignment</strong>:</li>
 <li>Are batching and head dimensions parallelized inside the inner tile loop? <strong>No.</strong></li>
-<li>In CUDA execution, batch parallelism (<code>batch_size = b</code>) and head parallelism (<code>num_heads = h</code>) are mapped to the 3D CUDA Grid: <span class="arithmatex">\(\text{Grid} = (\text{num\_query\_tiles}, \text{num\_heads}, \text{batch\_size}) = (16, 64, 32)\)</span>.</li>
+<li>In CUDA execution, batch parallelism (<code>batch_size = b</code>) and head parallelism (<code>num_heads = h</code>) are mapped to the 3D CUDA Grid: <span class="arithmatex">\(\text{Grid} = (\text{num_query_tiles}, \text{num_heads}, \text{batch_size}) = (16, 64, 32)\)</span>.</li>
 <li>
 <p>Each CUDA Thread Block running on a GPU SM handles <strong>ONE specific sequence <span class="arithmatex">\(b\)</span>, ONE attention head <span class="arithmatex">\(h\)</span>, and ONE Query Block <span class="arithmatex">\(i\)</span> (<span class="arithmatex">\(B_M = 64\)</span> query tokens)</strong>. All elements inside <span class="arithmatex">\(Q_{\text{tile}}, K_{\text{tile}}, V_{\text{tile}}\)</span> belong strictly to that exact sequence and head.</p>
 </li>
