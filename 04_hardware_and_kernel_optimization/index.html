@@ -533,6 +533,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#end-to-end-concrete-example-s-1024-tokens-b_m-64-b_n-128-d-128" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Concrete Example: \(S = 1,024\) Tokens (\(B_M = 64, B_N = 128, d = 128\))
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -999,6 +1010,17 @@
     <span class="md-ellipsis">
       
         Do \(B_M\) and \(B_N\) Always Have to Be Identical?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-concrete-example-s-1024-tokens-b_m-64-b_n-128-d-128" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Concrete Example: \(S = 1,024\) Tokens (\(B_M = 64, B_N = 128, d = 128\))
       
     </span>
   </a>
@@ -1472,6 +1494,50 @@
    During autoregressive single-token decoding, <span class="arithmatex">\(B_M = 1\)</span> (only 1 Query token per sequence is evaluated at step <span class="arithmatex">\(t\)</span>), while <span class="arithmatex">\(B_N = 64\)</span> or <span class="arithmatex">\(128\)</span> (the physical KV block size scanned from HBM). Here, <span class="arithmatex">\(S_{\text{tile}}\)</span> shape is <span class="arithmatex">\([1, B_N]\)</span>.</li>
 <li><strong>SRAM &amp; Tensor Core Hardware Trade-Offs</strong>:
    Even in prefill kernels, CUDA engineers often choose asymmetric tile dimensions (e.g., <span class="arithmatex">\(B_M = 128, B_N = 64\)</span> or <span class="arithmatex">\(B_M = 64, B_N = 128\)</span>) to optimize for GPU register allocations, SRAM shared memory limits (<span class="arithmatex">\(228 \text{ KB}\)</span>), and hardware Tensor Core GEMM instruction shapes (<code>mma.sync</code> or TMA/WGMMA).</li>
+</ol>
+<h4 id="end-to-end-concrete-example-s-1024-tokens-b_m-64-b_n-128-d-128">End-to-End Concrete Example: <span class="arithmatex">\(S = 1,024\)</span> Tokens (<span class="arithmatex">\(B_M = 64, B_N = 128, d = 128\)</span>)<a class="headerlink" href="#end-to-end-concrete-example-s-1024-tokens-b_m-64-b_n-128-d-128" title="Permanent link">&para;</a></h4>
+<p>To visualize how tiling executes across a sequence, consider a sequence of <span class="arithmatex">\(S = 1,024\)</span> tokens using tile sizes <span class="arithmatex">\(B_M = 64\)</span> and <span class="arithmatex">\(B_N = 128\)</span>:</p>
+<ol>
+<li><strong>Batch &amp; Head Parallelism Grid Assignment</strong>:</li>
+<li>Are batching and head dimensions parallelized inside the inner tile loop? <strong>No.</strong></li>
+<li>In CUDA execution, batch parallelism (<code>batch_size = b</code>) and head parallelism (<code>num_heads = h</code>) are mapped to the 3D CUDA Grid:
+     $<span class="arithmatex">\(\text{Grid} = (\text{num\_query\_tiles}, \text{num\_heads}, \text{batch\_size}) = (16, 64, 32)\)</span>$</li>
+<li>
+<p>Each CUDA Thread Block running on a GPU SM handles <strong>ONE specific sequence <span class="arithmatex">\(b\)</span>, ONE attention head <span class="arithmatex">\(h\)</span>, and ONE Query Block <span class="arithmatex">\(i\)</span> (<span class="arithmatex">\(B_M = 64\)</span> query tokens)</strong>. All elements inside <span class="arithmatex">\(Q_{\text{tile}}, K_{\text{tile}}, V_{\text{tile}}\)</span> belong strictly to that exact sequence and head.</p>
+</li>
+<li>
+<p><strong>Sequence Partitioning (<span class="arithmatex">\(S = 1,024\)</span>)</strong>:</p>
+</li>
+<li><strong>Total Query Blocks</strong>: <span class="arithmatex">\(N_M = \frac{S}{B_M} = \frac{1024}{64} = \mathbf{16 \text{ blocks}}\)</span> (<span class="arithmatex">\(i = 0, 1, \dots, 15\)</span>).</li>
+<li>
+<p><strong>Total KV Blocks</strong>: <span class="arithmatex">\(N_N = \frac{S}{B_N} = \frac{1024}{128} = \mathbf{8 \text{ blocks}}\)</span> (<span class="arithmatex">\(j = 0, 1, \dots, 7\)</span>).</p>
+</li>
+<li>
+<p><strong>Step-by-Step Execution for Query Block <span class="arithmatex">\(i = 3\)</span> (Tokens <span class="arithmatex">\(192 \dots 255\)</span>)</strong>:
+   Consider the Thread Block assigned to Query Block <span class="arithmatex">\(i = 3\)</span> (Tokens <span class="arithmatex">\(192 \dots 255\)</span>, total <span class="arithmatex">\(64\)</span> query tokens):</p>
+</li>
+<li>
+<p><strong>Step 0 (Initialization)</strong>: Load <span class="arithmatex">\(Q_3\)</span> (Tokens <span class="arithmatex">\(192 \dots 255\)</span>, shape <span class="arithmatex">\([64, 128]\)</span>) into SRAM once. Initialize running output accumulator <span class="arithmatex">\(O = \mathbf{0}_{[64, 128]}\)</span>, running max <span class="arithmatex">\(m = -\infty_{[64]}\)</span>, and running sum <span class="arithmatex">\(l = \mathbf{0}_{[64]}\)</span>.</p>
+</li>
+<li><strong>Iteration <span class="arithmatex">\(j = 0\)</span> (KV Tokens <span class="arithmatex">\(0 \dots 127\)</span>)</strong>:<ul>
+<li>Load <span class="arithmatex">\(K_0\)</span> (<span class="arithmatex">\([128, 128]\)</span>) and <span class="arithmatex">\(V_0\)</span> (<span class="arithmatex">\([128, 128]\)</span>) into SRAM.</li>
+<li>Compute raw scores <span class="arithmatex">\(S^{(0)} = \frac{Q_3 @ K_0^T}{\sqrt{128}}\)</span> (shape <span class="arithmatex">\([64, 128]\)</span>). Since KV tokens <span class="arithmatex">\(0 \dots 127\)</span> are all prior to Query tokens <span class="arithmatex">\(192 \dots 255\)</span>, all attention scores are valid (unmasked).</li>
+<li>Update running Online Softmax statistics (<span class="arithmatex">\(m^{(0)}, l^{(0)}\)</span>) and accumulate output <span class="arithmatex">\(O^{(0)} = P^{(0)} @ V_0\)</span> (shape <span class="arithmatex">\([64, 128]\)</span>).</li>
+</ul>
+</li>
+<li><strong>Iteration <span class="arithmatex">\(j = 1\)</span> (KV Tokens <span class="arithmatex">\(128 \dots 255\)</span>)</strong>:<ul>
+<li>Load <span class="arithmatex">\(K_1\)</span> (<span class="arithmatex">\([128, 128]\)</span>) and <span class="arithmatex">\(V_1\)</span> (<span class="arithmatex">\([128, 128]\)</span>) into SRAM.</li>
+<li>Compute raw scores <span class="arithmatex">\(S^{(1)} = \frac{Q_3 @ K_1^T}{\sqrt{128}}\)</span> (shape <span class="arithmatex">\([64, 128]\)</span>).</li>
+<li>Apply causal mask: for key tokens <span class="arithmatex">\(&gt; \text{query token index}\)</span>, set logit to <span class="arithmatex">\(-\infty\)</span>.</li>
+<li>Update running max <span class="arithmatex">\(m^{(1)} = \max(m^{(0)}, m_{\text{new}})\)</span>, rescale previous accumulator <span class="arithmatex">\(O^{(0)}\)</span>, and add new weighted values to yield <span class="arithmatex">\(O^{(1)}\)</span>.</li>
+</ul>
+</li>
+<li><strong>Iterations <span class="arithmatex">\(j \ge 2\)</span> (KV Tokens <span class="arithmatex">\(256 \dots 1023\)</span>) — Causal Short-Circuiting</strong>:<ul>
+<li>For <span class="arithmatex">\(j \ge 2\)</span>, all KV token indices (<span class="arithmatex">\(256 \dots 1023\)</span>) are strictly greater than Query token indices (<span class="arithmatex">\(192 \dots 255\)</span>).</li>
+<li>Under causal masking, all logits would be <span class="arithmatex">\(-\infty\)</span>. FlashAttention <strong>immediately short-circuits and terminates the inner loop</strong>, skipping KV blocks <span class="arithmatex">\(2, 3, 4, 5, 6, 7\)</span> completely!</li>
+</ul>
+</li>
+<li><strong>Step 2 (Writeback)</strong>: Normalize <span class="arithmatex">\(O_{\text{final}} = \frac{O^{(1)}}{l^{(1)}}\)</span> (shape <span class="arithmatex">\([64, 128]\)</span>) and write the 64 final output vectors directly to HBM memory!</li>
 </ol>
 <p>By executing matrix multiplication (<span class="arithmatex">\(S_{\text{tile}} = Q_{\text{tile}} @ K_{\text{tile}}^T\)</span>) and weighted summation (<span class="arithmatex">\(O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}\)</span>) entirely inside SRAM, <strong>the <span class="arithmatex">\(S \times S\)</span> attention matrix is never materialized in global HBM memory</strong>, reducing memory footprint from <span class="arithmatex">\(O(S^2)\)</span> to <span class="arithmatex">\(O(S)\)</span>.</p>
 <hr />
