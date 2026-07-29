@@ -91,10 +91,31 @@ flowchart TD
     O_TILE -->|"Write Final Output Vector"| HBM_O["Off-Chip HBM<br>Global Output Tensor O"]
 ```
 
-#### Tiling Parameters
+#### Tiling Parameters and Tensor Shapes
 - $B_M$: Query tile block size along sequence dimension (typically $B_M = 64$ or $128$).
 - $B_N$: Key/Value tile block size along sequence dimension (typically $B_N = 64$ or $128$).
 - $d$: Head dimension ($d_{\text{head}} = 128$).
+
+| Tile Tensor | Mathematical Notation | Tensor Shape | Physical / Mathematical Description |
+| :--- | :--- | :--- | :--- |
+| **Query Tile** | $Q_{\text{tile}}$ | $[B_M, d]$ | $B_M$ Query tokens, each with head dimension $d$. |
+| **Key Tile** | $K_{\text{tile}}$ | $[B_N, d]$ | $B_N$ Key tokens, each with head dimension $d$. |
+| **Transposed Key Tile** | $K_{\text{tile}}^T$ | $[d, B_N]$ | Transposed Key matrix for dot-product pairing. |
+| **Raw Score Matrix Tile** | $S_{\text{tile}} = \frac{Q_{\text{tile}} @ K_{\text{tile}}^T}{\sqrt{d}}$ | $[B_M, B_N]$ | Pairwise attention scores between $B_M$ Query and $B_N$ Key tokens. |
+| **Attention Probabilities** | $P_{\text{tile}} = \text{Softmax}(S_{\text{tile}})$ | $[B_M, B_N]$ | Normalized attention probability weights. |
+| **Value Tile** | $V_{\text{tile}}$ | $[B_N, d]$ | $B_N$ Value tokens, each with head dimension $d$. |
+| **Output Accumulation Tile** | $O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}$ | $[B_M, d]$ | Weighted sum output for the $B_M$ Query tokens ($[B_M, B_N] \times [B_N, d]$). |
+
+#### Do $B_M$ and $B_N$ Always Have to Be Identical?
+**No, $B_M$ and $B_N$ do NOT need to be identical.** 
+
+1. **Mathematical Meaning of $B_M$ vs. $B_N$**:
+   - $B_M$ represents the **number of Query tokens** assigned to a CUDA thread block to evaluate in parallel.
+   - $B_N$ represents the **number of Key/Value tokens** loaded into SRAM during each inner loop iteration across the sequence length $S$.
+2. **Decode Phase Asymmetry ($B_M = 1 \ne B_N$)**:
+   During autoregressive single-token decoding, $B_M = 1$ (only 1 Query token per sequence is evaluated at step $t$), while $B_N = 64$ or $128$ (the physical KV block size scanned from HBM). Here, $S_{\text{tile}}$ shape is $[1, B_N]$.
+3. **SRAM & Tensor Core Hardware Trade-Offs**:
+   Even in prefill kernels, CUDA engineers often choose asymmetric tile dimensions (e.g., $B_M = 128, B_N = 64$ or $B_M = 64, B_N = 128$) to optimize for GPU register allocations, SRAM shared memory limits ($228 \text{ KB}$), and hardware Tensor Core GEMM instruction shapes (`mma.sync` or TMA/WGMMA).
 
 By executing matrix multiplication ($S_{\text{tile}} = Q_{\text{tile}} @ K_{\text{tile}}^T$) and weighted summation ($O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}$) entirely inside SRAM, **the $S \times S$ attention matrix is never materialized in global HBM memory**, reducing memory footprint from $O(S^2)$ to $O(S)$.
 

@@ -93,10 +93,31 @@ flowchart TD
     O_TILE -->|"写回最终输出向量"| HBM_O["片外 HBM<br>全局输出张量 O"]
 ```
 
-#### Tiling 分块参数
+#### Tiling 分块参数与张量形状
 - $B_M$: Query 沿序列维度切分块大小 (通常 $B_M = 64$ 或 $128$)。
 - $B_N$: Key/Value 沿序列维度切分块大小 (通常 $B_N = 64$ 或 $128$)。
 - $d$: Head 维度 ($d_{\text{head}} = 128$)。
+
+| 分块张量 | 数学表示 | 张量形状 (Tensor Shape) | 物理与数学含义说明 |
+| :--- | :--- | :--- | :--- |
+| **Query 分块** | $Q_{\text{tile}}$ | $[B_M, d]$ | $B_M$ 个 Query Token，每个 Token 维度为 $d$。 |
+| **Key 分块** | $K_{\text{tile}}$ | $[B_N, d]$ | $B_N$ 个 Key Token，每个 Token 维度为 $d$。 |
+| **转置 Key 分块** | $K_{\text{tile}}^T$ | $[d, B_N]$ | 用于点积配对的转置 Key 矩阵。 |
+| **原始得分矩阵分块** | $S_{\text{tile}} = \frac{Q_{\text{tile}} @ K_{\text{tile}}^T}{\sqrt{d}}$ | $[B_M, B_N]$ | $B_M$ 个 Query 与 $B_N$ 个 Key 之间的两两注意力 Logits 分数矩阵。 |
+| **注意力概率分块** | $P_{\text{tile}} = \text{Softmax}(S_{\text{tile}})$ | $[B_M, B_N]$ | 归一化后的注意力概率权重矩阵。 |
+| **Value 分块** | $V_{\text{tile}}$ | $[B_N, d]$ | $B_N$ 个 Value Token，每个 Token 维度为 $d$。 |
+| **输出累加分块** | $O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}$ | $[B_M, d]$ | $B_M$ 个 Query Token 最终加权求和输出 ($[B_M, B_N] \times [B_N, d]$)。 |
+
+#### $B_M$ 与 $B_N$ 是否必须完全相同？
+**答案是不需要，$B_M$ 与 $B_N$ 可以且经常不相同。**
+
+1. **$B_M$ 与 $B_N$ 的数学与工程含义**:
+   - $B_M$ 代表被分配给单个 CUDA 线程块 (Thread Block) **同时并行计算输出的 Query Token 数量**。
+   - $B_N$ 代表在沿着序列长度 $S$ 扫描的内层循环中，**每次加载到 SRAM 中的 Key/Value Token 数量**。
+2. **Decode 阶段的非对称性 ($B_M = 1 \ne B_N$)**:
+   在自回归单 Token 解码阶段，$B_M = 1$ (单条序列在 Step $t$ 只有一个 Query Token)，而 $B_N = 64, 128$ 或 $256$ (从 HBM 扫描物理 KV Block 的大小)。此时 $S_{\text{tile}}$ 的形状为 $[1, B_N]$。
+3. **SRAM 容量与 Tensor Core 硬件指令权衡**:
+   即使在 Prefill Kernel 中，CUDA 工程师也经常选择非对称的 Tile 尺寸 (例如 $B_M = 128, B_N = 64$ 或 $B_M = 64, B_N = 128$)，以最大化 GPU 寄存器利用率、匹配 $228 \text{ KB}$ SRAM 共享内存限制，并对齐硬件 Tensor Core GEMM 指令形状 (`mma.sync` 或 TMA/WGMMA)。
 
 由于矩阵乘法 ($S_{\text{tile}} = Q_{\text{tile}} @ K_{\text{tile}}^T$) 和加权求和 ($O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}$) 完全在 SRAM 内部完成，**$S \times S$ 的全量注意力矩阵永远不会在全局 HBM 显存中被实例化**，显存复杂度从 $O(S^2)$ 直降为 $O(S)$。
 
