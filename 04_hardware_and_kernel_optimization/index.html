@@ -512,10 +512,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tiling-parameters" class="md-nav__link">
+  <a href="#tiling-parameters-and-tensor-shapes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tiling Parameters
+        Tiling Parameters and Tensor Shapes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-b_m-and-b_n-always-have-to-be-identical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Do \(B_M\) and \(B_N\) Always Have to Be Identical?
       
     </span>
   </a>
@@ -973,10 +984,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tiling-parameters" class="md-nav__link">
+  <a href="#tiling-parameters-and-tensor-shapes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tiling Parameters
+        Tiling Parameters and Tensor Shapes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-b_m-and-b_n-always-have-to-be-identical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Do \(B_M\) and \(B_N\) Always Have to Be Identical?
       
     </span>
   </a>
@@ -1380,12 +1402,77 @@
     end
 
     O_TILE --&gt;|"Write Final Output Vector"| HBM_O["Off-Chip HBM&lt;br&gt;Global Output Tensor O"]</code></pre>
-<h4 id="tiling-parameters">Tiling Parameters<a class="headerlink" href="#tiling-parameters" title="Permanent link">&para;</a></h4>
+<h4 id="tiling-parameters-and-tensor-shapes">Tiling Parameters and Tensor Shapes<a class="headerlink" href="#tiling-parameters-and-tensor-shapes" title="Permanent link">&para;</a></h4>
 <ul>
 <li><span class="arithmatex">\(B_M\)</span>: Query tile block size along sequence dimension (typically <span class="arithmatex">\(B_M = 64\)</span> or <span class="arithmatex">\(128\)</span>).</li>
 <li><span class="arithmatex">\(B_N\)</span>: Key/Value tile block size along sequence dimension (typically <span class="arithmatex">\(B_N = 64\)</span> or <span class="arithmatex">\(128\)</span>).</li>
 <li><span class="arithmatex">\(d\)</span>: Head dimension (<span class="arithmatex">\(d_{\text{head}} = 128\)</span>).</li>
 </ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Tile Tensor</th>
+<th style="text-align: left;">Mathematical Notation</th>
+<th style="text-align: left;">Tensor Shape</th>
+<th style="text-align: left;">Physical / Mathematical Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Query Tile</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(Q_{\text{tile}}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_M, d]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(B_M\)</span> Query tokens, each with head dimension <span class="arithmatex">\(d\)</span>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Key Tile</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(K_{\text{tile}}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_N, d]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(B_N\)</span> Key tokens, each with head dimension <span class="arithmatex">\(d\)</span>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Transposed Key Tile</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(K_{\text{tile}}^T\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([d, B_N]\)</span></td>
+<td style="text-align: left;">Transposed Key matrix for dot-product pairing.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Raw Score Matrix Tile</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(S_{\text{tile}} = \frac{Q_{\text{tile}} @ K_{\text{tile}}^T}{\sqrt{d}}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_M, B_N]\)</span></td>
+<td style="text-align: left;">Pairwise attention scores between <span class="arithmatex">\(B_M\)</span> Query and <span class="arithmatex">\(B_N\)</span> Key tokens.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Attention Probabilities</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(P_{\text{tile}} = \text{Softmax}(S_{\text{tile}})\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_M, B_N]\)</span></td>
+<td style="text-align: left;">Normalized attention probability weights.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Value Tile</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(V_{\text{tile}}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_N, d]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(B_N\)</span> Value tokens, each with head dimension <span class="arithmatex">\(d\)</span>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Output Accumulation Tile</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_M, d]\)</span></td>
+<td style="text-align: left;">Weighted sum output for the <span class="arithmatex">\(B_M\)</span> Query tokens (<span class="arithmatex">\([B_M, B_N] \times [B_N, d]\)</span>).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="do-b_m-and-b_n-always-have-to-be-identical">Do <span class="arithmatex">\(B_M\)</span> and <span class="arithmatex">\(B_N\)</span> Always Have to Be Identical?<a class="headerlink" href="#do-b_m-and-b_n-always-have-to-be-identical" title="Permanent link">&para;</a></h4>
+<p><strong>No, <span class="arithmatex">\(B_M\)</span> and <span class="arithmatex">\(B_N\)</span> do NOT need to be identical.</strong> </p>
+<ol>
+<li><strong>Mathematical Meaning of <span class="arithmatex">\(B_M\)</span> vs. <span class="arithmatex">\(B_N\)</span></strong>:</li>
+<li><span class="arithmatex">\(B_M\)</span> represents the <strong>number of Query tokens</strong> assigned to a CUDA thread block to evaluate in parallel.</li>
+<li><span class="arithmatex">\(B_N\)</span> represents the <strong>number of Key/Value tokens</strong> loaded into SRAM during each inner loop iteration across the sequence length <span class="arithmatex">\(S\)</span>.</li>
+<li><strong>Decode Phase Asymmetry (<span class="arithmatex">\(B_M = 1 \ne B_N\)</span>)</strong>:
+   During autoregressive single-token decoding, <span class="arithmatex">\(B_M = 1\)</span> (only 1 Query token per sequence is evaluated at step <span class="arithmatex">\(t\)</span>), while <span class="arithmatex">\(B_N = 64\)</span> or <span class="arithmatex">\(128\)</span> (the physical KV block size scanned from HBM). Here, <span class="arithmatex">\(S_{\text{tile}}\)</span> shape is <span class="arithmatex">\([1, B_N]\)</span>.</li>
+<li><strong>SRAM &amp; Tensor Core Hardware Trade-Offs</strong>:
+   Even in prefill kernels, CUDA engineers often choose asymmetric tile dimensions (e.g., <span class="arithmatex">\(B_M = 128, B_N = 64\)</span> or <span class="arithmatex">\(B_M = 64, B_N = 128\)</span>) to optimize for GPU register allocations, SRAM shared memory limits (<span class="arithmatex">\(228 \text{ KB}\)</span>), and hardware Tensor Core GEMM instruction shapes (<code>mma.sync</code> or TMA/WGMMA).</li>
+</ol>
 <p>By executing matrix multiplication (<span class="arithmatex">\(S_{\text{tile}} = Q_{\text{tile}} @ K_{\text{tile}}^T\)</span>) and weighted summation (<span class="arithmatex">\(O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}\)</span>) entirely inside SRAM, <strong>the <span class="arithmatex">\(S \times S\)</span> attention matrix is never materialized in global HBM memory</strong>, reducing memory footprint from <span class="arithmatex">\(O(S^2)\)</span> to <span class="arithmatex">\(O(S)\)</span>.</p>
 <hr />
 <h3 id="22-numerical-stability-online-softmax-recurrence">2.2 Numerical Stability: Online Softmax Recurrence<a class="headerlink" href="#22-numerical-stability-online-softmax-recurrence" title="Permanent link">&para;</a></h3>

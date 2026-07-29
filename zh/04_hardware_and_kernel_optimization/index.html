@@ -515,7 +515,18 @@
   <a href="#tiling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tiling 分块参数
+        Tiling 分块参数与张量形状
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b_m-b_n" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        \(B_M\) 与 \(B_N\) 是否必须完全相同？
       
     </span>
   </a>
@@ -976,7 +987,18 @@
   <a href="#tiling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tiling 分块参数
+        Tiling 分块参数与张量形状
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b_m-b_n" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        \(B_M\) 与 \(B_N\) 是否必须完全相同？
       
     </span>
   </a>
@@ -1381,12 +1403,77 @@
     end
 
     O_TILE --&gt;|"写回最终输出向量"| HBM_O["片外 HBM&lt;br&gt;全局输出张量 O"]</code></pre>
-<h4 id="tiling">Tiling 分块参数<a class="headerlink" href="#tiling" title="Permanent link">&para;</a></h4>
+<h4 id="tiling">Tiling 分块参数与张量形状<a class="headerlink" href="#tiling" title="Permanent link">&para;</a></h4>
 <ul>
 <li><span class="arithmatex">\(B_M\)</span>: Query 沿序列维度切分块大小 (通常 <span class="arithmatex">\(B_M = 64\)</span> 或 <span class="arithmatex">\(128\)</span>)。</li>
 <li><span class="arithmatex">\(B_N\)</span>: Key/Value 沿序列维度切分块大小 (通常 <span class="arithmatex">\(B_N = 64\)</span> 或 <span class="arithmatex">\(128\)</span>)。</li>
 <li><span class="arithmatex">\(d\)</span>: Head 维度 (<span class="arithmatex">\(d_{\text{head}} = 128\)</span>)。</li>
 </ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">分块张量</th>
+<th style="text-align: left;">数学表示</th>
+<th style="text-align: left;">张量形状 (Tensor Shape)</th>
+<th style="text-align: left;">物理与数学含义说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Query 分块</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(Q_{\text{tile}}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_M, d]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(B_M\)</span> 个 Query Token，每个 Token 维度为 <span class="arithmatex">\(d\)</span>。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Key 分块</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(K_{\text{tile}}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_N, d]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(B_N\)</span> 个 Key Token，每个 Token 维度为 <span class="arithmatex">\(d\)</span>。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>转置 Key 分块</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(K_{\text{tile}}^T\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([d, B_N]\)</span></td>
+<td style="text-align: left;">用于点积配对的转置 Key 矩阵。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>原始得分矩阵分块</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(S_{\text{tile}} = \frac{Q_{\text{tile}} @ K_{\text{tile}}^T}{\sqrt{d}}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_M, B_N]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(B_M\)</span> 个 Query 与 <span class="arithmatex">\(B_N\)</span> 个 Key 之间的两两注意力 Logits 分数矩阵。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>注意力概率分块</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(P_{\text{tile}} = \text{Softmax}(S_{\text{tile}})\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_M, B_N]\)</span></td>
+<td style="text-align: left;">归一化后的注意力概率权重矩阵。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Value 分块</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(V_{\text{tile}}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_N, d]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(B_N\)</span> 个 Value Token，每个 Token 维度为 <span class="arithmatex">\(d\)</span>。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>输出累加分块</strong></td>
+<td style="text-align: left;"><span class="arithmatex">\(O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\([B_M, d]\)</span></td>
+<td style="text-align: left;"><span class="arithmatex">\(B_M\)</span> 个 Query Token 最终加权求和输出 (<span class="arithmatex">\([B_M, B_N] \times [B_N, d]\)</span>)。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b_m-b_n"><span class="arithmatex">\(B_M\)</span> 与 <span class="arithmatex">\(B_N\)</span> 是否必须完全相同？<a class="headerlink" href="#b_m-b_n" title="Permanent link">&para;</a></h4>
+<p><strong>答案是不需要，<span class="arithmatex">\(B_M\)</span> 与 <span class="arithmatex">\(B_N\)</span> 可以且经常不相同。</strong></p>
+<ol>
+<li><strong><span class="arithmatex">\(B_M\)</span> 与 <span class="arithmatex">\(B_N\)</span> 的数学与工程含义</strong>:</li>
+<li><span class="arithmatex">\(B_M\)</span> 代表被分配给单个 CUDA 线程块 (Thread Block) <strong>同时并行计算输出的 Query Token 数量</strong>。</li>
+<li><span class="arithmatex">\(B_N\)</span> 代表在沿着序列长度 <span class="arithmatex">\(S\)</span> 扫描的内层循环中，<strong>每次加载到 SRAM 中的 Key/Value Token 数量</strong>。</li>
+<li><strong>Decode 阶段的非对称性 (<span class="arithmatex">\(B_M = 1 \ne B_N\)</span>)</strong>:
+   在自回归单 Token 解码阶段，<span class="arithmatex">\(B_M = 1\)</span> (单条序列在 Step <span class="arithmatex">\(t\)</span> 只有一个 Query Token)，而 <span class="arithmatex">\(B_N = 64, 128\)</span> 或 <span class="arithmatex">\(256\)</span> (从 HBM 扫描物理 KV Block 的大小)。此时 <span class="arithmatex">\(S_{\text{tile}}\)</span> 的形状为 <span class="arithmatex">\([1, B_N]\)</span>。</li>
+<li><strong>SRAM 容量与 Tensor Core 硬件指令权衡</strong>:
+   即使在 Prefill Kernel 中，CUDA 工程师也经常选择非对称的 Tile 尺寸 (例如 <span class="arithmatex">\(B_M = 128, B_N = 64\)</span> 或 <span class="arithmatex">\(B_M = 64, B_N = 128\)</span>)，以最大化 GPU 寄存器利用率、匹配 <span class="arithmatex">\(228 \text{ KB}\)</span> SRAM 共享内存限制，并对齐硬件 Tensor Core GEMM 指令形状 (<code>mma.sync</code> 或 TMA/WGMMA)。</li>
+</ol>
 <p>由于矩阵乘法 (<span class="arithmatex">\(S_{\text{tile}} = Q_{\text{tile}} @ K_{\text{tile}}^T\)</span>) 和加权求和 (<span class="arithmatex">\(O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}\)</span>) 完全在 SRAM 内部完成，<strong><span class="arithmatex">\(S \times S\)</span> 的全量注意力矩阵永远不会在全局 HBM 显存中被实例化</strong>，显存复杂度从 <span class="arithmatex">\(O(S^2)\)</span> 直降为 <span class="arithmatex">\(O(S)\)</span>。</p>
 <hr />
 <h3 id="22-online-softmax">2.2 数值稳定性: Online Softmax 递推算法<a class="headerlink" href="#22-online-softmax" title="Permanent link">&para;</a></h3>
