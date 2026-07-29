@@ -125,8 +125,7 @@ flowchart TD
 
 1. **Batch 与 Head 并行度网格 (Grid) 映射**:
    - Batch 维度和 Head 维度是否在 Tile 内部循环中并行化？**否。**
-   - 在 CUDA 执行中，Batch 并行度 (`batch_size = b`) 和 Head 并行度 (`num_heads = h`) 被映射至 3D CUDA Grid：
-     $$\text{Grid 维度} = (\text{num\_query\_tiles}, \text{num\_heads}, \text{batch\_size}) = (16, 64, 32)$$
+   - 在 CUDA 执行中，Batch 并行度 (`batch_size = b`) 和 Head 并行度 (`num_heads = h`) 被映射至 3D CUDA Grid：$\text{Grid 维度} = (\text{num\_query\_tiles}, \text{num\_heads}, \text{batch\_size}) = (16, 64, 32)$。
    - 在 GPU SM 上运行的每个 CUDA 线程块 (Thread Block) 仅处理 **某一条具体的序列 $b$、某一个具体的 Head $h$ 以及某一个 Query Block $i$ ($B_M = 64$ 个 query token)**。$Q_{\text{tile}}, K_{\text{tile}}, V_{\text{tile}}$ 内部的所有元素均严格属于那一条序列和那一个 Head。
 
 2. **序列切分划分 ($S = 1,024$)**:
