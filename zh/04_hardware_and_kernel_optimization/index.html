@@ -1501,8 +1501,7 @@
 <ol>
 <li><strong>Batch 与 Head 并行度网格 (Grid) 映射</strong>:</li>
 <li>Batch 维度和 Head 维度是否在 Tile 内部循环中并行化？<strong>否。</strong></li>
-<li>在 CUDA 执行中，Batch 并行度 (<code>batch_size = b</code>) 和 Head 并行度 (<code>num_heads = h</code>) 被映射至 3D CUDA Grid：
-     $<span class="arithmatex">\(\text{Grid 维度} = (\text{num\_query\_tiles}, \text{num\_heads}, \text{batch\_size}) = (16, 64, 32)\)</span>$</li>
+<li>在 CUDA 执行中，Batch 并行度 (<code>batch_size = b</code>) 和 Head 并行度 (<code>num_heads = h</code>) 被映射至 3D CUDA Grid：<span class="arithmatex">\(\text{Grid 维度} = (\text{num\_query\_tiles}, \text{num\_heads}, \text{batch\_size}) = (16, 64, 32)\)</span>。</li>
 <li>
 <p>在 GPU SM 上运行的每个 CUDA 线程块 (Thread Block) 仅处理 <strong>某一条具体的序列 <span class="arithmatex">\(b\)</span>、某一个具体的 Head <span class="arithmatex">\(h\)</span> 以及某一个 Query Block <span class="arithmatex">\(i\)</span> (<span class="arithmatex">\(B_M = 64\)</span> 个 query token)</strong>。<span class="arithmatex">\(Q_{\text{tile}}, K_{\text{tile}}, V_{\text{tile}}\)</span> 内部的所有元素均严格属于那一条序列和那一个 Head。</p>
 </li>
