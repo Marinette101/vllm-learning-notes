@@ -119,6 +119,38 @@ flowchart TD
 3. **SRAM 容量与 Tensor Core 硬件指令权衡**:
    即使在 Prefill Kernel 中，CUDA 工程师也经常选择非对称的 Tile 尺寸 (例如 $B_M = 128, B_N = 64$ 或 $B_M = 64, B_N = 128$)，以最大化 GPU 寄存器利用率、匹配 $228 \text{ KB}$ SRAM 共享内存限制，并对齐硬件 Tensor Core GEMM 指令形状 (`mma.sync` 或 TMA/WGMMA)。
 
+#### 端到端完整示例: $S = 1,024$ 个 Token ($B_M = 64, B_N = 128, d = 128$)
+
+为了直观理解 Tiling 如何跨序列执行，考虑一个由 $S = 1,024$ 个 Token 组成的序列，采用切分尺寸 $B_M = 64$ 与 $B_N = 128$：
+
+1. **Batch 与 Head 并行度网格 (Grid) 映射**:
+   - Batch 维度和 Head 维度是否在 Tile 内部循环中并行化？**否。**
+   - 在 CUDA 执行中，Batch 并行度 (`batch_size = b`) 和 Head 并行度 (`num_heads = h`) 被映射至 3D CUDA Grid：
+     $$\text{Grid 维度} = (\text{num\_query\_tiles}, \text{num\_heads}, \text{batch\_size}) = (16, 64, 32)$$
+   - 在 GPU SM 上运行的每个 CUDA 线程块 (Thread Block) 仅处理 **某一条具体的序列 $b$、某一个具体的 Head $h$ 以及某一个 Query Block $i$ ($B_M = 64$ 个 query token)**。$Q_{\text{tile}}, K_{\text{tile}}, V_{\text{tile}}$ 内部的所有元素均严格属于那一条序列和那一个 Head。
+
+2. **序列切分划分 ($S = 1,024$)**:
+   - **Query Block 总数**: $N_M = \frac{S}{B_M} = \frac{1024}{64} = \mathbf{16 \text{ 个 Block}}$ ($i = 0, 1, \dots, 15$)。
+   - **KV Block 总数**: $N_N = \frac{S}{B_N} = \frac{1024}{128} = \mathbf{8 \text{ 个 Block}}$ ($j = 0, 1, \dots, 7$)。
+
+3. **Query Block $i = 3$ (Tokens $192 \dots 255$) 的分步执行追踪**:
+   考虑被分配给 Query Block $i = 3$ (Tokens $192 \dots 255$，共 $64$ 个 Query Token) 的线程块：
+
+   - **Step 0 (初始化)**: 将 $Q_3$ (Tokens $192 \dots 255$，形状 $[64, 128]$) 从全局 HBM 显存一次性加载至 SRAM 中。初始化运行累加器 $O = \mathbf{0}_{[64, 128]}$，运行最大值 $m = -\infty_{[64]}$，运行求和值 $l = \mathbf{0}_{[64]}$。
+   - **迭代 $j = 0$ (KV Tokens $0 \dots 127$)**:
+     - 将 $K_0$ ($[128, 128]$) 与 $V_0$ ($[128, 128]$) 加载至 SRAM。
+     - 计算原始分数 $S^{(0)} = \frac{Q_3 @ K_0^T}{\sqrt{128}}$ (形状 $[64, 128]$)。由于 KV Token $0 \dots 127$ 全部处于 Query Token $192 \dots 255$ 之前，因果掩码完全有效 (未掩码)。
+     - 更新运行 Online Softmax 统计量 ($m^{(0)}, l^{(0)}$) 并累加输出 $O^{(0)} = P^{(0)} @ V_0$ (形状 $[64, 128]$)。
+   - **迭代 $j = 1$ (KV Tokens $128 \dots 255$)**:
+     - 将 $K_1$ ($[128, 128]$) 与 $V_1$ ($[128, 128]$) 加载至 SRAM。
+     - 计算原始分数 $S^{(1)} = \frac{Q_3 @ K_1^T}{\sqrt{128}}$ (形状 $[64, 128]$)。
+     - 应用因果掩码 (Causal Mask)：对于 Key Token 索引 $> \text{Query Token 索引}$ 的位置，将 Logits 设为 $-\infty$。
+     - 更新运行最大值 $m^{(1)} = \max(m^{(0)}, m_{\text{new}})$，缩放先前的累加结果 $O^{(0)}$，并加入新的加权值产生 $O^{(1)}$。
+   - **迭代 $j \ge 2$ (KV Tokens $256 \dots 1023$) — 因果短路优化 (Causal Short-Circuiting)**:
+     - 对于 $j \ge 2$，所有 KV Token 索引 ($256 \dots 1023$) 均严格大于 Query Token 索引 ($192 \dots 255$)。
+     - 在因果掩码下，所有的 Logits 均为 $-\infty$。FlashAttention **立即触发短路并终止内层循环**，完全跳过对 KV Block $2, 3, 4, 5, 6, 7$ 的加载！
+   - **Step 2 (写回)**: 归一化 $O_{\text{final}} = \frac{O^{(1)}}{l^{(1)}}$ (形状 $[64, 128]$)，并将这 64 个最终输出向量直接写回 HBM 显存！
+
 由于矩阵乘法 ($S_{\text{tile}} = Q_{\text{tile}} @ K_{\text{tile}}^T$) 和加权求和 ($O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}$) 完全在 SRAM 内部完成，**$S \times S$ 的全量注意力矩阵永远不会在全局 HBM 显存中被实例化**，显存复杂度从 $O(S^2)$ 直降为 $O(S)$。
 
 ---

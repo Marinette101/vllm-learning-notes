@@ -117,6 +117,38 @@ flowchart TD
 3. **SRAM & Tensor Core Hardware Trade-Offs**:
    Even in prefill kernels, CUDA engineers often choose asymmetric tile dimensions (e.g., $B_M = 128, B_N = 64$ or $B_M = 64, B_N = 128$) to optimize for GPU register allocations, SRAM shared memory limits ($228 \text{ KB}$), and hardware Tensor Core GEMM instruction shapes (`mma.sync` or TMA/WGMMA).
 
+#### End-to-End Concrete Example: $S = 1,024$ Tokens ($B_M = 64, B_N = 128, d = 128$)
+
+To visualize how tiling executes across a sequence, consider a sequence of $S = 1,024$ tokens using tile sizes $B_M = 64$ and $B_N = 128$:
+
+1. **Batch & Head Parallelism Grid Assignment**:
+   - Are batching and head dimensions parallelized inside the inner tile loop? **No.**
+   - In CUDA execution, batch parallelism (`batch_size = b`) and head parallelism (`num_heads = h`) are mapped to the 3D CUDA Grid:
+     $$\text{Grid} = (\text{num\_query\_tiles}, \text{num\_heads}, \text{batch\_size}) = (16, 64, 32)$$
+   - Each CUDA Thread Block running on a GPU SM handles **ONE specific sequence $b$, ONE attention head $h$, and ONE Query Block $i$ ($B_M = 64$ query tokens)**. All elements inside $Q_{\text{tile}}, K_{\text{tile}}, V_{\text{tile}}$ belong strictly to that exact sequence and head.
+
+2. **Sequence Partitioning ($S = 1,024$)**:
+   - **Total Query Blocks**: $N_M = \frac{S}{B_M} = \frac{1024}{64} = \mathbf{16 \text{ blocks}}$ ($i = 0, 1, \dots, 15$).
+   - **Total KV Blocks**: $N_N = \frac{S}{B_N} = \frac{1024}{128} = \mathbf{8 \text{ blocks}}$ ($j = 0, 1, \dots, 7$).
+
+3. **Step-by-Step Execution for Query Block $i = 3$ (Tokens $192 \dots 255$)**:
+   Consider the Thread Block assigned to Query Block $i = 3$ (Tokens $192 \dots 255$, total $64$ query tokens):
+
+   - **Step 0 (Initialization)**: Load $Q_3$ (Tokens $192 \dots 255$, shape $[64, 128]$) into SRAM once. Initialize running output accumulator $O = \mathbf{0}_{[64, 128]}$, running max $m = -\infty_{[64]}$, and running sum $l = \mathbf{0}_{[64]}$.
+   - **Iteration $j = 0$ (KV Tokens $0 \dots 127$)**:
+     - Load $K_0$ ($[128, 128]$) and $V_0$ ($[128, 128]$) into SRAM.
+     - Compute raw scores $S^{(0)} = \frac{Q_3 @ K_0^T}{\sqrt{128}}$ (shape $[64, 128]$). Since KV tokens $0 \dots 127$ are all prior to Query tokens $192 \dots 255$, all attention scores are valid (unmasked).
+     - Update running Online Softmax statistics ($m^{(0)}, l^{(0)}$) and accumulate output $O^{(0)} = P^{(0)} @ V_0$ (shape $[64, 128]$).
+   - **Iteration $j = 1$ (KV Tokens $128 \dots 255$)**:
+     - Load $K_1$ ($[128, 128]$) and $V_1$ ($[128, 128]$) into SRAM.
+     - Compute raw scores $S^{(1)} = \frac{Q_3 @ K_1^T}{\sqrt{128}}$ (shape $[64, 128]$).
+     - Apply causal mask: for key tokens $> \text{query token index}$, set logit to $-\infty$.
+     - Update running max $m^{(1)} = \max(m^{(0)}, m_{\text{new}})$, rescale previous accumulator $O^{(0)}$, and add new weighted values to yield $O^{(1)}$.
+   - **Iterations $j \ge 2$ (KV Tokens $256 \dots 1023$) — Causal Short-Circuiting**:
+     - For $j \ge 2$, all KV token indices ($256 \dots 1023$) are strictly greater than Query token indices ($192 \dots 255$).
+     - Under causal masking, all logits would be $-\infty$. FlashAttention **immediately short-circuits and terminates the inner loop**, skipping KV blocks $2, 3, 4, 5, 6, 7$ completely!
+   - **Step 2 (Writeback)**: Normalize $O_{\text{final}} = \frac{O^{(1)}}{l^{(1)}}$ (shape $[64, 128]$) and write the 64 final output vectors directly to HBM memory!
+
 By executing matrix multiplication ($S_{\text{tile}} = Q_{\text{tile}} @ K_{\text{tile}}^T$) and weighted summation ($O_{\text{tile}} = P_{\text{tile}} @ V_{\text{tile}}$) entirely inside SRAM, **the $S \times S$ attention matrix is never materialized in global HBM memory**, reducing memory footprint from $O(S^2)$ to $O(S)$.
 
 ---
