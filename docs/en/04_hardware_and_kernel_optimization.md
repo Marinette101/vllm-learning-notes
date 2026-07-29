@@ -123,7 +123,7 @@ To visualize how tiling executes across a sequence, consider a sequence of $S = 
 
 1. **Batch & Head Parallelism Grid Assignment**:
    - Are batching and head dimensions parallelized inside the inner tile loop? **No.**
-   - In CUDA execution, batch parallelism (`batch_size = b`) and head parallelism (`num_heads = h`) are mapped to the 3D CUDA Grid: $\text{Grid} = (\text{num\_query\_tiles}, \text{num\_heads}, \text{batch\_size}) = (16, 64, 32)$.
+   - In CUDA execution, batch parallelism (`batch_size = b`) and head parallelism (`num_heads = h`) are mapped to the 3D CUDA Grid: $\text{Grid} = (\text{num_query_tiles}, \text{num_heads}, \text{batch_size}) = (16, 64, 32)$.
    - Each CUDA Thread Block running on a GPU SM handles **ONE specific sequence $b$, ONE attention head $h$, and ONE Query Block $i$ ($B_M = 64$ query tokens)**. All elements inside $Q_{\text{tile}}, K_{\text{tile}}, V_{\text{tile}}$ belong strictly to that exact sequence and head.
 
 2. **Sequence Partitioning ($S = 1,024$)**:

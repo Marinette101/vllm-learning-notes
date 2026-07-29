@@ -154,7 +154,7 @@ $$
     - Online Softmax incremental recurrence equations ($m^{(j)}, l^{(j)}, O^{(j)}$) for single-pass stability.
 3. **PagedAttention CUDA Kernel Engineering (V1 vs. V2)**
     - PagedAttention V1: One thread block per head per sequence; SM wave under-utilization during single-user long-context decoding.
-    - PagedAttention V2 & Split-KV Reduction: Parallel sequence partitioning along the time axis ($N_{\text{partitions}} = \text{seq\_len} / 256$), intermediate global workspace staging (`tmp_output`, `tmp_max_logits`, `tmp_exp_sums`), and `paged_attention_v2_reduce_kernel` ($2.0\times \dots 5.0\times$ speedup).
+    - PagedAttention V2 & Split-KV Reduction: Parallel sequence partitioning along the time axis ($N_{\text{partitions}} = \text{seq_len} / 256$), intermediate global workspace staging (`tmp_output`, `tmp_max_logits`, `tmp_exp_sums`), and `paged_attention_v2_reduce_kernel` ($2.0\times \dots 5.0\times$ speedup).
 4. **Cross-Hardware Ecosystem Abstraction**
     - AMD ROCm (HIP): Wavefront 64 (`wave64`) thread alignment, AMD Composable Kernel (CK) for MI300X Matrix Cores, and MI300X $192 \text{ GB}$ HBM3 ($5.3 \text{ TB/s}$).
     - Google TPUs: XLA Paged KV custom calls and static block table padding.
