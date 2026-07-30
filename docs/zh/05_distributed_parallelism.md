@@ -90,6 +90,29 @@ $$
 Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
 $$
 
+#### 深度架构剖析: 为什么必须先按列并行再按行并行？
+Megatron-LM 与 vLLM 中的一个核心设计问题是：*为什么 $W_Q, W_K, W_V, W_{\text{Gate}}, W_{\text{Up}}$ 采用按列并行，而 $W_O, W_{\text{Down}}$ 必须采用按行并行？*
+
+1. **维度契合消除层间通信**:
+   - 第一层按列并行 (如 $W_{\text{Gate}}, W_{\text{Up}}$) 在 GPU $i$ 上的输出维度为 $\left[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}\right]$。
+   - 第二层按行并行 (如 $W_{\text{Down}}$) 的输入恰好需要一个沿行切分为 $\frac{d_{\text{ffn}}}{N_{\text{TP}}}$ 维度的矩阵。
+   - 由于第一层的输出列维度**完全精准契合**第二层的输入行维度，GPU $i$ 可以将其局部输出 $X_i$ **零通信**直接喂入 $W_{\text{Down}, i}$！
+   - 如果两层都采用按列并行，GPU $i$ 将被迫在第二层之前执行一次 **All-Gather**，并在第二层之后执行一次 **All-Reduce**。通过“按列并行 $\to$ 按行并行”的组合，通信被成功压制为**每个子层仅需一次 All-Reduce** (在 $W_O$ 和 $W_{\text{Down}}$ 结尾处)。
+
+#### 跨层 GPU 权重切分映射
+假设张量并行度 $N_{\text{TP}} = 4$：
+- **GPU 0** 保存整个模型中**每一层** $l \in [1 \dots L]$ 的切片 $W_0^{(l)}$。
+- **GPU 1** 保存整个模型中**每一层** $l \in [1 \dots L]$ 的切片 $W_1^{(l)}$。
+- **GPU 2** 保存整个模型中**每一层** $l \in [1 \dots L]$ 的切片 $W_2^{(l)}$。
+- **GPU 3** 保存整个模型中**每一层** $l \in [1 \dots L]$ 的切片 $W_3^{(l)}$。
+
+以 Llama 3 70B 为例 (80 层，64 个 Q Head，8 个 KV Head，$d_{\text{ffn}} = 28,672$)：
+- 对于第 $l$ 层的 $W_Q$: GPU 1 保存 16 个 Query Head (Head $16 \dots 31$)。
+- 对于第 $l$ 层的 $W_O$: GPU 1 保存 8,192 行中的 $2048 \dots 4095$ 行。
+- 对于第 $l$ 层的 $W_{\text{Gate}}$: GPU 1 保存 28,672 列中的 $7168 \dots 14335$ 列。
+- 对于第 $l$ 层的 $W_{\text{Down}}$: GPU 1 保存 28,672 行中的 $7168 \dots 14335$ 行。
+- 这种固定的切片映射在网络的**全部 80 层**中系统性重复。
+
 ---
 
 ### 2.2 自定义 NVLink All-Reduce Kernel (`vllm._C.custom_ar`)

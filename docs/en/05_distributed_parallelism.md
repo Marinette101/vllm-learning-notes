@@ -90,6 +90,29 @@ $$
 Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
 $$
 
+#### Architectural Deep-Dive: Why Pair Column Parallel followed by Row Parallel?
+A critical design question in Megatron-LM and vLLM is: *Why are $W_Q, W_K, W_V, W_{\text{Gate}}, W_{\text{Up}}$ Column-Parallel, while $W_O, W_{\text{Down}}$ are Row-Parallel?*
+
+1. **Dimensional Compatibility Eliminates Inter-Layer Communication**:
+   - The output of a Column-Parallel layer (e.g., $W_{\text{Gate}}, W_{\text{Up}}$) has shape $\left[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}\right]$ on GPU $i$.
+   - The input required by a Row-Parallel layer (e.g., $W_{\text{Down}}$) expects a matrix split along its rows with dimension $\frac{d_{\text{ffn}}}{N_{\text{TP}}}$.
+   - Because the output column dimension of the 1st layer **EXACTLY MATCHES** the input row dimension of the 2nd layer, GPU $i$ passes its local output $X_i$ directly into $W_{\text{Down}, i}$ **with ZERO cross-GPU communication**!
+   - If both layers were Column-Parallel, GPU $i$ would be forced to execute an **All-Gather** before the 2nd layer AND an **All-Reduce** after it. Pairing Column-Parallel $\to$ Row-Parallel restricts communication to **exactly ONE All-Reduce per sub-layer** (at the very end of $W_O$ and $W_{\text{Down}}$).
+
+#### GPU Weight Partitioning Across All Layers
+Suppose Tensor Parallelism size is $N_{\text{TP}} = 4$:
+- **GPU 0** holds slice $W_0^{(l)}$ for **EVERY single layer** $l \in [1 \dots L]$ across the entire model.
+- **GPU 1** holds slice $W_1^{(l)}$ for **EVERY single layer** $l \in [1 \dots L]$ across the entire model.
+- **GPU 2** holds slice $W_2^{(l)}$ for **EVERY single layer** $l \in [1 \dots L]$ across the entire model.
+- **GPU 3** holds slice $W_3^{(l)}$ for **EVERY single layer** $l \in [1 \dots L]$ across the entire model.
+
+For example, on Llama 3 70B (80 layers, 64 Q heads, 8 KV heads, $d_{\text{ffn}} = 28,672$):
+- For Layer $l$'s $W_Q$: GPU 1 holds 16 Query heads (heads $16 \dots 31$).
+- For Layer $l$'s $W_O$: GPU 1 holds rows $2048 \dots 4095$ out of 8192 rows.
+- For Layer $l$'s $W_{\text{Gate}}$: GPU 1 holds columns $7168 \dots 14335$ out of 28,672 columns.
+- For Layer $l$'s $W_{\text{Down}}$: GPU 1 holds rows $7168 \dots 14335$ out of 28,672 rows.
+- This exact slice assignment repeats systematically across **all 80 layers** of the network.
+
 ---
 
 ### 2.2 Custom NVLink All-Reduce Kernels (`vllm._C.custom_ar`)
