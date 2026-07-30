@@ -549,6 +549,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#architectural-deep-dive-why-pair-column-parallel-followed-by-row-parallel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Deep-Dive: Why Pair Column Parallel followed by Row Parallel?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpu-weight-partitioning-across-all-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPU Weight Partitioning Across All Layers
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -866,6 +888,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#architectural-deep-dive-why-pair-column-parallel-followed-by-row-parallel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Deep-Dive: Why Pair Column Parallel followed by Row Parallel?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpu-weight-partitioning-across-all-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPU Weight Partitioning Across All Layers
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1118,6 +1162,27 @@ Y_i = X_i @ W_i
 <div class="arithmatex">\[
 Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
 \]</div>
+<h4 id="architectural-deep-dive-why-pair-column-parallel-followed-by-row-parallel">Architectural Deep-Dive: Why Pair Column Parallel followed by Row Parallel?<a class="headerlink" href="#architectural-deep-dive-why-pair-column-parallel-followed-by-row-parallel" title="Permanent link">&para;</a></h4>
+<p>A critical design question in Megatron-LM and vLLM is: <em>Why are <span class="arithmatex">\(W_Q, W_K, W_V, W_{\text{Gate}}, W_{\text{Up}}\)</span> Column-Parallel, while <span class="arithmatex">\(W_O, W_{\text{Down}}\)</span> are Row-Parallel?</em></p>
+<ol>
+<li><strong>Dimensional Compatibility Eliminates Inter-Layer Communication</strong>:</li>
+<li>The output of a Column-Parallel layer (e.g., <span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>) has shape <span class="arithmatex">\(\left[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}\right]\)</span> on GPU <span class="arithmatex">\(i\)</span>.</li>
+<li>The input required by a Row-Parallel layer (e.g., <span class="arithmatex">\(W_{\text{Down}}\)</span>) expects a matrix split along its rows with dimension <span class="arithmatex">\(\frac{d_{\text{ffn}}}{N_{\text{TP}}}\)</span>.</li>
+<li>Because the output column dimension of the 1st layer <strong>EXACTLY MATCHES</strong> the input row dimension of the 2nd layer, GPU <span class="arithmatex">\(i\)</span> passes its local output <span class="arithmatex">\(X_i\)</span> directly into <span class="arithmatex">\(W_{\text{Down}, i}\)</span> <strong>with ZERO cross-GPU communication</strong>!</li>
+<li>If both layers were Column-Parallel, GPU <span class="arithmatex">\(i\)</span> would be forced to execute an <strong>All-Gather</strong> before the 2nd layer AND an <strong>All-Reduce</strong> after it. Pairing Column-Parallel <span class="arithmatex">\(\to\)</span> Row-Parallel restricts communication to <strong>exactly ONE All-Reduce per sub-layer</strong> (at the very end of <span class="arithmatex">\(W_O\)</span> and <span class="arithmatex">\(W_{\text{Down}}\)</span>).</li>
+</ol>
+<h4 id="gpu-weight-partitioning-across-all-layers">GPU Weight Partitioning Across All Layers<a class="headerlink" href="#gpu-weight-partitioning-across-all-layers" title="Permanent link">&para;</a></h4>
+<p>Suppose Tensor Parallelism size is <span class="arithmatex">\(N_{\text{TP}} = 4\)</span>:
+- <strong>GPU 0</strong> holds slice <span class="arithmatex">\(W_0^{(l)}\)</span> for <strong>EVERY single layer</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> across the entire model.
+- <strong>GPU 1</strong> holds slice <span class="arithmatex">\(W_1^{(l)}\)</span> for <strong>EVERY single layer</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> across the entire model.
+- <strong>GPU 2</strong> holds slice <span class="arithmatex">\(W_2^{(l)}\)</span> for <strong>EVERY single layer</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> across the entire model.
+- <strong>GPU 3</strong> holds slice <span class="arithmatex">\(W_3^{(l)}\)</span> for <strong>EVERY single layer</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> across the entire model.</p>
+<p>For example, on Llama 3 70B (80 layers, 64 Q heads, 8 KV heads, <span class="arithmatex">\(d_{\text{ffn}} = 28,672\)</span>):
+- For Layer <span class="arithmatex">\(l\)</span>'s <span class="arithmatex">\(W_Q\)</span>: GPU 1 holds 16 Query heads (heads <span class="arithmatex">\(16 \dots 31\)</span>).
+- For Layer <span class="arithmatex">\(l\)</span>'s <span class="arithmatex">\(W_O\)</span>: GPU 1 holds rows <span class="arithmatex">\(2048 \dots 4095\)</span> out of 8192 rows.
+- For Layer <span class="arithmatex">\(l\)</span>'s <span class="arithmatex">\(W_{\text{Gate}}\)</span>: GPU 1 holds columns <span class="arithmatex">\(7168 \dots 14335\)</span> out of 28,672 columns.
+- For Layer <span class="arithmatex">\(l\)</span>'s <span class="arithmatex">\(W_{\text{Down}}\)</span>: GPU 1 holds rows <span class="arithmatex">\(7168 \dots 14335\)</span> out of 28,672 rows.
+- This exact slice assignment repeats systematically across <strong>all 80 layers</strong> of the network.</p>
 <hr />
 <h3 id="22-custom-nvlink-all-reduce-kernels-vllm_ccustom_ar">2.2 Custom NVLink All-Reduce Kernels (<code>vllm._C.custom_ar</code>)<a class="headerlink" href="#22-custom-nvlink-all-reduce-kernels-vllm_ccustom_ar" title="Permanent link">&para;</a></h3>
 <p>In PyTorch, standard <code>torch.distributed.all_reduce</code> invokes NCCL, which incurs kernel launch overhead and IPC synchronization latency (<span class="arithmatex">\(\sim 10 \dots 15 \ \mu\text{s}\)</span>).</p>

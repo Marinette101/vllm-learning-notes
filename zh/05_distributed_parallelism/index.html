@@ -549,6 +549,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        深度架构剖析: 为什么必须先按列并行再按行并行？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        跨层 GPU 权重切分映射
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -595,7 +617,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         通信效率优势
@@ -683,7 +705,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         总结: 并行策略决策矩阵
@@ -866,6 +888,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        深度架构剖析: 为什么必须先按列并行再按行并行？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        跨层 GPU 权重切分映射
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -912,7 +956,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         通信效率优势
@@ -1000,7 +1044,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         总结: 并行策略决策矩阵
@@ -1118,6 +1162,27 @@ Y_i = X_i @ W_i
 <div class="arithmatex">\[
 Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
 \]</div>
+<h4 id="_1">深度架构剖析: 为什么必须先按列并行再按行并行？<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<p>Megatron-LM 与 vLLM 中的一个核心设计问题是：<em>为什么 <span class="arithmatex">\(W_Q, W_K, W_V, W_{\text{Gate}}, W_{\text{Up}}\)</span> 采用按列并行，而 <span class="arithmatex">\(W_O, W_{\text{Down}}\)</span> 必须采用按行并行？</em></p>
+<ol>
+<li><strong>维度契合消除层间通信</strong>:</li>
+<li>第一层按列并行 (如 <span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>) 在 GPU <span class="arithmatex">\(i\)</span> 上的输出维度为 <span class="arithmatex">\(\left[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}\right]\)</span>。</li>
+<li>第二层按行并行 (如 <span class="arithmatex">\(W_{\text{Down}}\)</span>) 的输入恰好需要一个沿行切分为 <span class="arithmatex">\(\frac{d_{\text{ffn}}}{N_{\text{TP}}}\)</span> 维度的矩阵。</li>
+<li>由于第一层的输出列维度<strong>完全精准契合</strong>第二层的输入行维度，GPU <span class="arithmatex">\(i\)</span> 可以将其局部输出 <span class="arithmatex">\(X_i\)</span> <strong>零通信</strong>直接喂入 <span class="arithmatex">\(W_{\text{Down}, i}\)</span>！</li>
+<li>如果两层都采用按列并行，GPU <span class="arithmatex">\(i\)</span> 将被迫在第二层之前执行一次 <strong>All-Gather</strong>，并在第二层之后执行一次 <strong>All-Reduce</strong>。通过“按列并行 <span class="arithmatex">\(\to\)</span> 按行并行”的组合，通信被成功压制为<strong>每个子层仅需一次 All-Reduce</strong> (在 <span class="arithmatex">\(W_O\)</span> 和 <span class="arithmatex">\(W_{\text{Down}}\)</span> 结尾处)。</li>
+</ol>
+<h4 id="gpu">跨层 GPU 权重切分映射<a class="headerlink" href="#gpu" title="Permanent link">&para;</a></h4>
+<p>假设张量并行度 <span class="arithmatex">\(N_{\text{TP}} = 4\)</span>：
+- <strong>GPU 0</strong> 保存整个模型中<strong>每一层</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> 的切片 <span class="arithmatex">\(W_0^{(l)}\)</span>。
+- <strong>GPU 1</strong> 保存整个模型中<strong>每一层</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> 的切片 <span class="arithmatex">\(W_1^{(l)}\)</span>。
+- <strong>GPU 2</strong> 保存整个模型中<strong>每一层</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> 的切片 <span class="arithmatex">\(W_2^{(l)}\)</span>。
+- <strong>GPU 3</strong> 保存整个模型中<strong>每一层</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> 的切片 <span class="arithmatex">\(W_3^{(l)}\)</span>。</p>
+<p>以 Llama 3 70B 为例 (80 层，64 个 Q Head，8 个 KV Head，<span class="arithmatex">\(d_{\text{ffn}} = 28,672\)</span>)：
+- 对于第 <span class="arithmatex">\(l\)</span> 层的 <span class="arithmatex">\(W_Q\)</span>: GPU 1 保存 16 个 Query Head (Head <span class="arithmatex">\(16 \dots 31\)</span>)。
+- 对于第 <span class="arithmatex">\(l\)</span> 层的 <span class="arithmatex">\(W_O\)</span>: GPU 1 保存 8,192 行中的 <span class="arithmatex">\(2048 \dots 4095\)</span> 行。
+- 对于第 <span class="arithmatex">\(l\)</span> 层的 <span class="arithmatex">\(W_{\text{Gate}}\)</span>: GPU 1 保存 28,672 列中的 <span class="arithmatex">\(7168 \dots 14335\)</span> 列。
+- 对于第 <span class="arithmatex">\(l\)</span> 层的 <span class="arithmatex">\(W_{\text{Down}}\)</span>: GPU 1 保存 28,672 行中的 <span class="arithmatex">\(7168 \dots 14335\)</span> 行。
+- 这种固定的切片映射在网络的<strong>全部 80 层</strong>中系统性重复。</p>
 <hr />
 <h3 id="22-nvlink-all-reduce-kernel-vllm_ccustom_ar">2.2 自定义 NVLink All-Reduce Kernel (<code>vllm._C.custom_ar</code>)<a class="headerlink" href="#22-nvlink-all-reduce-kernel-vllm_ccustom_ar" title="Permanent link">&para;</a></h3>
 <p>在原生 PyTorch 中，标准 <code>torch.distributed.all_reduce</code> 会调用 NCCL 库，带来额外的 Kernel 启动开销与 IPC 同步延迟 (<span class="arithmatex">\(\sim 10 \dots 15 \ \mu\text{s}\)</span>)。</p>
@@ -1152,7 +1217,7 @@ Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
     S0_P --&gt;|"点对点传输 (P2P)"| S1_P
     S1_P --&gt;|"点对点传输 (P2P)"| S2_P
     S2_P --&gt;|"点对点传输 (P2P)"| S3_P</code></pre>
-<h4 id="_1">通信效率优势<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<h4 id="_2">通信效率优势<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
 <p>不同于张量并行 (每层需要 2 次 All-Reduce)，流水线并行在 Stage 边界之间<strong>仅需 1 次点对点 (P2P) Activation 张量传输</strong>。较小的网络通信量使得 PP 能够完美运行在跨节点的 InfiniBand / RoCE 网络上 (<span class="arithmatex">\(50 \text{ GB/s}\)</span>)。</p>
 <hr />
 <h3 id="32-cp-ring-attention">3.2 上下文并行 (CP) 与 Ring-Attention<a class="headerlink" href="#32-cp-ring-attention" title="Permanent link">&para;</a></h3>
@@ -1220,7 +1285,7 @@ y = \sum_{i \in \text{TopK}} g(x)_i \cdot \text{Expert}_i(x)
 <li><strong>Batched GEMM 执行</strong>: 发起一次分组 GEMM CUDA 启动，同时处理所有专家的计算任务，极大提升了 Tensor Core 的利用率！</li>
 </ul>
 <hr />
-<h2 id="_2">总结: 并行策略决策矩阵<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_3">总结: 并行策略决策矩阵<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
