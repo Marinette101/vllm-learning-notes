@@ -528,10 +528,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-columnparallellinear-w_q-w_k-w_v-and-w_textgate-w_textup" class="md-nav__link">
+  <a href="#1-step-1-columnparallellinear-w_textgate-w_textup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. ColumnParallelLinear (\(W_Q, W_K, W_V\) and \(W_{\text{Gate}}, W_{\text{Up}}\))
+        1. Step 1: ColumnParallelLinear (\(W_{\text{Gate}}, W_{\text{Up}}\))
       
     </span>
   </a>
@@ -539,10 +539,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-rowparallellinear-w_o-and-w_textdown" class="md-nav__link">
+  <a href="#2-step-2-rowparallellinear-w_textdown" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. RowParallelLinear (\(W_O\) and \(W_{\text{Down}}\))
+        2. Step 2: RowParallelLinear (\(W_{\text{Down}}\))
       
     </span>
   </a>
@@ -550,10 +550,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#architectural-deep-dive-why-pair-column-parallel-followed-by-row-parallel" class="md-nav__link">
+  <a href="#3-mathematical-proof-of-block-matrix-multiplication-and-all-reduce" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architectural Deep-Dive: Why Pair Column Parallel followed by Row Parallel?
+        3. Mathematical Proof of Block Matrix Multiplication and All-Reduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-of-communication-per-transformer-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary of Communication Per Transformer Layer:
       
     </span>
   </a>
@@ -867,10 +878,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-columnparallellinear-w_q-w_k-w_v-and-w_textgate-w_textup" class="md-nav__link">
+  <a href="#1-step-1-columnparallellinear-w_textgate-w_textup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. ColumnParallelLinear (\(W_Q, W_K, W_V\) and \(W_{\text{Gate}}, W_{\text{Up}}\))
+        1. Step 1: ColumnParallelLinear (\(W_{\text{Gate}}, W_{\text{Up}}\))
       
     </span>
   </a>
@@ -878,10 +889,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-rowparallellinear-w_o-and-w_textdown" class="md-nav__link">
+  <a href="#2-step-2-rowparallellinear-w_textdown" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. RowParallelLinear (\(W_O\) and \(W_{\text{Down}}\))
+        2. Step 2: RowParallelLinear (\(W_{\text{Down}}\))
       
     </span>
   </a>
@@ -889,10 +900,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#architectural-deep-dive-why-pair-column-parallel-followed-by-row-parallel" class="md-nav__link">
+  <a href="#3-mathematical-proof-of-block-matrix-multiplication-and-all-reduce" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architectural Deep-Dive: Why Pair Column Parallel followed by Row Parallel?
+        3. Mathematical Proof of Block Matrix Multiplication and All-Reduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-of-communication-per-transformer-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary of Communication Per Transformer Layer:
       
     </span>
   </a>
@@ -1139,45 +1161,62 @@
 
     AR --&gt; OUT["Final Aggregated Activation Tensor Y"]</code></pre>
 <h3 id="21-columnparallellinear-and-rowparallellinear">2.1 ColumnParallelLinear and RowParallelLinear<a class="headerlink" href="#21-columnparallellinear-and-rowparallellinear" title="Permanent link">&para;</a></h3>
-<h4 id="1-columnparallellinear-w_q-w_k-w_v-and-w_textgate-w_textup">1. ColumnParallelLinear (<span class="arithmatex">\(W_Q, W_K, W_V\)</span> and <span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>)<a class="headerlink" href="#1-columnparallellinear-w_q-w_k-w_v-and-w_textgate-w_textup" title="Permanent link">&para;</a></h4>
-<p>A weight matrix <span class="arithmatex">\(W \in \mathbb{R}^{d \times d_{\text{out}}}\)</span> is split along its <strong>columns</strong> across <span class="arithmatex">\(N_{\text{TP}}\)</span> GPUs:</p>
+<p>To understand how Tensor Parallelism works, consider a Transformer layer processing an input sequence of length <span class="arithmatex">\(S\)</span> tokens (where <span class="arithmatex">\(S\)</span> is the <strong>Sequence Length</strong>, e.g. <span class="arithmatex">\(S = 512\)</span>). The input activation tensor <span class="arithmatex">\(X\)</span> has shape <span class="arithmatex">\([S, d]\)</span> (e.g., <span class="arithmatex">\([512, 8192]\)</span>).</p>
+<p>A Transformer block consists of two distinct sub-layers, each requiring <strong>exactly ONE All-Reduce communication step</strong> at its end:
+1. <strong>Self-Attention Sub-Layer</strong>: Column-Parallel (<span class="arithmatex">\(W_Q, W_K, W_V\)</span>) <span class="arithmatex">\(\to\)</span> Attention <span class="arithmatex">\(\to\)</span> Row-Parallel (<span class="arithmatex">\(W_O\)</span>) <span class="arithmatex">\(\to\)</span> <strong>All-Reduce #1</strong>.
+2. <strong>MLP / SwiGLU Sub-Layer</strong>: Column-Parallel (<span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>) <span class="arithmatex">\(\to\)</span> SwiGLU Activation <span class="arithmatex">\(\to\)</span> Row-Parallel (<span class="arithmatex">\(W_{\text{Down}}\)</span>) <span class="arithmatex">\(\to\)</span> <strong>All-Reduce #2</strong>.</p>
+<hr />
+<h4 id="1-step-1-columnparallellinear-w_textgate-w_textup">1. Step 1: ColumnParallelLinear (<span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>)<a class="headerlink" href="#1-step-1-columnparallellinear-w_textgate-w_textup" title="Permanent link">&para;</a></h4>
+<p>In SwiGLU FFN, the un-split matrices <span class="arithmatex">\(W_{\text{Gate}}\)</span> and <span class="arithmatex">\(W_{\text{Up}}\)</span> have shape <span class="arithmatex">\([d, d_{\text{ffn}}]\)</span> (e.g., <span class="arithmatex">\([8192, 28672]\)</span>). </p>
+<p>Under Column Parallelism across <span class="arithmatex">\(N_{\text{TP}} = 4\)</span> GPUs, each weight matrix is split along its <strong>columns</strong> (the output feature dimension <span class="arithmatex">\(d_{\text{ffn}}\)</span>) into 4 vertical slices:</p>
 <div class="arithmatex">\[
-W = \begin{bmatrix} W_1 &amp; W_2 &amp; \dots &amp; W_{N_{\text{TP}}} \end{bmatrix}
+W_{\text{Gate}} = \begin{bmatrix} W_{\text{Gate}, 0} &amp; W_{\text{Gate}, 1} &amp; W_{\text{Gate}, 2} &amp; W_{\text{Gate}, 3} \end{bmatrix}, \quad \text{where } W_{\text{Gate}, i} \in \mathbb{R}^{d \times \frac{d_{\text{ffn}}}{N_{\text{TP}}}} \ \left[8192, 7168\right]
 \]</div>
-<p>Each GPU <span class="arithmatex">\(i\)</span> receives a slice <span class="arithmatex">\(W_i\)</span> and multiplies against the input activation matrix <span class="arithmatex">\(X\)</span>:</p>
+<p>On <strong>GPU 0</strong>, the local multiplication yields intermediate activation <span class="arithmatex">\(H_0\)</span>:</p>
 <div class="arithmatex">\[
-Y_i = X @ W_i
+H_0 = \text{SiLU}(X @ W_{\text{Gate}, 0}) \odot (X @ W_{\text{Up}, 0}) \implies [512, 8192] \times [8192, 7168] = \mathbf{[512, 7168]}
 \]</div>
-<p>Because <span class="arithmatex">\(Y_i\)</span> is a column slice of the full output <span class="arithmatex">\(Y = \begin{bmatrix} Y_1 &amp; Y_2 &amp; \dots &amp; Y_{N_{\text{TP}}} \end{bmatrix}\)</span>, <strong>no cross-GPU communication is needed</strong> after a ColumnParallelLinear layer!</p>
-<h4 id="2-rowparallellinear-w_o-and-w_textdown">2. RowParallelLinear (<span class="arithmatex">\(W_O\)</span> and <span class="arithmatex">\(W_{\text{Down}}\)</span>)<a class="headerlink" href="#2-rowparallellinear-w_o-and-w_textdown" title="Permanent link">&para;</a></h4>
-<p>A weight matrix <span class="arithmatex">\(W \in \mathbb{R}^{d_{\text{in}} \times d}\)</span> is split along its <strong>rows</strong> across <span class="arithmatex">\(N_{\text{TP}}\)</span> GPUs:</p>
+<ul>
+<li><strong>Shape of <span class="arithmatex">\(H_0\)</span> on GPU 0</strong>: <span class="arithmatex">\([S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}] = [512, 7168]\)</span> (columns <span class="arithmatex">\(0 \dots 7167\)</span>).</li>
+<li><strong>Shape of <span class="arithmatex">\(H_1\)</span> on GPU 1</strong>: <span class="arithmatex">\([S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}] = [512, 7168]\)</span> (columns <span class="arithmatex">\(7168 \dots 14335\)</span>).</li>
+<li><strong>Communication after Step 1</strong>: <strong>ZERO!</strong> Each GPU computes its local column slice <span class="arithmatex">\(H_i\)</span> independently.</li>
+</ul>
+<hr />
+<h4 id="2-step-2-rowparallellinear-w_textdown">2. Step 2: RowParallelLinear (<span class="arithmatex">\(W_{\text{Down}}\)</span>)<a class="headerlink" href="#2-step-2-rowparallellinear-w_textdown" title="Permanent link">&para;</a></h4>
+<p>The down-projection matrix <span class="arithmatex">\(W_{\text{Down}}\)</span> has un-split shape <span class="arithmatex">\([d_{\text{ffn}}, d]\)</span> (e.g., <span class="arithmatex">\([28672, 8192]\)</span>).</p>
+<p>Under Row Parallelism across <span class="arithmatex">\(N_{\text{TP}} = 4\)</span> GPUs, <span class="arithmatex">\(W_{\text{Down}}\)</span> is split along its <strong>rows</strong> (the input feature dimension <span class="arithmatex">\(d_{\text{ffn}}\)</span>) into 4 horizontal slices:</p>
 <div class="arithmatex">\[
-W = \begin{bmatrix} W_1 \\ W_2 \\ \vdots \\ W_{N_{\text{TP}}} \end{bmatrix}
+W_{\text{Down}} = \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix}, \quad \text{where } W_{\text{Down}, i} \in \mathbb{R}^{\frac{d_{\text{ffn}}}{N_{\text{TP}}} \times d} \ \left[7168, 8192\right]
 \]</div>
-<p>Input activation <span class="arithmatex">\(X\)</span> (which is already split column-wise as <span class="arithmatex">\(\begin{bmatrix} X_1 &amp; X_2 &amp; \dots &amp; X_{N_{\text{TP}}} \end{bmatrix}\)</span>) multiplies against <span class="arithmatex">\(W_i\)</span>:</p>
+<p><strong>Why does this pair perfectly with Step 1 without communication between Step 1 and Step 2?</strong>
+- Notice the number of rows of <span class="arithmatex">\(W_{\text{Down}, 0}\)</span> on GPU 0: <strong>it has <span class="arithmatex">\(7,168\)</span> rows!</strong>
+- Notice the number of columns of <span class="arithmatex">\(H_0\)</span> produced by Step 1 on GPU 0: <strong>it has <span class="arithmatex">\(7,168\)</span> columns!</strong>
+- <span class="arithmatex">\(\text{Columns of } H_0 \ (7,168) \equiv \text{Rows of } W_{\text{Down}, 0} \ (7,168)\)</span>.
+- Therefore, GPU 0 multiplies <span class="arithmatex">\(H_0 @ W_{\text{Down}, 0}\)</span> <strong>directly in local GPU memory without fetching any data from GPU 1, 2, or 3</strong>:</p>
 <div class="arithmatex">\[
-Y_i = X_i @ W_i
+Y_0 = H_0 @ W_{\text{Down}, 0} \implies [512, 7168] \times [7168, 8192] = \mathbf{[512, 8192]}
 \]</div>
-<p>To recover the true mathematical output <span class="arithmatex">\(Y = X @ W\)</span>, partial outputs must be summed across all GPUs:</p>
+<hr />
+<h4 id="3-mathematical-proof-of-block-matrix-multiplication-and-all-reduce">3. Mathematical Proof of Block Matrix Multiplication and All-Reduce<a class="headerlink" href="#3-mathematical-proof-of-block-matrix-multiplication-and-all-reduce" title="Permanent link">&para;</a></h4>
+<p>By standard linear algebra block matrix multiplication, multiplying full <span class="arithmatex">\(H = [H_0 \mid H_1 \mid H_2 \mid H_3]\)</span> against full <span class="arithmatex">\(W_{\text{Down}} = \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix}\)</span> equals:</p>
 <div class="arithmatex">\[
-Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
+H @ W_{\text{Down}} = \begin{bmatrix} H_0 &amp; H_1 &amp; H_2 &amp; H_3 \end{bmatrix} @ \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix} = \mathbf{H_0 @ W_{\text{Down}, 0} + H_1 @ W_{\text{Down}, 1} + H_2 @ W_{\text{Down}, 2} + H_3 @ W_{\text{Down}, 3}}
 \]</div>
-<h4 id="architectural-deep-dive-why-pair-column-parallel-followed-by-row-parallel">Architectural Deep-Dive: Why Pair Column Parallel followed by Row Parallel?<a class="headerlink" href="#architectural-deep-dive-why-pair-column-parallel-followed-by-row-parallel" title="Permanent link">&para;</a></h4>
-<p>A critical design question in Megatron-LM and vLLM is: <em>Why are <span class="arithmatex">\(W_Q, W_K, W_V, W_{\text{Gate}}, W_{\text{Up}}\)</span> Column-Parallel, while <span class="arithmatex">\(W_O, W_{\text{Down}}\)</span> are Row-Parallel?</em></p>
-<ol>
-<li><strong>Dimensional Compatibility Eliminates Inter-Layer Communication</strong>:</li>
-<li>The output of a Column-Parallel layer (e.g., <span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>) has shape <span class="arithmatex">\(\left[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}\right]\)</span> on GPU <span class="arithmatex">\(i\)</span>.</li>
-<li>The input required by a Row-Parallel layer (e.g., <span class="arithmatex">\(W_{\text{Down}}\)</span>) expects a matrix split along its rows with dimension <span class="arithmatex">\(\frac{d_{\text{ffn}}}{N_{\text{TP}}}\)</span>.</li>
-<li>Because the output column dimension of the 1st layer <strong>EXACTLY MATCHES</strong> the input row dimension of the 2nd layer, GPU <span class="arithmatex">\(i\)</span> passes its local output <span class="arithmatex">\(X_i\)</span> directly into <span class="arithmatex">\(W_{\text{Down}, i}\)</span> <strong>with ZERO cross-GPU communication</strong>!</li>
-<li>If both layers were Column-Parallel, GPU <span class="arithmatex">\(i\)</span> would be forced to execute an <strong>All-Gather</strong> before the 2nd layer AND an <strong>All-Reduce</strong> after it. Pairing Column-Parallel <span class="arithmatex">\(\to\)</span> Row-Parallel restricts communication to <strong>exactly ONE All-Reduce per sub-layer</strong> (at the very end of <span class="arithmatex">\(W_O\)</span> and <span class="arithmatex">\(W_{\text{Down}}\)</span>).</li>
-</ol>
+<p>Each GPU <span class="arithmatex">\(i\)</span> computes its partial matrix product <span class="arithmatex">\(Y_i = H_i @ W_{\text{Down}, i} \in [S, d]\)</span> locally.
+Then, a single <strong>All-Reduce (Sum)</strong> aggregates <span class="arithmatex">\(Y_0 + Y_1 + Y_2 + Y_3\)</span> across the 4 GPUs to produce the final output tensor <span class="arithmatex">\(Y \in [S, d]\)</span>.</p>
+<h4 id="summary-of-communication-per-transformer-layer">Summary of Communication Per Transformer Layer:<a class="headerlink" href="#summary-of-communication-per-transformer-layer" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Total All-Reduces per Layer</strong>: <strong>2 All-Reduces</strong> (1 at the end of the Self-Attention sub-layer after <span class="arithmatex">\(W_O\)</span>, and 1 at the end of the MLP sub-layer after <span class="arithmatex">\(W_{\text{Down}}\)</span>).</li>
+<li><strong>Communication between Column-Parallel and Row-Parallel</strong>: <strong>ZERO</strong> (because output columns of Step 1 match input rows of Step 2).</li>
+</ul>
+<hr />
 <h4 id="gpu-weight-partitioning-across-all-layers">GPU Weight Partitioning Across All Layers<a class="headerlink" href="#gpu-weight-partitioning-across-all-layers" title="Permanent link">&para;</a></h4>
 <p>Suppose Tensor Parallelism size is <span class="arithmatex">\(N_{\text{TP}} = 4\)</span>:
 - <strong>GPU 0</strong> holds slice <span class="arithmatex">\(W_0^{(l)}\)</span> for <strong>EVERY single layer</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> across the entire model.
 - <strong>GPU 1</strong> holds slice <span class="arithmatex">\(W_1^{(l)}\)</span> for <strong>EVERY single layer</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> across the entire model.
 - <strong>GPU 2</strong> holds slice <span class="arithmatex">\(W_2^{(l)}\)</span> for <strong>EVERY single layer</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> across the entire model.
 - <strong>GPU 3</strong> holds slice <span class="arithmatex">\(W_3^{(l)}\)</span> for <strong>EVERY single layer</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> across the entire model.</p>
-<p>For example, on Llama 3 70B (80 layers, 64 Q heads, 8 KV heads, <span class="arithmatex">\(d_{\text{ffn}} = 28,672\)</span>):
+<p>For example, on Llama 3 70B (80 layers, 64 Q heads, 8 KV heads, <span class="arithmatex">\(d = 8192\)</span>, <span class="arithmatex">\(d_{\text{ffn}} = 28,672\)</span>):
 - For Layer <span class="arithmatex">\(l\)</span>'s <span class="arithmatex">\(W_Q\)</span>: GPU 1 holds 16 Query heads (heads <span class="arithmatex">\(16 \dots 31\)</span>).
 - For Layer <span class="arithmatex">\(l\)</span>'s <span class="arithmatex">\(W_O\)</span>: GPU 1 holds rows <span class="arithmatex">\(2048 \dots 4095\)</span> out of 8192 rows.
 - For Layer <span class="arithmatex">\(l\)</span>'s <span class="arithmatex">\(W_{\text{Gate}}\)</span>: GPU 1 holds columns <span class="arithmatex">\(7168 \dots 14335\)</span> out of 28,672 columns.

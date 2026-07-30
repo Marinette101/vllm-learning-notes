@@ -519,19 +519,19 @@
   <a href="#21-columnparallellinear-rowparallellinear" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2.1 ColumnParallelLinear 与 RowParallelLinear
+        2.1 按列并行 (ColumnParallelLinear) 与按行并行 (RowParallelLinear)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2.1 ColumnParallelLinear 与 RowParallelLinear">
+    <nav class="md-nav" aria-label="2.1 按列并行 (ColumnParallelLinear) 与按行并行 (RowParallelLinear)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-columnparallellinear-w_q-w_k-w_v-w_textgate-w_textup" class="md-nav__link">
+  <a href="#1-columnparallellinear-w_textgate-w_textup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 按列并行 ColumnParallelLinear (\(W_Q, W_K, W_V\) 及 \(W_{\text{Gate}}, W_{\text{Up}}\))
+        1. 第一步: 按列并行 ColumnParallelLinear (\(W_{\text{Gate}}, W_{\text{Up}}\))
       
     </span>
   </a>
@@ -539,10 +539,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-rowparallellinear-w_o-w_textdown" class="md-nav__link">
+  <a href="#2-rowparallellinear-w_textdown" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. 按行并行 RowParallelLinear (\(W_O\) 及 \(W_{\text{Down}}\))
+        2. 第二步: 按行并行 RowParallelLinear (\(W_{\text{Down}}\))
       
     </span>
   </a>
@@ -550,10 +550,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#3-all-reduce" class="md-nav__link">
     <span class="md-ellipsis">
       
-        深度架构剖析: 为什么必须先按列并行再按行并行？
+        3. 分块矩阵乘法数学证明与 All-Reduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        每个 Transformer 层通信总结:
       
     </span>
   </a>
@@ -617,7 +628,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         通信效率优势
@@ -705,7 +716,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         总结: 并行策略决策矩阵
@@ -858,19 +869,19 @@
   <a href="#21-columnparallellinear-rowparallellinear" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2.1 ColumnParallelLinear 与 RowParallelLinear
+        2.1 按列并行 (ColumnParallelLinear) 与按行并行 (RowParallelLinear)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2.1 ColumnParallelLinear 与 RowParallelLinear">
+    <nav class="md-nav" aria-label="2.1 按列并行 (ColumnParallelLinear) 与按行并行 (RowParallelLinear)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-columnparallellinear-w_q-w_k-w_v-w_textgate-w_textup" class="md-nav__link">
+  <a href="#1-columnparallellinear-w_textgate-w_textup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 按列并行 ColumnParallelLinear (\(W_Q, W_K, W_V\) 及 \(W_{\text{Gate}}, W_{\text{Up}}\))
+        1. 第一步: 按列并行 ColumnParallelLinear (\(W_{\text{Gate}}, W_{\text{Up}}\))
       
     </span>
   </a>
@@ -878,10 +889,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-rowparallellinear-w_o-w_textdown" class="md-nav__link">
+  <a href="#2-rowparallellinear-w_textdown" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. 按行并行 RowParallelLinear (\(W_O\) 及 \(W_{\text{Down}}\))
+        2. 第二步: 按行并行 RowParallelLinear (\(W_{\text{Down}}\))
       
     </span>
   </a>
@@ -889,10 +900,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#3-all-reduce" class="md-nav__link">
     <span class="md-ellipsis">
       
-        深度架构剖析: 为什么必须先按列并行再按行并行？
+        3. 分块矩阵乘法数学证明与 All-Reduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        每个 Transformer 层通信总结:
       
     </span>
   </a>
@@ -956,7 +978,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         通信效率优势
@@ -1044,7 +1066,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         总结: 并行策略决策矩阵
@@ -1138,46 +1160,63 @@
     end
 
     AR --&gt; OUT["最终聚合后的 Activation 张量 Y"]</code></pre>
-<h3 id="21-columnparallellinear-rowparallellinear">2.1 ColumnParallelLinear 与 RowParallelLinear<a class="headerlink" href="#21-columnparallellinear-rowparallellinear" title="Permanent link">&para;</a></h3>
-<h4 id="1-columnparallellinear-w_q-w_k-w_v-w_textgate-w_textup">1. 按列并行 ColumnParallelLinear (<span class="arithmatex">\(W_Q, W_K, W_V\)</span> 及 <span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>)<a class="headerlink" href="#1-columnparallellinear-w_q-w_k-w_v-w_textgate-w_textup" title="Permanent link">&para;</a></h4>
-<p>权重矩阵 <span class="arithmatex">\(W \in \mathbb{R}^{d \times d_{\text{out}}}\)</span> 沿<strong>列</strong>切分到 <span class="arithmatex">\(N_{\text{TP}}\)</span> 块 GPU 上：</p>
+<h3 id="21-columnparallellinear-rowparallellinear">2.1 按列并行 (ColumnParallelLinear) 与按行并行 (RowParallelLinear)<a class="headerlink" href="#21-columnparallellinear-rowparallellinear" title="Permanent link">&para;</a></h3>
+<p>为了严密推导张量并行 (Tensor Parallelism) 的工作机制，考虑一个 Transformer 层处理长度为 <span class="arithmatex">\(S\)</span> 个 Token 的输入序列 (其中 <span class="arithmatex">\(S\)</span> 为 <strong>序列长度 Sequence Length</strong>，例如 <span class="arithmatex">\(S = 512\)</span>)。输入 Activation 张量 <span class="arithmatex">\(X\)</span> 的维度为 <span class="arithmatex">\([S, d]\)</span> (例如 <span class="arithmatex">\([512, 8192]\)</span>)。</p>
+<p>一个完整的 Transformer Block 由两个独立的子层组成，每个子层的末尾均需要<strong>恰好一次 All-Reduce 集合通信</strong>：
+1. <strong>Self-Attention 自注意力子层</strong>: 按列并行 (<span class="arithmatex">\(W_Q, W_K, W_V\)</span>) <span class="arithmatex">\(\to\)</span> 注意力计算 <span class="arithmatex">\(\to\)</span> 按行并行 (<span class="arithmatex">\(W_O\)</span>) <span class="arithmatex">\(\to\)</span> <strong>第 1 次 All-Reduce</strong>.
+2. <strong>MLP / SwiGLU 前馈网络子层</strong>: 按列并行 (<span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>) <span class="arithmatex">\(\to\)</span> SwiGLU 激活函数 <span class="arithmatex">\(\to\)</span> 按行并行 (<span class="arithmatex">\(W_{\text{Down}}\)</span>) <span class="arithmatex">\(\to\)</span> <strong>第 2 次 All-Reduce</strong>.</p>
+<hr />
+<h4 id="1-columnparallellinear-w_textgate-w_textup">1. 第一步: 按列并行 ColumnParallelLinear (<span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>)<a class="headerlink" href="#1-columnparallellinear-w_textgate-w_textup" title="Permanent link">&para;</a></h4>
+<p>在 SwiGLU FFN 中，未切分的原始矩阵 <span class="arithmatex">\(W_{\text{Gate}}\)</span> 与 <span class="arithmatex">\(W_{\text{Up}}\)</span> 的维度为 <span class="arithmatex">\([d, d_{\text{ffn}}]\)</span> (例如 <span class="arithmatex">\([8192, 28672]\)</span>)。</p>
+<p>在 <span class="arithmatex">\(N_{\text{TP}} = 4\)</span> 块 GPU 上执行按列并行时，每个权重矩阵沿其<strong>列</strong> (即输出特征维度 <span class="arithmatex">\(d_{\text{ffn}}\)</span>) 被切分为 4 个垂直切片：</p>
 <div class="arithmatex">\[
-W = \begin{bmatrix} W_1 &amp; W_2 &amp; \dots &amp; W_{N_{\text{TP}}} \end{bmatrix}
+W_{\text{Gate}} = \begin{bmatrix} W_{\text{Gate}, 0} &amp; W_{\text{Gate}, 1} &amp; W_{\text{Gate}, 2} &amp; W_{\text{Gate}, 3} \end{bmatrix}, \quad \text{其中 } W_{\text{Gate}, i} \in \mathbb{R}^{d \times \frac{d_{\text{ffn}}}{N_{\text{TP}}}} \ \left[8192, 7168\right]
 \]</div>
-<p>每块 GPU <span class="arithmatex">\(i\)</span> 独立保存分片 <span class="arithmatex">\(W_i\)</span>，并与输入 Activation 矩阵 <span class="arithmatex">\(X\)</span> 相乘：</p>
+<p>在 <strong>GPU 0</strong> 上，局部矩阵乘法产生中间 Activation <span class="arithmatex">\(H_0\)</span>：</p>
 <div class="arithmatex">\[
-Y_i = X @ W_i
+H_0 = \text{SiLU}(X @ W_{\text{Gate}, 0}) \odot (X @ W_{\text{Up}, 0}) \implies [512, 8192] \times [8192, 7168] = \mathbf{[512, 7168]}
 \]</div>
-<p>由于 <span class="arithmatex">\(Y_i\)</span> 本身就是完整输出 <span class="arithmatex">\(Y = \begin{bmatrix} Y_1 &amp; Y_2 &amp; \dots &amp; Y_{N_{\text{TP}}} \end{bmatrix}\)</span> 的一个列分片，<strong>ColumnParallelLinear 层执行完毕后无需任何跨卡通信</strong>！</p>
-<h4 id="2-rowparallellinear-w_o-w_textdown">2. 按行并行 RowParallelLinear (<span class="arithmatex">\(W_O\)</span> 及 <span class="arithmatex">\(W_{\text{Down}}\)</span>)<a class="headerlink" href="#2-rowparallellinear-w_o-w_textdown" title="Permanent link">&para;</a></h4>
-<p>权重矩阵 <span class="arithmatex">\(W \in \mathbb{R}^{d_{\text{in}} \times d}\)</span> 沿<strong>行</strong>切分到 <span class="arithmatex">\(N_{\text{TP}}\)</span> 块 GPU 上：</p>
+<ul>
+<li><strong>GPU 0 上的 <span class="arithmatex">\(H_0\)</span> 维度</strong>: <span class="arithmatex">\([S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}] = [512, 7168]\)</span> (涵盖第 <span class="arithmatex">\(0 \dots 7167\)</span> 列特征)。</li>
+<li><strong>GPU 1 上的 <span class="arithmatex">\(H_1\)</span> 维度</strong>: <span class="arithmatex">\([S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}] = [512, 7168]\)</span> (涵盖第 <span class="arithmatex">\(7168 \dots 14335\)</span> 列特征)。</li>
+<li><strong>第一步结束后的通信量</strong>: <strong>零 (ZERO)</strong>！每块 GPU 独立计算自己的局部列切片 <span class="arithmatex">\(H_i\)</span>。</li>
+</ul>
+<hr />
+<h4 id="2-rowparallellinear-w_textdown">2. 第二步: 按行并行 RowParallelLinear (<span class="arithmatex">\(W_{\text{Down}}\)</span>)<a class="headerlink" href="#2-rowparallellinear-w_textdown" title="Permanent link">&para;</a></h4>
+<p>下投影矩阵 <span class="arithmatex">\(W_{\text{Down}}\)</span> 的未切分原始维度为 <span class="arithmatex">\([d_{\text{ffn}}, d]\)</span> (例如 <span class="arithmatex">\([28672, 8192]\)</span>)。</p>
+<p>在 <span class="arithmatex">\(N_{\text{TP}} = 4\)</span> 块 GPU 上执行按行并行时，<span class="arithmatex">\(W_{\text{Down}}\)</span> 沿其<strong>行</strong> (即输入特征维度 <span class="arithmatex">\(d_{\text{ffn}}\)</span>) 被切分为 4 个水平切片：</p>
 <div class="arithmatex">\[
-W = \begin{bmatrix} W_1 \\ W_2 \\ \vdots \\ W_{N_{\text{TP}}} \end{bmatrix}
+W_{\text{Down}} = \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix}, \quad \text{其中 } W_{\text{Down}, i} \in \mathbb{R}^{\frac{d_{\text{ffn}}}{N_{\text{TP}}} \times d} \ \left[7168, 8192\right]
 \]</div>
-<p>输入 Activation <span class="arithmatex">\(X\)</span> (此时已按列切分为 <span class="arithmatex">\(\begin{bmatrix} X_1 &amp; X_2 &amp; \dots &amp; X_{N_{\text{TP}}} \end{bmatrix}\)</span>) 分别与 <span class="arithmatex">\(W_i\)</span> 相乘：</p>
+<p><strong>为什么第一步与第二步之间完全不需要任何通信即可精准无缝契合？</strong>
+- 注意 GPU 0 上的 <span class="arithmatex">\(W_{\text{Down}, 0}\)</span> 的行数：<strong>恰好有 <span class="arithmatex">\(7,168\)</span> 行！</strong>
+- 注意 GPU 0 在第一步算出的 <span class="arithmatex">\(H_0\)</span> 的列数：<strong>恰好有 <span class="arithmatex">\(7,168\)</span> 列！</strong>
+- <span class="arithmatex">\(\text{GPU 0 上的 } H_0 \text{ 列数 } (7,168) \equiv \text{GPU 0 上的 } W_{\text{Down}, 0} \text{ 行数 } (7,168)\)</span>。
+- 因此，GPU 0 直接在<strong>本地 GPU 显存内</strong>计算 <span class="arithmatex">\(H_0 @ W_{\text{Down}, 0}\)</span>，<strong>完全不需要向 GPU 1, 2, 3 发送或读取任何数据</strong>：</p>
 <div class="arithmatex">\[
-Y_i = X_i @ W_i
+Y_0 = H_0 @ W_{\text{Down}, 0} \implies [512, 7168] \times [7168, 8192] = \mathbf{[512, 8192]}
 \]</div>
-<p>为了还原真正的数学输出 <span class="arithmatex">\(Y = X @ W\)</span>，必须对所有 GPU 的局部输出求和：</p>
+<hr />
+<h4 id="3-all-reduce">3. 分块矩阵乘法数学证明与 All-Reduce<a class="headerlink" href="#3-all-reduce" title="Permanent link">&para;</a></h4>
+<p>根据线性代数分块矩阵乘法定理，将全量 <span class="arithmatex">\(H = [H_0 \mid H_1 \mid H_2 \mid H_3]\)</span> 乘以全量 <span class="arithmatex">\(W_{\text{Down}} = \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix}\)</span> 展开为：</p>
 <div class="arithmatex">\[
-Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
+H @ W_{\text{Down}} = \begin{bmatrix} H_0 &amp; H_1 &amp; H_2 &amp; H_3 \end{bmatrix} @ \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix} = \mathbf{H_0 @ W_{\text{Down}, 0} + H_1 @ W_{\text{Down}, 1} + H_2 @ W_{\text{Down}, 2} + H_3 @ W_{\text{Down}, 3}}
 \]</div>
-<h4 id="_1">深度架构剖析: 为什么必须先按列并行再按行并行？<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
-<p>Megatron-LM 与 vLLM 中的一个核心设计问题是：<em>为什么 <span class="arithmatex">\(W_Q, W_K, W_V, W_{\text{Gate}}, W_{\text{Up}}\)</span> 采用按列并行，而 <span class="arithmatex">\(W_O, W_{\text{Down}}\)</span> 必须采用按行并行？</em></p>
-<ol>
-<li><strong>维度契合消除层间通信</strong>:</li>
-<li>第一层按列并行 (如 <span class="arithmatex">\(W_{\text{Gate}}, W_{\text{Up}}\)</span>) 在 GPU <span class="arithmatex">\(i\)</span> 上的输出维度为 <span class="arithmatex">\(\left[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}\right]\)</span>。</li>
-<li>第二层按行并行 (如 <span class="arithmatex">\(W_{\text{Down}}\)</span>) 的输入恰好需要一个沿行切分为 <span class="arithmatex">\(\frac{d_{\text{ffn}}}{N_{\text{TP}}}\)</span> 维度的矩阵。</li>
-<li>由于第一层的输出列维度<strong>完全精准契合</strong>第二层的输入行维度，GPU <span class="arithmatex">\(i\)</span> 可以将其局部输出 <span class="arithmatex">\(X_i\)</span> <strong>零通信</strong>直接喂入 <span class="arithmatex">\(W_{\text{Down}, i}\)</span>！</li>
-<li>如果两层都采用按列并行，GPU <span class="arithmatex">\(i\)</span> 将被迫在第二层之前执行一次 <strong>All-Gather</strong>，并在第二层之后执行一次 <strong>All-Reduce</strong>。通过“按列并行 <span class="arithmatex">\(\to\)</span> 按行并行”的组合，通信被成功压制为<strong>每个子层仅需一次 All-Reduce</strong> (在 <span class="arithmatex">\(W_O\)</span> 和 <span class="arithmatex">\(W_{\text{Down}}\)</span> 结尾处)。</li>
-</ol>
+<p>每块 GPU <span class="arithmatex">\(i\)</span> 在本地独立计算出部分矩阵积 <span class="arithmatex">\(Y_i = H_i @ W_{\text{Down}, i} \in [S, d]\)</span>。
+随后，执行<strong>单次 All-Reduce (Sum)</strong> 集合通信，在 4 块 GPU 之间对 <span class="arithmatex">\(Y_0 + Y_1 + Y_2 + Y_3\)</span> 求和，得出最终完整的输出张量 <span class="arithmatex">\(Y \in [S, d]\)</span>。</p>
+<h4 id="transformer">每个 Transformer 层通信总结:<a class="headerlink" href="#transformer" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>每层总 All-Reduce 次数</strong>: <strong>2 次 All-Reduce</strong> (第 1 次在 Self-Attention 子层结尾 <span class="arithmatex">\(W_O\)</span> 之后；第 2 次在 MLP 子层结尾 <span class="arithmatex">\(W_{\text{Down}}\)</span> 之后)。</li>
+<li><strong>按列并行与按行并行之间的层间通信量</strong>: <strong>零 (ZERO)</strong> (因为第一步的输出列维度与第二步的输入行维度完全对齐)。</li>
+</ul>
+<hr />
 <h4 id="gpu">跨层 GPU 权重切分映射<a class="headerlink" href="#gpu" title="Permanent link">&para;</a></h4>
 <p>假设张量并行度 <span class="arithmatex">\(N_{\text{TP}} = 4\)</span>：
 - <strong>GPU 0</strong> 保存整个模型中<strong>每一层</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> 的切片 <span class="arithmatex">\(W_0^{(l)}\)</span>。
 - <strong>GPU 1</strong> 保存整个模型中<strong>每一层</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> 的切片 <span class="arithmatex">\(W_1^{(l)}\)</span>。
 - <strong>GPU 2</strong> 保存整个模型中<strong>每一层</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> 的切片 <span class="arithmatex">\(W_2^{(l)}\)</span>。
 - <strong>GPU 3</strong> 保存整个模型中<strong>每一层</strong> <span class="arithmatex">\(l \in [1 \dots L]\)</span> 的切片 <span class="arithmatex">\(W_3^{(l)}\)</span>。</p>
-<p>以 Llama 3 70B 为例 (80 层，64 个 Q Head，8 个 KV Head，<span class="arithmatex">\(d_{\text{ffn}} = 28,672\)</span>)：
+<p>以 Llama 3 70B 为例 (80 层，64 个 Q Head，8 个 KV Head，<span class="arithmatex">\(d = 8192\)</span>, <span class="arithmatex">\(d_{\text{ffn}} = 28,672\)</span>)：
 - 对于第 <span class="arithmatex">\(l\)</span> 层的 <span class="arithmatex">\(W_Q\)</span>: GPU 1 保存 16 个 Query Head (Head <span class="arithmatex">\(16 \dots 31\)</span>)。
 - 对于第 <span class="arithmatex">\(l\)</span> 层的 <span class="arithmatex">\(W_O\)</span>: GPU 1 保存 8,192 行中的 <span class="arithmatex">\(2048 \dots 4095\)</span> 行。
 - 对于第 <span class="arithmatex">\(l\)</span> 层的 <span class="arithmatex">\(W_{\text{Gate}}\)</span>: GPU 1 保存 28,672 列中的 <span class="arithmatex">\(7168 \dots 14335\)</span> 列。
@@ -1217,7 +1256,7 @@ Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
     S0_P --&gt;|"点对点传输 (P2P)"| S1_P
     S1_P --&gt;|"点对点传输 (P2P)"| S2_P
     S2_P --&gt;|"点对点传输 (P2P)"| S3_P</code></pre>
-<h4 id="_2">通信效率优势<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
+<h4 id="_1">通信效率优势<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
 <p>不同于张量并行 (每层需要 2 次 All-Reduce)，流水线并行在 Stage 边界之间<strong>仅需 1 次点对点 (P2P) Activation 张量传输</strong>。较小的网络通信量使得 PP 能够完美运行在跨节点的 InfiniBand / RoCE 网络上 (<span class="arithmatex">\(50 \text{ GB/s}\)</span>)。</p>
 <hr />
 <h3 id="32-cp-ring-attention">3.2 上下文并行 (CP) 与 Ring-Attention<a class="headerlink" href="#32-cp-ring-attention" title="Permanent link">&para;</a></h3>
@@ -1285,7 +1324,7 @@ y = \sum_{i \in \text{TopK}} g(x)_i \cdot \text{Expert}_i(x)
 <li><strong>Batched GEMM 执行</strong>: 发起一次分组 GEMM CUDA 启动，同时处理所有专家的计算任务，极大提升了 Tensor Core 的利用率！</li>
 </ul>
 <hr />
-<h2 id="_3">总结: 并行策略决策矩阵<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_2">总结: 并行策略决策矩阵<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
