@@ -54,50 +54,73 @@ flowchart TD
     AR --> OUT["最终聚合后的 Activation 张量 Y"]
 ```
 
-### 2.1 ColumnParallelLinear 与 RowParallelLinear
+### 2.1 按列并行 (ColumnParallelLinear) 与按行并行 (RowParallelLinear)
 
-#### 1. 按列并行 ColumnParallelLinear ($W_Q, W_K, W_V$ 及 $W_{\text{Gate}}, W_{\text{Up}}$)
-权重矩阵 $W \in \mathbb{R}^{d \times d_{\text{out}}}$ 沿**列**切分到 $N_{\text{TP}}$ 块 GPU 上：
+为了严密推导张量并行 (Tensor Parallelism) 的工作机制，考虑一个 Transformer 层处理长度为 $S$ 个 Token 的输入序列 (其中 $S$ 为 **序列长度 Sequence Length**，例如 $S = 512$)。输入 Activation 张量 $X$ 的维度为 $[S, d]$ (例如 $[512, 8192]$)。
 
-$$
-W = \begin{bmatrix} W_1 & W_2 & \dots & W_{N_{\text{TP}}} \end{bmatrix}
-$$
+一个完整的 Transformer Block 由两个独立的子层组成，每个子层的末尾均需要**恰好一次 All-Reduce 集合通信**：
+1. **Self-Attention 自注意力子层**: 按列并行 ($W_Q, W_K, W_V$) $\to$ 注意力计算 $\to$ 按行并行 ($W_O$) $\to$ **第 1 次 All-Reduce**.
+2. **MLP / SwiGLU 前馈网络子层**: 按列并行 ($W_{\text{Gate}}, W_{\text{Up}}$) $\to$ SwiGLU 激活函数 $\to$ 按行并行 ($W_{\text{Down}}$) $\to$ **第 2 次 All-Reduce**.
 
-每块 GPU $i$ 独立保存分片 $W_i$，并与输入 Activation 矩阵 $X$ 相乘：
+---
 
-$$
-Y_i = X @ W_i
-$$
+#### 1. 第一步: 按列并行 ColumnParallelLinear ($W_{\text{Gate}}, W_{\text{Up}}$)
+在 SwiGLU FFN 中，未切分的原始矩阵 $W_{\text{Gate}}$ 与 $W_{\text{Up}}$ 的维度为 $[d, d_{\text{ffn}}]$ (例如 $[8192, 28672]$)。
 
-由于 $Y_i$ 本身就是完整输出 $Y = \begin{bmatrix} Y_1 & Y_2 & \dots & Y_{N_{\text{TP}}} \end{bmatrix}$ 的一个列分片，**ColumnParallelLinear 层执行完毕后无需任何跨卡通信**！
-
-#### 2. 按行并行 RowParallelLinear ($W_O$ 及 $W_{\text{Down}}$)
-权重矩阵 $W \in \mathbb{R}^{d_{\text{in}} \times d}$ 沿**行**切分到 $N_{\text{TP}}$ 块 GPU 上：
+在 $N_{\text{TP}} = 4$ 块 GPU 上执行按列并行时，每个权重矩阵沿其**列** (即输出特征维度 $d_{\text{ffn}}$) 被切分为 4 个垂直切片：
 
 $$
-W = \begin{bmatrix} W_1 \\ W_2 \\ \vdots \\ W_{N_{\text{TP}}} \end{bmatrix}
+W_{\text{Gate}} = \begin{bmatrix} W_{\text{Gate}, 0} & W_{\text{Gate}, 1} & W_{\text{Gate}, 2} & W_{\text{Gate}, 3} \end{bmatrix}, \quad \text{其中 } W_{\text{Gate}, i} \in \mathbb{R}^{d \times \frac{d_{\text{ffn}}}{N_{\text{TP}}}} \ \left[8192, 7168\right]
 $$
 
-输入 Activation $X$ (此时已按列切分为 $\begin{bmatrix} X_1 & X_2 & \dots & X_{N_{\text{TP}}} \end{bmatrix}$) 分别与 $W_i$ 相乘：
+在 **GPU 0** 上，局部矩阵乘法产生中间 Activation $H_0$：
 
 $$
-Y_i = X_i @ W_i
+H_0 = \text{SiLU}(X @ W_{\text{Gate}, 0}) \odot (X @ W_{\text{Up}, 0}) \implies [512, 8192] \times [8192, 7168] = \mathbf{[512, 7168]}
 $$
 
-为了还原真正的数学输出 $Y = X @ W$，必须对所有 GPU 的局部输出求和：
+- **GPU 0 上的 $H_0$ 维度**: $[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}] = [512, 7168]$ (涵盖第 $0 \dots 7167$ 列特征)。
+- **GPU 1 上的 $H_1$ 维度**: $[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}] = [512, 7168]$ (涵盖第 $7168 \dots 14335$ 列特征)。
+- **第一步结束后的通信量**: **零 (ZERO)**！每块 GPU 独立计算自己的局部列切片 $H_i$。
+
+---
+
+#### 2. 第二步: 按行并行 RowParallelLinear ($W_{\text{Down}}$)
+下投影矩阵 $W_{\text{Down}}$ 的未切分原始维度为 $[d_{\text{ffn}}, d]$ (例如 $[28672, 8192]$)。
+
+在 $N_{\text{TP}} = 4$ 块 GPU 上执行按行并行时，$W_{\text{Down}}$ 沿其**行** (即输入特征维度 $d_{\text{ffn}}$) 被切分为 4 个水平切片：
 
 $$
-Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
+W_{\text{Down}} = \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix}, \quad \text{其中 } W_{\text{Down}, i} \in \mathbb{R}^{\frac{d_{\text{ffn}}}{N_{\text{TP}}} \times d} \ \left[7168, 8192\right]
 $$
 
-#### 深度架构剖析: 为什么必须先按列并行再按行并行？
-Megatron-LM 与 vLLM 中的一个核心设计问题是：*为什么 $W_Q, W_K, W_V, W_{\text{Gate}}, W_{\text{Up}}$ 采用按列并行，而 $W_O, W_{\text{Down}}$ 必须采用按行并行？*
+**为什么第一步与第二步之间完全不需要任何通信即可精准无缝契合？**
+- 注意 GPU 0 上的 $W_{\text{Down}, 0}$ 的行数：**恰好有 $7,168$ 行！**
+- 注意 GPU 0 在第一步算出的 $H_0$ 的列数：**恰好有 $7,168$ 列！**
+- $\text{GPU 0 上的 } H_0 \text{ 列数 } (7,168) \equiv \text{GPU 0 上的 } W_{\text{Down}, 0} \text{ 行数 } (7,168)$。
+- 因此，GPU 0 直接在**本地 GPU 显存内**计算 $H_0 @ W_{\text{Down}, 0}$，**完全不需要向 GPU 1, 2, 3 发送或读取任何数据**：
 
-1. **维度契合消除层间通信**:
-   - 第一层按列并行 (如 $W_{\text{Gate}}, W_{\text{Up}}$) 在 GPU $i$ 上的输出维度为 $\left[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}\right]$。
-   - 第二层按行并行 (如 $W_{\text{Down}}$) 的输入恰好需要一个沿行切分为 $\frac{d_{\text{ffn}}}{N_{\text{TP}}}$ 维度的矩阵。
-   - 由于第一层的输出列维度**完全精准契合**第二层的输入行维度，GPU $i$ 可以将其局部输出 $X_i$ **零通信**直接喂入 $W_{\text{Down}, i}$！
-   - 如果两层都采用按列并行，GPU $i$ 将被迫在第二层之前执行一次 **All-Gather**，并在第二层之后执行一次 **All-Reduce**。通过“按列并行 $\to$ 按行并行”的组合，通信被成功压制为**每个子层仅需一次 All-Reduce** (在 $W_O$ 和 $W_{\text{Down}}$ 结尾处)。
+$$
+Y_0 = H_0 @ W_{\text{Down}, 0} \implies [512, 7168] \times [7168, 8192] = \mathbf{[512, 8192]}
+$$
+
+---
+
+#### 3. 分块矩阵乘法数学证明与 All-Reduce
+根据线性代数分块矩阵乘法定理，将全量 $H = [H_0 \mid H_1 \mid H_2 \mid H_3]$ 乘以全量 $W_{\text{Down}} = \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix}$ 展开为：
+
+$$
+H @ W_{\text{Down}} = \begin{bmatrix} H_0 & H_1 & H_2 & H_3 \end{bmatrix} @ \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix} = \mathbf{H_0 @ W_{\text{Down}, 0} + H_1 @ W_{\text{Down}, 1} + H_2 @ W_{\text{Down}, 2} + H_3 @ W_{\text{Down}, 3}}
+$$
+
+每块 GPU $i$ 在本地独立计算出部分矩阵积 $Y_i = H_i @ W_{\text{Down}, i} \in [S, d]$。
+随后，执行**单次 All-Reduce (Sum)** 集合通信，在 4 块 GPU 之间对 $Y_0 + Y_1 + Y_2 + Y_3$ 求和，得出最终完整的输出张量 $Y \in [S, d]$。
+
+#### 每个 Transformer 层通信总结:
+- **每层总 All-Reduce 次数**: **2 次 All-Reduce** (第 1 次在 Self-Attention 子层结尾 $W_O$ 之后；第 2 次在 MLP 子层结尾 $W_{\text{Down}}$ 之后)。
+- **按列并行与按行并行之间的层间通信量**: **零 (ZERO)** (因为第一步的输出列维度与第二步的输入行维度完全对齐)。
+
+---
 
 #### 跨层 GPU 权重切分映射
 假设张量并行度 $N_{\text{TP}} = 4$：
@@ -106,7 +129,7 @@ Megatron-LM 与 vLLM 中的一个核心设计问题是：*为什么 $W_Q, W_K, W
 - **GPU 2** 保存整个模型中**每一层** $l \in [1 \dots L]$ 的切片 $W_2^{(l)}$。
 - **GPU 3** 保存整个模型中**每一层** $l \in [1 \dots L]$ 的切片 $W_3^{(l)}$。
 
-以 Llama 3 70B 为例 (80 层，64 个 Q Head，8 个 KV Head，$d_{\text{ffn}} = 28,672$)：
+以 Llama 3 70B 为例 (80 层，64 个 Q Head，8 个 KV Head，$d = 8192$, $d_{\text{ffn}} = 28,672$)：
 - 对于第 $l$ 层的 $W_Q$: GPU 1 保存 16 个 Query Head (Head $16 \dots 31$)。
 - 对于第 $l$ 层的 $W_O$: GPU 1 保存 8,192 行中的 $2048 \dots 4095$ 行。
 - 对于第 $l$ 层的 $W_{\text{Gate}}$: GPU 1 保存 28,672 列中的 $7168 \dots 14335$ 列。

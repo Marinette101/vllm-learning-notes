@@ -56,48 +56,71 @@ flowchart TD
 
 ### 2.1 ColumnParallelLinear and RowParallelLinear
 
-#### 1. ColumnParallelLinear ($W_Q, W_K, W_V$ and $W_{\text{Gate}}, W_{\text{Up}}$)
-A weight matrix $W \in \mathbb{R}^{d \times d_{\text{out}}}$ is split along its **columns** across $N_{\text{TP}}$ GPUs:
+To understand how Tensor Parallelism works, consider a Transformer layer processing an input sequence of length $S$ tokens (where $S$ is the **Sequence Length**, e.g. $S = 512$). The input activation tensor $X$ has shape $[S, d]$ (e.g., $[512, 8192]$).
+
+A Transformer block consists of two distinct sub-layers, each requiring **exactly ONE All-Reduce communication step** at its end:
+1. **Self-Attention Sub-Layer**: Column-Parallel ($W_Q, W_K, W_V$) $\to$ Attention $\to$ Row-Parallel ($W_O$) $\to$ **All-Reduce #1**.
+2. **MLP / SwiGLU Sub-Layer**: Column-Parallel ($W_{\text{Gate}}, W_{\text{Up}}$) $\to$ SwiGLU Activation $\to$ Row-Parallel ($W_{\text{Down}}$) $\to$ **All-Reduce #2**.
+
+---
+
+#### 1. Step 1: ColumnParallelLinear ($W_{\text{Gate}}, W_{\text{Up}}$)
+In SwiGLU FFN, the un-split matrices $W_{\text{Gate}}$ and $W_{\text{Up}}$ have shape $[d, d_{\text{ffn}}]$ (e.g., $[8192, 28672]$). 
+
+Under Column Parallelism across $N_{\text{TP}} = 4$ GPUs, each weight matrix is split along its **columns** (the output feature dimension $d_{\text{ffn}}$) into 4 vertical slices:
 
 $$
-W = \begin{bmatrix} W_1 & W_2 & \dots & W_{N_{\text{TP}}} \end{bmatrix}
+W_{\text{Gate}} = \begin{bmatrix} W_{\text{Gate}, 0} & W_{\text{Gate}, 1} & W_{\text{Gate}, 2} & W_{\text{Gate}, 3} \end{bmatrix}, \quad \text{where } W_{\text{Gate}, i} \in \mathbb{R}^{d \times \frac{d_{\text{ffn}}}{N_{\text{TP}}}} \ \left[8192, 7168\right]
 $$
 
-Each GPU $i$ receives a slice $W_i$ and multiplies against the input activation matrix $X$:
+On **GPU 0**, the local multiplication yields intermediate activation $H_0$:
 
 $$
-Y_i = X @ W_i
+H_0 = \text{SiLU}(X @ W_{\text{Gate}, 0}) \odot (X @ W_{\text{Up}, 0}) \implies [512, 8192] \times [8192, 7168] = \mathbf{[512, 7168]}
 $$
 
-Because $Y_i$ is a column slice of the full output $Y = \begin{bmatrix} Y_1 & Y_2 & \dots & Y_{N_{\text{TP}}} \end{bmatrix}$, **no cross-GPU communication is needed** after a ColumnParallelLinear layer!
+- **Shape of $H_0$ on GPU 0**: $[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}] = [512, 7168]$ (columns $0 \dots 7167$).
+- **Shape of $H_1$ on GPU 1**: $[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}] = [512, 7168]$ (columns $7168 \dots 14335$).
+- **Communication after Step 1**: **ZERO!** Each GPU computes its local column slice $H_i$ independently.
 
-#### 2. RowParallelLinear ($W_O$ and $W_{\text{Down}}$)
-A weight matrix $W \in \mathbb{R}^{d_{\text{in}} \times d}$ is split along its **rows** across $N_{\text{TP}}$ GPUs:
+---
 
-$$
-W = \begin{bmatrix} W_1 \\ W_2 \\ \vdots \\ W_{N_{\text{TP}}} \end{bmatrix}
-$$
+#### 2. Step 2: RowParallelLinear ($W_{\text{Down}}$)
+The down-projection matrix $W_{\text{Down}}$ has un-split shape $[d_{\text{ffn}}, d]$ (e.g., $[28672, 8192]$).
 
-Input activation $X$ (which is already split column-wise as $\begin{bmatrix} X_1 & X_2 & \dots & X_{N_{\text{TP}}} \end{bmatrix}$) multiplies against $W_i$:
-
-$$
-Y_i = X_i @ W_i
-$$
-
-To recover the true mathematical output $Y = X @ W$, partial outputs must be summed across all GPUs:
+Under Row Parallelism across $N_{\text{TP}} = 4$ GPUs, $W_{\text{Down}}$ is split along its **rows** (the input feature dimension $d_{\text{ffn}}$) into 4 horizontal slices:
 
 $$
-Y = \sum_{i=1}^{N_{\text{TP}}} Y_i = \text{All-Reduce-Sum}(Y_i)
+W_{\text{Down}} = \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix}, \quad \text{where } W_{\text{Down}, i} \in \mathbb{R}^{\frac{d_{\text{ffn}}}{N_{\text{TP}}} \times d} \ \left[7168, 8192\right]
 $$
 
-#### Architectural Deep-Dive: Why Pair Column Parallel followed by Row Parallel?
-A critical design question in Megatron-LM and vLLM is: *Why are $W_Q, W_K, W_V, W_{\text{Gate}}, W_{\text{Up}}$ Column-Parallel, while $W_O, W_{\text{Down}}$ are Row-Parallel?*
+**Why does this pair perfectly with Step 1 without communication between Step 1 and Step 2?**
+- Notice the number of rows of $W_{\text{Down}, 0}$ on GPU 0: **it has $7,168$ rows!**
+- Notice the number of columns of $H_0$ produced by Step 1 on GPU 0: **it has $7,168$ columns!**
+- $\text{Columns of } H_0 \ (7,168) \equiv \text{Rows of } W_{\text{Down}, 0} \ (7,168)$.
+- Therefore, GPU 0 multiplies $H_0 @ W_{\text{Down}, 0}$ **directly in local GPU memory without fetching any data from GPU 1, 2, or 3**:
 
-1. **Dimensional Compatibility Eliminates Inter-Layer Communication**:
-   - The output of a Column-Parallel layer (e.g., $W_{\text{Gate}}, W_{\text{Up}}$) has shape $\left[S, \frac{d_{\text{ffn}}}{N_{\text{TP}}}\right]$ on GPU $i$.
-   - The input required by a Row-Parallel layer (e.g., $W_{\text{Down}}$) expects a matrix split along its rows with dimension $\frac{d_{\text{ffn}}}{N_{\text{TP}}}$.
-   - Because the output column dimension of the 1st layer **EXACTLY MATCHES** the input row dimension of the 2nd layer, GPU $i$ passes its local output $X_i$ directly into $W_{\text{Down}, i}$ **with ZERO cross-GPU communication**!
-   - If both layers were Column-Parallel, GPU $i$ would be forced to execute an **All-Gather** before the 2nd layer AND an **All-Reduce** after it. Pairing Column-Parallel $\to$ Row-Parallel restricts communication to **exactly ONE All-Reduce per sub-layer** (at the very end of $W_O$ and $W_{\text{Down}}$).
+$$
+Y_0 = H_0 @ W_{\text{Down}, 0} \implies [512, 7168] \times [7168, 8192] = \mathbf{[512, 8192]}
+$$
+
+---
+
+#### 3. Mathematical Proof of Block Matrix Multiplication and All-Reduce
+By standard linear algebra block matrix multiplication, multiplying full $H = [H_0 \mid H_1 \mid H_2 \mid H_3]$ against full $W_{\text{Down}} = \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix}$ equals:
+
+$$
+H @ W_{\text{Down}} = \begin{bmatrix} H_0 & H_1 & H_2 & H_3 \end{bmatrix} @ \begin{bmatrix} W_{\text{Down}, 0} \\ W_{\text{Down}, 1} \\ W_{\text{Down}, 2} \\ W_{\text{Down}, 3} \end{bmatrix} = \mathbf{H_0 @ W_{\text{Down}, 0} + H_1 @ W_{\text{Down}, 1} + H_2 @ W_{\text{Down}, 2} + H_3 @ W_{\text{Down}, 3}}
+$$
+
+Each GPU $i$ computes its partial matrix product $Y_i = H_i @ W_{\text{Down}, i} \in [S, d]$ locally.
+Then, a single **All-Reduce (Sum)** aggregates $Y_0 + Y_1 + Y_2 + Y_3$ across the 4 GPUs to produce the final output tensor $Y \in [S, d]$.
+
+#### Summary of Communication Per Transformer Layer:
+- **Total All-Reduces per Layer**: **2 All-Reduces** (1 at the end of the Self-Attention sub-layer after $W_O$, and 1 at the end of the MLP sub-layer after $W_{\text{Down}}$).
+- **Communication between Column-Parallel and Row-Parallel**: **ZERO** (because output columns of Step 1 match input rows of Step 2).
+
+---
 
 #### GPU Weight Partitioning Across All Layers
 Suppose Tensor Parallelism size is $N_{\text{TP}} = 4$:
@@ -106,7 +129,7 @@ Suppose Tensor Parallelism size is $N_{\text{TP}} = 4$:
 - **GPU 2** holds slice $W_2^{(l)}$ for **EVERY single layer** $l \in [1 \dots L]$ across the entire model.
 - **GPU 3** holds slice $W_3^{(l)}$ for **EVERY single layer** $l \in [1 \dots L]$ across the entire model.
 
-For example, on Llama 3 70B (80 layers, 64 Q heads, 8 KV heads, $d_{\text{ffn}} = 28,672$):
+For example, on Llama 3 70B (80 layers, 64 Q heads, 8 KV heads, $d = 8192$, $d_{\text{ffn}} = 28,672$):
 - For Layer $l$'s $W_Q$: GPU 1 holds 16 Query heads (heads $16 \dots 31$).
 - For Layer $l$'s $W_O$: GPU 1 holds rows $2048 \dots 4095$ out of 8192 rows.
 - For Layer $l$'s $W_{\text{Gate}}$: GPU 1 holds columns $7168 \dots 14335$ out of 28,672 columns.
