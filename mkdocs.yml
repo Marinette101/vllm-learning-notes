@@ -52,6 +52,9 @@ plugins:
           name: 简体中文
           build: true
 
+hooks:
+  - hooks/i18n_alternate_fix.py
+
 markdown_extensions:
   - admonition
   - pymdownx.superfences:
