@@ -1,6 +1,6 @@
 # Appendix: Master Glossary and Terminology Reference
 
-This authoritative reference document compiles all mathematical, architectural, hardware, and distributed systems terminology utilized across **vLLM Core Architecture (`Modules 1 through 6`)**. Each entry provides exact physical definitions, mathematical formulas, and systems engineering roles.
+This authoritative reference document compiles all mathematical, architectural, hardware, distributed systems, and cloud orchestration terminology utilized across **vLLM Core Architecture (`Modules 1 through 6`)**. Each entry provides exact physical definitions, mathematical formulas, and systems engineering roles.
 
 ---
 
@@ -159,3 +159,32 @@ $$
 ### `External Fragmentation`
 - **Systems Engineering Definition**: Memory waste occurring **OUTSIDE** of all allocated memory regions when total unallocated free memory exists across physical address space, but is fragmented into non-contiguous gaps, causing contiguous allocation requests to fail with Out-Of-Memory (`OOM`).
 - **LLM Serving Impact**: Legacy serving engines suffer 5%-10% external fragmentation gridlock due to physical contiguity rules. vLLM reduces external fragmentation to **exactly 0%** by evaluating attention across non-contiguous fixed-size blocks via PagedAttention.
+
+---
+
+## 6. Cloud Orchestration, Storage, and Confidential AI Terminology
+
+### `LeaderWorkerSet` (`LWS`)
+- **Definition**: A Kubernetes-native controller API designed specifically for multi-node distributed AI/LLM workloads. It models a distributed model replica as 1 Leader Pod (entrypoint, rank 0) and $N-1$ Worker Pods (ranks $1 \dots N-1$).
+- **Key Capability**: Automatically enforces **atomic gang lifecycle** (`RecreateGroupOnPodRestart`), ensuring all pods in a tensor/pipeline parallel group restart together if any single node or GPU fails, preventing partial cluster deadlocks.
+
+### `Hyperdisk ML`
+- **Definition**: Google Cloud's high-throughput block storage volume architecture designed for AI inference and training. 
+- **Role in LLM Serving**: Can be attached in **Read-Only Many (`ROX`)** mode to up to **2,500 GKE Pods simultaneously**, delivering up to **$1.2 \text{ TB/s}$ aggregate cluster read throughput**. Eliminates cold-start scaling bottlenecks by reducing 70B/405B model loading time from 15–30 minutes to under 10 seconds.
+
+### `Google Cloud AI Hypercomputer`
+- **Definition**: Google Cloud's supercomputing AI architecture that tightly integrates hardware accelerators (TPU v5e/v5p/v6e Trillium, NVIDIA H100/H200/B200 like A3/A4 instances), ultra-high bandwidth interconnects (Titanium offload, RoCEv2, GPUDirect RDMA / TCPX, NCCL FastSocket), high-throughput storage (Hyperdisk ML, GCS FUSE), and GKE orchestration (LWS, KubeRay, Kueue, KEDA).
+
+### `Confidential Space` & `Confidential GKE`
+- **Definition**: Google Cloud's zero-trust confidential computing environment built on hardware-isolated Trusted Execution Environments (TEEs) using Confidential VMs (AMD SEV-SNP / Intel TDX) and **Confidential GPUs (NVIDIA H100 TEE)**.
+- **Security Role**: Guarantees that neither host OS administrators, compromised hypervisors, cloud operators, nor co-located tenants can inspect sensitive model weights or client prompts in memory (HBM/RAM) or across PCIe buses.
+
+### `Remote Attestation`
+- **Definition**: A cryptographic process where a hardware security module (vTPM and NVIDIA H100 security processor) measures the boot state, firmware, kernel, and container image hashes of a workload inside a TEE, generating a cryptographically signed quote.
+- **Role in vLLM**: Verified by an Attestation Service to issue an OIDC token, allowing the pod to retrieve symmetric model decryption keys from Cloud KMS only if the container and TEE hardware are untampered.
+
+### `Disaggregated Serving` (`Split Prefill and Decode`)
+- **Definition**: An advanced LLM serving topology that physically separates compute-heavy **Prefill Nodes** (optimized for parallel GEMM and high TTFT throughput) from memory-bandwidth-heavy **Decode Nodes** (optimized for low ITL latency), transferring physical KV cache blocks across nodes via low-latency RDMA.
+
+### `Prefix-Cache-Aware Routing`
+- **Definition**: An intelligent API Gateway routing strategy that computes consistent hashes across incoming prompt prefixes (system prompts, RAG document contexts) to forward requests sharing identical prefixes to the same vLLM pod replica, maximizing Automatic Prefix Caching (APC) hit rates from $\sim 15\%$ to $> 90\%$.

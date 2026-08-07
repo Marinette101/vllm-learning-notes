@@ -22,7 +22,7 @@ flowchart TD
     P3 --> S3["Max HBM/SRAM bandwidth efficiency<br>*(Custom Fused Kernels and CUDA Graphs)*"]
     
     ROOT --> P4["4. Scale-Out and Scale-Up Synergy"]
-    P4 --> S4["Multi-dimensional parallelism and cloud orchestration<br>*(TP, PP, CP, EP via K8s / Ray)*"]
+    P4 --> S4["Multi-dimensional parallelism and cloud orchestration<br>*(TP, PP, CP, EP via K8s / Ray / LWS)*"]
 ```
 
 ### Principle 1: Memory is the Ultimate Bottleneck in LLM Decoding
@@ -59,13 +59,13 @@ As models grow beyond the HBM capacity of a single GPU (or require multi-node ex
 **vLLM's Solution**:
 
 - Multi-dimensional parallelism: **Tensor Parallelism (TP)** for intra-node low latency, **Pipeline Parallelism (PP)** for inter-node scaling, **Context/Sequence Parallelism (CP)** for million-token contexts, and **Expert Parallelism (EP)** for Mixture-of-Experts (MoE).
-- Clean separation between compute engines (managed via **Ray** or native multiprocessing) and serving gateways (OpenAI-compatible APIs, **Kubernetes** operators, and **Triton Inference Server** integration).
+- Clean separation between compute engines (managed via **Ray** or Kubernetes-native **LeaderWorkerSet (LWS)**) and serving gateways (OpenAI-compatible APIs, prefix-cache-aware routing proxies, and **Triton Inference Server** integration).
 
 ---
 
 ## Part 2: Curriculum Structure and Textbook Roadmap
 
-This learning folder (`vLLM/`) is organized into 6 comprehensive, self-contained modules. Each module will be authored as a deep-dive Markdown document containing theoretical concepts, mathematical formulas, architecture diagrams, code patterns, and production trade-offs.
+This learning folder (`vLLM/`) is organized into 6 comprehensive, self-contained modules. Each module is authored as a deep-dive Markdown document containing theoretical concepts, mathematical formulas, architecture diagrams, code patterns, and production trade-offs.
 
 | Module | Filename | Key Topics Covered |
 | :--- | :--- | :--- |
@@ -74,8 +74,8 @@ This learning folder (`vLLM/`) is organized into 6 comprehensive, self-contained
 | **[Module 3: Performance and Quality](03_performance_and_quality.md)** | [`03_performance_and_quality.md`](03_performance_and_quality.md) | Metrics (TTFT, ITL/TBT, Throughput), Chunked Prefill, CUDA Graphs, Speculative Decoding (Medusa/EAGLE/Draft models), and Quantization trade-offs (AWQ, GPTQ, FP8, W8A8). |
 | **[Module 4: Hardware Interaction](04_hardware_and_kernel_optimization.md)** | [`04_hardware_and_kernel_optimization.md`](04_hardware_and_kernel_optimization.md) | GPU memory hierarchy (HBM/L2/SRAM), PagedAttention and FlashAttention SRAM tiling, V1 vs V2 engine async execution, and cross-hardware backends (CUDA, ROCm, TPU, Neuron). |
 | **[Module 5: Distributed Parallelism](05_distributed_parallelism.md)** | [`05_distributed_parallelism.md`](05_distributed_parallelism.md) | Tensor Parallelism (Megatron-LM syncs over NVLink), Pipeline Parallelism (micro-batching and bubbles), Context Parallelism (Ring-Attention), and Expert Parallelism (MoE routing). |
-| **[Module 6: K8s and Orchestration](06_deployment_and_orchestration.md)** | [`06_deployment_and_orchestration.md`](06_deployment_and_orchestration.md) | OpenAI API Server structure, Ray multi-host actors, Kubernetes deployment (GPU Operator, `/dev/shm` sizing, NUMA pinning), KEDA autoscaling on KV utilization, and Triton integration. |
-| **[Appendix: Master Glossary](appendix_glossary_and_terminology.md)** | [`appendix_glossary_and_terminology.md`](appendix_glossary_and_terminology.md) | Comprehensive reference of all architectural, mathematical (`RoPE`, `SwiGLU`), physical hardware (`HBM`, `L2`, `SM`), and distributed systems (`EP`, `TP`, `PP`) terminology. |
+| **[Module 6: K8s and Orchestration](06_deployment_and_orchestration.md)** | [`06_deployment_and_orchestration.md`](06_deployment_and_orchestration.md) | OpenAI API Server, Prefix-Aware Routing, Disaggregated Serving, Ray vs. LeaderWorkerSet (LWS), GKE AI Hypercomputer, Hyperdisk ML, and Confidential AI (Confidential Space / H100 TEE). |
+| **[Appendix: Master Glossary](appendix_glossary_and_terminology.md)** | [`appendix_glossary_and_terminology.md`](appendix_glossary_and_terminology.md) | Comprehensive reference of all architectural, mathematical (`RoPE`, `SwiGLU`), physical hardware (`HBM`, `L2`, `SM`), and distributed systems (`EP`, `TP`, `PP`, `LWS`, `TEE`) terminology. |
 
 ---
 
@@ -179,22 +179,28 @@ $$
 ---
 
 ### [Module 6: Production Deployment, Cloud Orchestration, and Observability](06_deployment_and_orchestration.md)
-1. **OpenAI API Server and AsyncEngine Architecture**
+1. **OpenAI API Server, Prefix Routing, and Disaggregated Serving**
     - `FastAPI` / `Uvicorn` server layer providing OpenAI-compatible endpoints (`/v1/completions` and `/v1/chat/completions`).
     - Non-blocking `AsyncLLMEngine` with background `step_async()` loop decoupling HTTP queueing from GPU forward execution.
-    - Server-Sent Events (SSE) streaming (`text/event-stream`).
-2. **Multi-Node Distributed Cluster Orchestration with Ray Core**
-    - Ray Actor workers (`Worker` class) wrapping individual GPUs.
-    - Ray Placement Groups with `PACK` bundle strategy for intra-node locality before cross-node expansion.
-3. **Kubernetes Production Deployment Best Practices**
-    - Critical `/dev/shm` shared memory volume mounting (`emptyDir` with `medium: Memory` and $\ge 16 \text{ GB}$ capacity) to prevent NVLink IPC `SIGBUS` kernel crashes.
-    - NVIDIA GPU Operator resource limits (`nvidia.com/gpu: "8"`).
-    - Readiness Probe pointing to `GET /health` ensuring traffic routes only after CUDA Graph warm-up capture.
-4. **Production Observability, Metrics, and KEDA Autoscaling**
+    - Prefix-Cache-Aware Intelligent Routing Gateways to maximize APC hit rates from 15% to >90%.
+    - Disaggregated Prefill and Decode (Split Serving Topology) transferring KV blocks via RDMA.
+2. **Multi-Node Cluster Orchestration: Ray vs. LeaderWorkerSet (LWS)**
+    - Ray Actor workers (`Worker` class) and Ray Placement Groups (`PACK` strategy).
+    - Kubernetes-Native `LeaderWorkerSet` (LWS): Zero control-plane overhead, atomic gang failure recovery (`RecreateGroupOnPodRestart`), and deterministic DNS topology.
+3. **Enterprise Cloud Infrastructure and Cold-Start Acceleration**
+    - Critical `/dev/shm` shared memory sizing ($\ge 32 \text{ GB}$) and NUMA node core pinning.
+    - Eliminating Cold-Start Delays: **Google Cloud Hyperdisk ML** (1.2 TB/s aggregate throughput across up to 2,500 pods), GCS FUSE Local SSD file caching, and Image Streaming.
+    - High-performance multi-NIC cloud networking (GPUDirect-TCPX / RoCEv2 RDMA, FastSocket, NCCL tuning).
+4. **Confidential AI and Zero-Trust LLM Serving**
+    - Threat model: Host OS compromise, rogue cloud operators, hypervisors, and co-tenant memory snooping.
+    - Hardware-Enforced TEE: AMD SEV-SNP / Intel TDX + NVIDIA Hopper H100 TEE (APM mode, line-rate AES-GCM-256 HBM & PCIe encryption).
+    - Cryptographic Remote Attestation and Key Release Pipeline via **Confidential Space / Confidential GKE**.
+    - Architecture synthesis: Google Cloud AI Hypercomputer (Scale & Throughput) vs. Confidential Space (Zero-Trust Security & Attestation).
+5. **Production Observability, Metrics, and KEDA Autoscaling**
     - Operational metrics: `vllm:num_requests_waiting`, `vllm:gpu_cache_usage_perc`, `vllm:time_to_first_token_seconds`, and `vllm:time_per_output_token_seconds`.
     - KEDA Event-Driven Autoscaling: Scaling pod replicas dynamically based on waiting queue depth and KV cache usage thresholds.
-5. **Complete Production Reference Architecture**
-    - End-to-end enterprise diagram bridging API Ingress/Gateway, Kubernetes Serving Clusters, Ray Workers, PagedAttention Memory Managers, Prometheus Monitoring, and KEDA Controllers.
+6. **Complete Production Reference Architecture and Checklist**
+    - End-to-end enterprise reference topology and production readiness audit checklist.
 
 ---
 

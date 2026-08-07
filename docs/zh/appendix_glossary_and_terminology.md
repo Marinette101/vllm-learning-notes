@@ -1,6 +1,6 @@
 # 附录: 主词汇表与术语权威参考
 
-本权威参考文档汇编了全书 **vLLM 核心架构 (`模块 1 至 6`)** 所涉及的所有数学、架构、硬件与分布式系统术语。每个条目均给出了精确的物理定义、数学公式推导以及系统工程作用。
+本权威参考文档汇编了全书 **vLLM 核心架构 (`模块 1 至 6`)** 所涉及的所有数学、架构、硬件、分布式系统以及云原生编排术语。每个条目均给出了精确的物理定义、数学公式推导以及系统工程作用。
 
 ---
 
@@ -81,6 +81,10 @@ $$
 - **定义**: 矩阵乘以单个向量的线性代数算子 ($c = A @ b$)。
 - **推理语境**: 占据 **Decode 解码阶段** ($batch_size = 1$)，每步仅计算一个新生成的 Token ($seq_len = 1$)。`GEMV` 处于严重的显存带宽受限区域 ($I_{\text{decode}} \approx 1.0 \dots 2.0 \text{ FLOPs/Byte}$)。
 
+### `BMM` (Batched Matrix Multiplication - 批量矩阵乘法)
+- **定义**: 跨高维张量的并行矩阵乘法算子 (`[b, h, m, k] @ [b, h, k, n] = [b, h, m, n]`)。
+- **机制**: 严格在最后两个维度上执行计算，将其余前导维度视为独立的并行 Batch 索引分发到各个 GPU SM 核心。
+
 ---
 
 ## 3. 硬件与内存层级术语
@@ -137,5 +141,45 @@ $$
 ### `Block Table` (块表)
 - **定义**: vLLM 中每个序列的元数据查找表，在 $\mathcal{O}(1)$ 时间内将逻辑 Block 索引 (`例如 逻辑 Block 1`) 转换为物理 `HBM` Block 指针 (`例如 物理 Block 28`)。同时追踪 `num_filled_tokens` 和 Block 引用计数 (`ref_count`)。
 
+### `Online Softmax`
+- **定义**: PagedAttention Kernel 中采用的增量在线 Softmax 算法，维护动态最大值 $m_i$ 与指数累加和 $l_i$，允许在片上 SRAM 寄存器中直接完成非连续物理 Block 的注意力归一化与 Value 累加，无需中间显存落盘。
+
 ### `Continuous Batching` (连续批处理 / 迭代级调度)
 - **定义**: 一种动态调度范式 (`Orca, Yu et al., 2022`)，推理服务器在**每一个 Token 生成 Step (Iteration)** 上检查请求队列，立即弹出已完成的序列 (`EOS`) 并吸纳新请求 (`Waiting -> Running`)，消除了传统静态批处理高达 90% 的 GPU 闲置浪费。
+
+### `Preemption` (抢占机制: Swap vs. Recomputation)
+- **定义**: 当自回归解码期间 HBM 空闲块耗尽时触发的容错恢复机制。调度器将低优先级的 `Running` 序列降级为 `Swapped` (通过 PCIe 将物理 KV 块驱逐至 Host 内存) 或 `Waiting` (直接丢弃 KV 块以待后续重新计算)。
+
+### `Internal Fragmentation` (内部碎片)
+- **定义**: 分配的物理内存块大小超过了实际存储的有效载荷导致的显存浪费。在传统连续预分配中浪费率高达 60%-80%；vLLM 将内部碎片消除并严格隔离至序列尾部的最后一个未填满 Block (<4% 浪费)。
+
+### `External Fragmentation` (外部碎片)
+- **定义**: 未分配的空闲内存散落在物理地址空间中但互不连续，导致无法满足连续分配请求的现象。vLLM 通过 PagedAttention 允许非连续寻址，将外部碎片彻底降至 **0%**。
+
+---
+
+## 6. 云原生编排、存储与机密 AI 术语
+
+### `LeaderWorkerSet` (`LWS`)
+- **定义**: 专为多节点分布式 AI/LLM 工作负载设计的 Kubernetes 原生控制器 API。它将分布式模型副本建模为 1 个 Leader Pod (服务入口/Rank 0) 与 $N-1$ 个 Worker Pod (Rank $1 \dots N-1$)。
+- **关键能力**: 原生支持 **原子 Gang 故障生命周期** (`RecreateGroupOnPodRestart`)，确保在多机 TP/PP 组中任意节点故障时全组同步重启，杜绝集群出现残缺死锁。
+
+### `Hyperdisk ML`
+- **定义**: Google Cloud 专为 AI 推理与训练设计的超高吞吐分布式块存储架构。
+- **在 LLM 推理中的作用**: 支持以 **Read-Only Many (`ROX`)** 模式同时挂载给多达 **2,500 个 GKE Pod**，提供高达 **$1.2 \text{ TB/s}$ 的集群聚合读取吞吐量**。将 70B/405B 大模型的冷启动加载耗时从 15–30 分钟降至 10 秒以内。
+
+### `Google Cloud AI Hypercomputer`
+- **定义**: Google Cloud 的超级计算 AI 体系架构，深度整合了专用加速硬件 (TPU v5e/v5p/v6e Trillium、NVIDIA H100/H200/B200 A3/A4 实例)、超高速网络互联 (Titanium 卸载、RoCEv2、GPUDirect-TCPX/RDMA、NCCL FastSocket)、高吞吐存储 (Hyperdisk ML、GCS FUSE) 以及 GKE 编排 (LWS、KubeRay、Kueue、KEDA)。
+
+### `Confidential Space` 与 `Confidential GKE`
+- **定义**: Google Cloud 基于硬件隔离的可信执行环境 (TEE) 打造的零信任机密计算体系，依托机密虚拟机 (AMD SEV-SNP / Intel TDX) 与 **机密 GPU (NVIDIA H100 TEE APM 模式)**。
+- **安全作用**: 确保物理机 Host OS 管理员、被攻破的 Hypervisor、云平台运维人员以及多租户邻居均无法窥探显存 (HBM)、内存 (RAM) 以及 PCIe 总线中的明文模型权重与用户数据。
+
+### `Remote Attestation` (密码学远程证明)
+- **定义**: 运行在 TEE 内的硬件安全模块 (vTPM 与 H100 安全处理器) 对系统的启动状态、固件、内核与容器镜像计算密码学哈希，并生成带硬件签名的 Quote。证明服务验证 Quote 后签发 OIDC Token，由 Cloud KMS 校验并下发对称解密密钥。
+
+### `Disaggregated Serving` (Prefill 与 Decode 解耦服务)
+- **定义**: 将计算密集型的 **Prefill 节点** (优化大 Batch GEMM 算力) 与显存带宽密集型的 **Decode 节点** (优化低延迟自回归解码) 在物理服务器级别分离，通过超低延迟 RDMA 跨网络直传物理 KV Cache Block 的先进推理服务拓扑。
+
+### `Prefix-Cache-Aware Routing` (前缀缓存感知路由)
+- **定义**: 智能 API 网关路由策略，对传入 Prompt 的公共前缀（系统提示词、长文档上下文）计算一致性哈希，将具有相同前缀特征的请求始终路由到同一个 vLLM Pod 副本，将自动前缀缓存 (APC) 命中率从 $\sim 15\%$ 提升至 $> 90\%$。
