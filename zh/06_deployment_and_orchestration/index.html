@@ -492,15 +492,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-openai-api-server-asyncengine" class="md-nav__link">
+  <a href="#1-openai-api-server-prefilldecode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第 1 部分: OpenAI API Server 与 AsyncEngine 架构
+        第 1 部分: OpenAI API Server、前缀路由与 Prefill/Decode 解耦服务
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="第 1 部分: OpenAI API Server 与 AsyncEngine 架构">
+    <nav class="md-nav" aria-label="第 1 部分: OpenAI API Server、前缀路由与 Prefill/Decode 解耦服务">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -514,28 +514,84 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#12-prefix-cache-aware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 前缀缓存感知 (Prefix-Cache-Aware) 智能网关路由
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-prefill-decode-disaggregated-serving-split-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Prefill 与 Decode 解耦服务 (Disaggregated Serving / Split Serving)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-ray-core" class="md-nav__link">
+  <a href="#2-ray-leaderworkerset-lws" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第 2 部分: 基于 Ray Core 的多节点分布式集群编排
+        第 2 部分: 多节点分布式集群编排: Ray 与 LeaderWorkerSet (LWS)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="第 2 部分: 基于 Ray Core 的多节点分布式集群编排">
+    <nav class="md-nav" aria-label="第 2 部分: 多节点分布式集群编排: Ray 与 LeaderWorkerSet (LWS)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#21-ray-actor-placement-group" class="md-nav__link">
+  <a href="#21-ray-core" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2.1 Ray Actor 与 Placement Group
+        2.1 基于 Ray Core 的分布式集群编排
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-kubernetes-leaderworkerset-lws" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 现代 Kubernetes 原生多节点编排: LeaderWorkerSet (LWS)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 现代 Kubernetes 原生多节点编排: LeaderWorkerSet (LWS)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#leaderworkerset-lws-ray" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LeaderWorkerSet (LWS) 相比 Ray 的核心生产优势:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#leaderworkerset-yaml-2-x-8-h100-gpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        生产级 LeaderWorkerSet YAML 配置规范 (2 节点 x 8 张 H100 GPU):
       
     </span>
   </a>
@@ -546,36 +602,41 @@
     </nav>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#3-kubernetes" class="md-nav__link">
+  <a href="#3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第 3 部分: Kubernetes 生产级部署最佳实践
+        第 3 部分: 企业级云基础设施与冷启动加速
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="第 3 部分: Kubernetes 生产级部署最佳实践">
+    <nav class="md-nav" aria-label="第 3 部分: 企业级云基础设施与冷启动加速">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#31-pod" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.1 关键 Pod 配置要求
+        3.1 高性能推理关键 Pod 参数配置
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3.1 关键 Pod 配置要求">
+    <nav class="md-nav" aria-label="3.1 高性能推理关键 Pod 参数配置">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#1-devshm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 共享内存 (/dev/shm) 卷挂载
+        1. 共享内存 (/dev/shm) 容量调优
       
     </span>
   </a>
@@ -583,21 +644,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-gpu" class="md-nav__link">
+  <a href="#2-numa-cpu" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. GPU 资源分配与驱动
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. 健康检查与优雅终止
+        2. NUMA 亲和性与 CPU 核心绑定
       
     </span>
   </a>
@@ -606,6 +656,45 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-hyperdisk-ml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 解决冷启动扩容瓶颈: Hyperdisk ML 与高速缓存
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 解决冷启动扩容瓶颈: Hyperdisk ML 与高速缓存">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        高速存储加速方案:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 高性能跨节点云网络
+      
+    </span>
+  </a>
   
 </li>
         
@@ -615,22 +704,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-keda" class="md-nav__link">
+  <a href="#4-ai-llm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第 4 部分: 生产级可观测性、指标与 KEDA 自动扩缩容
+        第 4 部分: 机密 AI 与零信任 LLM 推理
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="第 4 部分: 生产级可观测性、指标与 KEDA 自动扩缩容">
+    <nav class="md-nav" aria-label="第 4 部分: 机密 AI 与零信任 LLM 推理">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#41-vllm-prometheus" class="md-nav__link">
+  <a href="#41-tee" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.1 核心 vLLM Prometheus 指标
+        4.1 硬件级可信执行环境 (TEE)
       
     </span>
   </a>
@@ -638,22 +727,72 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#42-keda-pod" class="md-nav__link">
+  <a href="#42-remote-attestation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.2 KEDA 事件驱动的 Pod 水平自动扩缩容
+        4.2 密码学远程证明 (Remote Attestation) 与安全权重加载管线
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="4.2 KEDA 事件驱动的 Pod 水平自动扩缩容">
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-ai-hypercomputer-vs-confidential-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 架构对比总结: AI Hypercomputer vs. Confidential Space
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-prometheus-keda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 5 部分: 生产级可观测性、Prometheus 指标与 KEDA 自动扩缩容
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 5 部分: 生产级可观测性、Prometheus 指标与 KEDA 自动扩缩容">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-vllm-prometheus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 核心 vLLM Prometheus 指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-keda-pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 KEDA 事件驱动的 Pod 水平自动扩缩容
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 KEDA 事件驱动的 Pod 水平自动扩缩容">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#keda-scaledobject" class="md-nav__link">
     <span class="md-ellipsis">
       
-        KEDA ScaledObject 配置示例
+        生产级 KEDA ScaledObject 配置示例
       
     </span>
   </a>
@@ -671,10 +810,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5" class="md-nav__link">
+  <a href="#6_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第 5 部分: 完整生产级参考架构
+        第 6 部分: 完整生产级参考架构
       
     </span>
   </a>
@@ -754,15 +893,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-openai-api-server-asyncengine" class="md-nav__link">
+  <a href="#1-openai-api-server-prefilldecode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第 1 部分: OpenAI API Server 与 AsyncEngine 架构
+        第 1 部分: OpenAI API Server、前缀路由与 Prefill/Decode 解耦服务
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="第 1 部分: OpenAI API Server 与 AsyncEngine 架构">
+    <nav class="md-nav" aria-label="第 1 部分: OpenAI API Server、前缀路由与 Prefill/Decode 解耦服务">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -776,28 +915,84 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#12-prefix-cache-aware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 前缀缓存感知 (Prefix-Cache-Aware) 智能网关路由
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-prefill-decode-disaggregated-serving-split-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Prefill 与 Decode 解耦服务 (Disaggregated Serving / Split Serving)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-ray-core" class="md-nav__link">
+  <a href="#2-ray-leaderworkerset-lws" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第 2 部分: 基于 Ray Core 的多节点分布式集群编排
+        第 2 部分: 多节点分布式集群编排: Ray 与 LeaderWorkerSet (LWS)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="第 2 部分: 基于 Ray Core 的多节点分布式集群编排">
+    <nav class="md-nav" aria-label="第 2 部分: 多节点分布式集群编排: Ray 与 LeaderWorkerSet (LWS)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#21-ray-actor-placement-group" class="md-nav__link">
+  <a href="#21-ray-core" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2.1 Ray Actor 与 Placement Group
+        2.1 基于 Ray Core 的分布式集群编排
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-kubernetes-leaderworkerset-lws" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 现代 Kubernetes 原生多节点编排: LeaderWorkerSet (LWS)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 现代 Kubernetes 原生多节点编排: LeaderWorkerSet (LWS)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#leaderworkerset-lws-ray" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LeaderWorkerSet (LWS) 相比 Ray 的核心生产优势:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#leaderworkerset-yaml-2-x-8-h100-gpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        生产级 LeaderWorkerSet YAML 配置规范 (2 节点 x 8 张 H100 GPU):
       
     </span>
   </a>
@@ -808,36 +1003,41 @@
     </nav>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#3-kubernetes" class="md-nav__link">
+  <a href="#3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第 3 部分: Kubernetes 生产级部署最佳实践
+        第 3 部分: 企业级云基础设施与冷启动加速
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="第 3 部分: Kubernetes 生产级部署最佳实践">
+    <nav class="md-nav" aria-label="第 3 部分: 企业级云基础设施与冷启动加速">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#31-pod" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.1 关键 Pod 配置要求
+        3.1 高性能推理关键 Pod 参数配置
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3.1 关键 Pod 配置要求">
+    <nav class="md-nav" aria-label="3.1 高性能推理关键 Pod 参数配置">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#1-devshm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 共享内存 (/dev/shm) 卷挂载
+        1. 共享内存 (/dev/shm) 容量调优
       
     </span>
   </a>
@@ -845,21 +1045,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-gpu" class="md-nav__link">
+  <a href="#2-numa-cpu" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. GPU 资源分配与驱动
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. 健康检查与优雅终止
+        2. NUMA 亲和性与 CPU 核心绑定
       
     </span>
   </a>
@@ -868,6 +1057,45 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-hyperdisk-ml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 解决冷启动扩容瓶颈: Hyperdisk ML 与高速缓存
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 解决冷启动扩容瓶颈: Hyperdisk ML 与高速缓存">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        高速存储加速方案:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 高性能跨节点云网络
+      
+    </span>
+  </a>
   
 </li>
         
@@ -877,22 +1105,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-keda" class="md-nav__link">
+  <a href="#4-ai-llm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第 4 部分: 生产级可观测性、指标与 KEDA 自动扩缩容
+        第 4 部分: 机密 AI 与零信任 LLM 推理
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="第 4 部分: 生产级可观测性、指标与 KEDA 自动扩缩容">
+    <nav class="md-nav" aria-label="第 4 部分: 机密 AI 与零信任 LLM 推理">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#41-vllm-prometheus" class="md-nav__link">
+  <a href="#41-tee" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.1 核心 vLLM Prometheus 指标
+        4.1 硬件级可信执行环境 (TEE)
       
     </span>
   </a>
@@ -900,22 +1128,72 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#42-keda-pod" class="md-nav__link">
+  <a href="#42-remote-attestation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.2 KEDA 事件驱动的 Pod 水平自动扩缩容
+        4.2 密码学远程证明 (Remote Attestation) 与安全权重加载管线
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="4.2 KEDA 事件驱动的 Pod 水平自动扩缩容">
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-ai-hypercomputer-vs-confidential-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 架构对比总结: AI Hypercomputer vs. Confidential Space
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-prometheus-keda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 5 部分: 生产级可观测性、Prometheus 指标与 KEDA 自动扩缩容
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第 5 部分: 生产级可观测性、Prometheus 指标与 KEDA 自动扩缩容">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-vllm-prometheus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 核心 vLLM Prometheus 指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-keda-pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 KEDA 事件驱动的 Pod 水平自动扩缩容
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 KEDA 事件驱动的 Pod 水平自动扩缩容">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#keda-scaledobject" class="md-nav__link">
     <span class="md-ellipsis">
       
-        KEDA ScaledObject 配置示例
+        生产级 KEDA ScaledObject 配置示例
       
     </span>
   </a>
@@ -933,10 +1211,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5" class="md-nav__link">
+  <a href="#6_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第 5 部分: 完整生产级参考架构
+        第 6 部分: 完整生产级参考架构
       
     </span>
   </a>
@@ -972,10 +1250,16 @@
 
 
 <h1 id="6">模块 6: 生产级部署、云原生编排与可观测性<a class="headerlink" href="#6" title="Permanent link">&para;</a></h1>
-<p>将高性能 LLM 推理引擎从单机单卡环境推向企业级生产环境，需要具备健壮的部署架构、云原生编排以及实时可观测性。生产级 LLM 服务节点必须能够提供低延迟的 API 响应流、在突发流量下弹性扩缩容、优雅隔离硬件故障，并暴露详尽的运行指标用于自动扩缩容。</p>
-<p>本模块将探索 vLLM 的生产级工程架构，涵盖 <strong>OpenAI API Server 架构</strong>、<strong>Ray 分布式集群</strong>、<strong>Kubernetes Pod 部署最佳实践</strong>、<strong>Prometheus 指标与 KEDA 自动扩缩容</strong>，以及 <strong>完整生产级参考架构</strong>。</p>
+<p>将高性能 LLM 推理引擎从单机单卡测试环境推向企业级生产环境，需要具备健壮的部署架构、云原生编排能力、超高速冷启动存储管线、硬件级机密计算保障以及实时的可观测性。生产级 LLM 服务节点不仅必须能够提供低延迟的流式 API 响应、在突发流量下弹性扩缩容（消除长达数十分钟的模型权重加载等待），还要能优雅地隔离硬件故障，利用硬件级可信执行环境 (TEE) 保护敏感的模型权重与用户数据，并暴露详尽的运行指标用于事件驱动的自动扩缩容。</p>
+<p>本模块将全面剖析 vLLM 的生产级工程架构，涵盖：
+1. <strong>OpenAI API Server、前缀感知智能路由与 Prefill/Decode 解耦服务</strong>
+2. <strong>多节点分布式集群编排: Ray 与 LeaderWorkerSet (LWS)</strong>
+3. <strong>企业级云基础设施与冷启动加速 (GKE AI Hypercomputer 与 Hyperdisk ML)</strong>
+4. <strong>机密 AI 与零信任 LLM 推理 (Confidential Space 与搭载 H100 TEE 的 Confidential GKE)</strong>
+5. <strong>生产级可观测性、Prometheus 指标与 KEDA 事件驱动自动扩缩容</strong>
+6. <strong>完整生产级参考架构与就绪检查清单 (Checklist)</strong></p>
 <hr />
-<h2 id="1-openai-api-server-asyncengine">第 1 部分: OpenAI API Server 与 AsyncEngine 架构<a class="headerlink" href="#1-openai-api-server-asyncengine" title="Permanent link">&para;</a></h2>
+<h2 id="1-openai-api-server-prefilldecode">第 1 部分: OpenAI API Server、前缀路由与 Prefill/Decode 解耦服务<a class="headerlink" href="#1-openai-api-server-prefilldecode" title="Permanent link">&para;</a></h2>
 <p>vLLM 提供了企业级 HTTP 服务器，完全兼容 <strong>OpenAI API 规范</strong> (<code>vllm.entrypoints.openai.api_server</code>)，支持文本补全 (<code>/v1/completions</code>) 和 Chat 补全 (<code>/v1/chat/completions</code>) 的流式响应。</p>
 <pre class="mermaid"><code>flowchart TD
     CLIENT["🌐 客户端请求 (HTTP POST)"] --&gt; FASTAPI["FastAPI / Uvicorn 服务层"]
@@ -999,78 +1283,326 @@
 <li><strong>Server-Sent Events (SSE) 流式传输</strong>: 每当 GPU Step 生成新 Token，API 服务器会将其格式化为 <code>text/event-stream</code> 块 (<code>data: {"choices": [{"delta": {"content": "..."}}]}</code>) 并通过 HTTP 立即推送到客户端。</li>
 </ol>
 <hr />
-<h2 id="2-ray-core">第 2 部分: 基于 Ray Core 的多节点分布式集群编排<a class="headerlink" href="#2-ray-core" title="Permanent link">&para;</a></h2>
-<p>当运行多 GPU 或多节点分布式推理时 (例如跨 4 个节点的张量并行 <span class="arithmatex">\(\text{TP} = 8\)</span>)，vLLM 利用 <strong>Ray Core</strong> (<code>vllm.engine.ray_utils</code>) 来编排 Worker 进程。</p>
+<h3 id="12-prefix-cache-aware">1.2 前缀缓存感知 (Prefix-Cache-Aware) 智能网关路由<a class="headerlink" href="#12-prefix-cache-aware" title="Permanent link">&para;</a></h3>
+<p>当部署由多个 vLLM Pod 副本组成的推理集群时，传统的轮询 (Round-Robin) 或随机负载均衡器会严重破坏<strong>自动前缀缓存 (Automatic Prefix Caching, APC)</strong> 的局部性。如果用户发送包含 4,000 Token 系统提示词（或 32K RAG 文档上下文）的重复请求，若请求 1 被路由至 Pod A，而请求 2 被路由至 Pod B，Pod B 将被迫从头重新计算整个 Prompt 的 KV Cache（首 Token 延迟 <span class="arithmatex">\(\text{TTFT} \approx 800\text{ ms}\)</span>，而缓存命中时 <span class="arithmatex">\(&lt; 20\text{ ms}\)</span>）。</p>
 <pre class="mermaid"><code>flowchart TD
-    DRIVER["vLLM Engine Driver 进程 (Head 节点)"] --&gt; RAY_EXEC["Ray Worker 执行器"]
+    REQ["传入用户请求&lt;br&gt;(系统提示词 Hash: 0x8F3A...)"] --&gt; ROUTER["🧭 前缀缓存感知路由网关"]
 
-    subgraph RAY_CLUSTER ["Ray 集群 Placement Group (PACK 策略)"]
-        RAY_EXEC --&gt; W0["Ray Actor Worker 0 (GPU 0 - Master)"]
-        RAY_EXEC --&gt; W1["Ray Actor Worker 1 (GPU 1)"]
-        RAY_EXEC --&gt; W7["Ray Actor Worker 7 (GPU 7)"]
+    ROUTER --&gt;|"一致性哈希环亲和性 (前缀命中)"| POD_A["vLLM Pod A (APC 缓存命中: TTFT &lt; 20ms)"]
+    ROUTER -.-&gt;|"避免缓存未命中"| POD_B["vLLM Pod B"]
+    ROUTER -.-&gt;|"避免缓存未命中"| POD_C["vLLM Pod C"]</code></pre>
+<p><strong>生产级路由方案</strong>:
+- <strong>一致性哈希代理 (Consistent Hashing Proxy)</strong>: 部署智能网关（例如基于 Envoy 的自定义 Lua 过滤器，或专用的 vLLM Router），对请求的初始 Token 前缀（或 System Prompt / 文档 ID）计算哈希值并映射至一致性哈希环。
+- <strong>缓存亲和性转发</strong>: 拥有相同前缀哈希的请求会被精准路由至同一个 vLLM Pod 副本，将集群整体的 APC 命中率从 <span class="arithmatex">\(\sim 15\%\)</span> 大幅提升至 <span class="arithmatex">\(&gt; 90\%\)</span>，节约大量算力并将整体 TTFT 降低高达 <span class="arithmatex">\(10\times\)</span>。</p>
+<hr />
+<h3 id="13-prefill-decode-disaggregated-serving-split-serving">1.3 Prefill 与 Decode 解耦服务 (Disaggregated Serving / Split Serving)<a class="headerlink" href="#13-prefill-decode-disaggregated-serving-split-serving" title="Permanent link">&para;</a></h3>
+<p>如 <a href="../01_llm_inference_fundamentals/">模块 1</a> 与 <a href="../03_performance_and_quality/">模块 3</a> 所述，LLM 推理的两个阶段对硬件有着截然相反的诉求：
+- <strong>Prefill (Prompt 处理阶段)</strong>: 计算受限 (Compute-bound)，并行 GEMM 操作打满 Tensor Core，极大受益于高 TFLOPs 算力。
+- <strong>Decode (Token 生成阶段)</strong>: 显存带宽受限 (Memory-bandwidth bound)，逐 Token 串行 GEMV 执行，极度依赖海量显存容量与超高 HBM 带宽 (TB/s)。</p>
+<p>当 Prefill 和 Decode 混部在同一个引擎实例中时，长 Prompt 的突发到达会直接打断正在活跃生成的解码流，造成严重的 Token 间延迟 (ITL / TBT) 抖动与长尾延迟尖峰。</p>
+<pre class="mermaid"><code>flowchart TD
+    CLIENT_REQ["客户端请求"] --&gt; ROUTER["Prefill/Decode 分流网关"]
+
+    subgraph PREFILL_CLUSTER ["⚡ 专用 Prefill 节点 (计算优化型: 如 H100 / TPU v5p)"]
+        P_NODE["Prefill 引擎&lt;br&gt;大 Batch 高并发并行 GEMM"]
     end
 
-    W0 --&gt;|"自定义 NVLink All-Reduce / Ray IPC"| W1
-    W1 --&gt;|"自定义 NVLink All-Reduce / Ray IPC"| W7</code></pre>
-<h3 id="21-ray-actor-placement-group">2.1 Ray Actor 与 Placement Group<a class="headerlink" href="#21-ray-actor-placement-group" title="Permanent link">&para;</a></h3>
-<p>为了确保多 GPU Worker 进程具备物理亲和性与高 NVLink 带宽：</p>
+    subgraph DECODE_CLUSTER ["📦 专用 Decode 节点 (显存带宽优化型: 如 H200 / MI300X)"]
+        D_NODE["Decode 引擎&lt;br&gt;低延迟自回归 Token 生成"]
+    end
+
+    ROUTER --&gt;|"1. 转发 Prompt"| P_NODE
+    P_NODE --&gt;|"2. 跨 RDMA / NVLink-C2C 传输 KV Cache Block"| D_NODE
+    D_NODE --&gt;|"3. 流式返回生成 Token"| CLIENT_REQ</code></pre>
 <ol>
-<li><strong>Ray Actor</strong>: vLLM 将每个 GPU Worker 封装在一个 <strong>Ray Actor</strong> (<code>Worker</code> 类) 中，每个 Actor 运行在独立的 GPU 上。</li>
-<li><strong>Placement Group (<code>PACK</code> 策略)</strong>: vLLM 使用 <code>PACK</code> 束策略申请 Ray Placement Group，强制 Ray 在跨节点扩展前，优先将 GPU Worker Actor 打包部署在同一个物理服务器节点上。</li>
-<li><strong>PyTorch Distributed 初始化</strong>: Ray Actor 实例化后，Ray 会跨 Actor 初始化 <code>torch.distributed</code> 进程组，从而启用低延迟的 NVLink 和 InfiniBand 直接传输 (<code>vllm._C.custom_ar</code>)。</li>
+<li><strong>专用 Prefill 节点</strong>: 在计算密集型节点上批量并发处理 Prompt。当生成初始 KV Cache 后，通过极低延迟的 InfiniBand / RoCE RDMA 将物理 KV Block 转移至 Decode 节点。</li>
+<li><strong>专用 Decode 节点</strong>: 专心执行平滑、无阻塞的自回归解码，提供严格的 ITL SLA 保障 (例如 <span class="arithmatex">\(&lt; 15\text{ ms/token}\)</span>)。</li>
 </ol>
 <hr />
-<h2 id="3-kubernetes">第 3 部分: Kubernetes 生产级部署最佳实践<a class="headerlink" href="#3-kubernetes" title="Permanent link">&para;</a></h2>
-<p>在企业云环境 (GKE、EKS、AKS) 中，vLLM 实例作为由 Deployment 或 StatefulSet 控制器管理的 <strong>Kubernetes Pod</strong> 进行部署。</p>
+<h2 id="2-ray-leaderworkerset-lws">第 2 部分: 多节点分布式集群编排: Ray 与 LeaderWorkerSet (LWS)<a class="headerlink" href="#2-ray-leaderworkerset-lws" title="Permanent link">&para;</a></h2>
+<p>当模型规模超出单机显存容纳极限时 (例如跨多机部署 Llama 3 70B，或部署 Llama 3 405B 需要在 8 台 8xH100 节点上运行 <span class="arithmatex">\(\text{TP} = 8, \text{PP} = 8\)</span>)，编排系统必须统一管理跨节点进程生命周期与物理 GPU 亲和性。</p>
 <pre class="mermaid"><code>flowchart TD
-    K8S_SVC["Kubernetes Service / Ingress"] --&gt; POD1["vLLM Pod 实例 1"]
-    K8S_SVC --&gt; POD2["vLLM Pod 实例 2"]
-
-    subgraph POD_SPEC ["📦 vLLM Pod 配置规范"]
-        LIMITS["NVIDIA GPU 资源限制&lt;br&gt;nvidia.com/gpu: 8"]
-        SHM["共享内存挂载 (/dev/shm)&lt;br&gt;emptyDir: medium: Memory | size: 16Gi"]
-        PROBES["Readiness 与 Liveness 探针&lt;br&gt;GET /health"]
+    subgraph ORCHESTRATION_CHOICE ["分布式编排架构选型"]
+        RAY["Ray Core 编排&lt;br&gt;(Actor Placement Groups)"]
+        LWS["LeaderWorkerSet (LWS)&lt;br&gt;(K8s 原生多节点 AI 工作负载 API)"]
     end
 
-    POD1 --&gt; POD_SPEC</code></pre>
-<h3 id="31-pod">3.1 关键 Pod 配置要求<a class="headerlink" href="#31-pod" title="Permanent link">&para;</a></h3>
-<h4 id="1-devshm">1. 共享内存 (<code>/dev/shm</code>) 卷挂载<a class="headerlink" href="#1-devshm" title="Permanent link">&para;</a></h4>
-<p>默认情况下，Docker 和 Kubernetes 将容器的 <code>/dev/shm</code> 共享内存限制为微小的 <span class="arithmatex">\(64 \text{ MB}\)</span>。</p>
-<p>由于 vLLM 的自定义 NVLink All-Reduce CUDA Kernel (<code>vllm._C.custom_ar</code>) 和 PyTorch Distributed IPC 需要使用 POSIX 共享内存缓冲区，<strong><span class="arithmatex">\(64 \text{ MB}\)</span> 的 <code>/dev/shm</code> 会直接导致 Kernel 崩溃 (<code>SIGBUS</code> 或 CUDA Out of Memory)</strong>。</p>
-<p><strong>Kubernetes 修复方案</strong>: 将内存型的 <code>emptyDir</code> 挂载到 <code>/dev/shm</code>，容量至少设为 <span class="arithmatex">\(16 \text{ GB}\)</span>：</p>
+    RAY --&gt;|"动态 Actor、跨框架灵活编排"| USE_RAY["适用场景: 异构工作流与算法研究"]
+    LWS --&gt;|"零 Ray 守护进程开销、原子故障组恢复"| USE_LWS["适用场景: 企业级 K8s 与 GKE AI Hypercomputer"]</code></pre>
+<hr />
+<h3 id="21-ray-core">2.1 基于 Ray Core 的分布式集群编排<a class="headerlink" href="#21-ray-core" title="Permanent link">&para;</a></h3>
+<p>在常规设置中，vLLM 利用 <strong>Ray Core</strong> (<code>vllm.engine.ray_utils</code>) 编排跨物理节点的 Worker 进程：</p>
+<ol>
+<li><strong>Ray Actor</strong>: vLLM 将每个 GPU Worker 封装在绑定特定物理 GPU 的 Actor (<code>Worker</code> 类) 中。</li>
+<li><strong>Placement Group (<code>PACK</code> 策略)</strong>: vLLM 使用 <code>PACK</code> 策略申请 Ray Placement Group，强制 Ray 在跨节点扩展前优先将 GPU Worker Actor 打包部署在同一物理机内，以最大化 NVLink 带宽。</li>
+<li><strong>PyTorch Distributed 进程组</strong>: Ray 跨 Actor 初始化 <code>torch.distributed</code> 进程组，从而启用低延迟的 NVLink 和 InfiniBand 直接传输 (<code>vllm._C.custom_ar</code>)。</li>
+</ol>
+<hr />
+<h3 id="22-kubernetes-leaderworkerset-lws">2.2 现代 Kubernetes 原生多节点编排: <code>LeaderWorkerSet</code> (LWS)<a class="headerlink" href="#22-kubernetes-leaderworkerset-lws" title="Permanent link">&para;</a></h3>
+<p>尽管 Ray 应用广泛，但在企业级 Kubernetes 生产环境中运维 Ray 集群会引入额外的组件（Ray Head Pod、Ray Autoscaler 守护进程、Redis/GCS 状态存储），增加了运维复杂性。</p>
+<p>Kubernetes 社区与 Google Cloud 推出了 <strong><code>LeaderWorkerSet</code> (LWS)</strong> —— 专门为多节点 AI/LLM 分布式推理与训练设计的 Kubernetes 原生 API：</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph LWS_GROUP ["LeaderWorkerSet 副本 (跨 2 节点的 TP=8, PP=2)"]
+        LEADER["👑 Leader Pod (Node 0 - GPUs 0..7)&lt;br&gt;运行 vLLM 主进程 / HTTP API Server / Rank 0..7"]
+        WORKER["👷 Worker Pod 1 (Node 1 - GPUs 8..15)&lt;br&gt;运行 vLLM Worker Ranks 8..15"]
+
+        LEADER &lt;--&gt;|"RoCE / InfiniBand Multi-NIC RDMA&lt;br&gt;(PyTorch Distributed / NCCL)"| WORKER
+    end
+
+    LWS_CTRL["LWS Kubernetes 控制器"] --&gt;|"原子 Gang 管理 (All-or-Nothing)"| LWS_GROUP</code></pre>
+<h4 id="leaderworkerset-lws-ray">LeaderWorkerSet (LWS) 相比 Ray 的核心生产优势:<a class="headerlink" href="#leaderworkerset-lws-ray" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>零额外控制面开销</strong>: 无需 Ray Head 节点与守护进程，完全基于标准 Kubernetes Pod 原语运行。</li>
+<li><strong>原子故障恢复 (Gang Lifecycle)</strong>: 在张量/流水线并行中，若单个 GPU 节点故障，整个推理组必须同步重启。LWS 自动支持 <code>RecreateGroupOnPodRestart</code>（原子级整组重建），防止集群出现“僵尸”残缺组死锁。</li>
+<li><strong>确定性网络拓扑</strong>: 自动生成稳定的 Pod DNS 子域名（如 <code>leader-0.lws-service</code>、<code>worker-0-1.lws-service</code>），使得 PyTorch Distributed Rendezvous 能够瞬间解析并组网，无需外部协调组件。</li>
+</ol>
+<h4 id="leaderworkerset-yaml-2-x-8-h100-gpu">生产级 <code>LeaderWorkerSet</code> YAML 配置规范 (2 节点 x 8 张 H100 GPU):<a class="headerlink" href="#leaderworkerset-yaml-2-x-8-h100-gpu" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">leaderworkerset.x-k8s.io/v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LeaderWorkerSet</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-llama3-405b</span>
+<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">llm-serving</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"> </span><span class="c1"># 部署 2 个服务副本，每个副本横跨 2 个物理节点 (共 4 个节点)</span>
+<span class="w">  </span><span class="nt">leaderWorkerTemplate</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"> </span><span class="c1"># 每个副本由 1 个 Leader Pod + 1 个 Worker Pod 组成</span>
+<span class="w">    </span><span class="nt">restartPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RecreateGroupOnPodRestart</span><span class="w"> </span><span class="c1"># 原子故障组恢复</span>
+<span class="w">    </span><span class="nt">leaderTemplate</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">metadata</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">leader</span>
+<span class="w">      </span><span class="nt">spec</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">containers</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-leader</span>
+<span class="w">            </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm/vllm-openai:latest</span>
+<span class="w">            </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python3</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-m</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm.entrypoints.openai.api_server</span>
+<span class="w">            </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--model=/models/llama-3-405b-instruct</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--tensor-parallel-size=8</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--pipeline-parallel-size=2</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--gpu-memory-utilization=0.92</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--enable-prefix-caching</span>
+<span class="w">            </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">limits</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+<span class="w">              </span><span class="nt">requests</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+<span class="w">            </span><span class="nt">volumeMounts</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/dev/shm</span>
+<span class="w">                </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/models</span>
+<span class="w">                </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model-storage</span>
+<span class="w">        </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
+<span class="w">            </span><span class="nt">emptyDir</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Memory</span>
+<span class="w">              </span><span class="nt">sizeLimit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64Gi</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model-storage</span>
+<span class="w">            </span><span class="nt">persistentVolumeClaim</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">claimName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hyperdisk-ml-pvc</span>
+<span class="w">    </span><span class="nt">workerTemplate</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">spec</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">containers</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-worker</span>
+<span class="w">            </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm/vllm-openai:latest</span>
+<span class="w">            </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">limits</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+<span class="w">              </span><span class="nt">requests</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+<span class="w">            </span><span class="nt">volumeMounts</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/dev/shm</span>
+<span class="w">                </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/models</span>
+<span class="w">                </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model-storage</span>
+<span class="w">        </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
+<span class="w">            </span><span class="nt">emptyDir</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Memory</span>
+<span class="w">              </span><span class="nt">sizeLimit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64Gi</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model-storage</span>
+<span class="w">            </span><span class="nt">persistentVolumeClaim</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">claimName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hyperdisk-ml-pvc</span>
+</code></pre></div>
+<hr />
+<h2 id="3">第 3 部分: 企业级云基础设施与冷启动加速<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p>在 <strong>Google Cloud AI Hypercomputer on GKE</strong> 等现代云原生 AI 基础设施中，系统设计必须贯穿计算加速卡、超高速模型存储与高带宽网络互联。</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph GKE_AI_HYPERCOMPUTER ["🚀 企业级云原生 AI 基础设施 (GKE AI Hypercomputer)"]
+        direction TB
+        STORAGE["⚡ 存储层: Hyperdisk ML (1.2 TB/s 多挂载) + GCS FUSE 缓存"]
+        NETWORK["🌐 网络层: Multi-NIC RoCEv2 / GPUDirect-TCPX / FastSocket"]
+        COMPUTE["🔥 计算层: A3 High / A3 Mega / A4 (H100/H200/B200 SXM5)"]
+        ORCH["☸️ 编排层: GKE + LeaderWorkerSet + Kueue + KEDA"]
+    end</code></pre>
+<h3 id="31-pod">3.1 高性能推理关键 Pod 参数配置<a class="headerlink" href="#31-pod" title="Permanent link">&para;</a></h3>
+<h4 id="1-devshm">1. 共享内存 (<code>/dev/shm</code>) 容量调优<a class="headerlink" href="#1-devshm" title="Permanent link">&para;</a></h4>
+<p>默认情况下，Docker 和 Kubernetes 将容器的 <code>/dev/shm</code> 共享内存限制为极小的 <span class="arithmatex">\(64 \text{ MB}\)</span>。</p>
+<p>由于 vLLM 的自定义 NVLink All-Reduce CUDA Kernel (<code>vllm._C.custom_ar</code>) 与 PyTorch Distributed IPC 需要使用 POSIX 共享内存缓冲区跨 8 张 GPU 交换中间张量指针，<strong><span class="arithmatex">\(64 \text{ MB}\)</span> 的 <code>/dev/shm</code> 会直接导致系统崩溃 (<code>SIGBUS</code> 或 CUDA Out of Memory)</strong>。</p>
+<p><strong>生产级容量规范</strong>: 挂载内存型 <code>emptyDir</code>，容量至少设为 <span class="arithmatex">\(\ge 16 \text{ GB}\)</span>（多节点或大 Batch 场景建议 <span class="arithmatex">\(\ge 32 \dots 64 \text{ GB}\)</span>）：</p>
 <div class="highlight"><pre><span></span><code><span class="nt">volumes</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
 <span class="w">    </span><span class="nt">emptyDir</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Memory</span>
-<span class="w">      </span><span class="nt">sizeLimit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16Gi</span>
+<span class="w">      </span><span class="nt">sizeLimit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32Gi</span>
 <span class="nt">volumeMounts</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/dev/shm</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
 </code></pre></div>
-<h4 id="2-gpu">2. GPU 资源分配与驱动<a class="headerlink" href="#2-gpu" title="Permanent link">&para;</a></h4>
-<p>使用 <strong>NVIDIA GPU Operator</strong> 指定明确的 GPU 资源 Request 与 Limit：</p>
-<div class="highlight"><pre><span></span><code><span class="nt">resources</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">limits</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
-<span class="w">  </span><span class="nt">requests</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
-</code></pre></div>
-<h4 id="3">3. 健康检查与优雅终止<a class="headerlink" href="#3" title="Permanent link">&para;</a></h4>
-<ul>
-<li><strong>Readiness Probe</strong>: 查询 <code>GET /health</code>，确保模型完成加载和 CUDA Graph 预热捕获后，Kubernetes Service 才开始分发线上流量。</li>
-<li><strong>优雅终止 (<code>terminationGracePeriodSeconds: 120</code>)</strong>: 允许活跃的流式请求在 Pod 接收到 <code>SIGKILL</code> 之前完成传输。</li>
-</ul>
+<h4 id="2-numa-cpu">2. NUMA 亲和性与 CPU 核心绑定<a class="headerlink" href="#2-numa-cpu" title="Permanent link">&para;</a></h4>
+<p>在双路服务器（如 2 颗 Intel Xeon / AMD EPYC CPU 搭载 8 张 H100 GPU）中，GPU 0-3 连接至 NUMA Node 0，GPU 4-7 连接至 NUMA Node 1。</p>
+<p>若 Kubernetes 将 vLLM CPU 线程调度在 NUMA Node 1 上，却在操控 GPU 0-3，内存拷贝将跨越跨 Socket 的 UPI/QPI 总线，导致高达 <span class="arithmatex">\(40\%\)</span> 的吞吐量衰减。在 GKE 中，配置 <strong>Kubernetes CPU Manager Policy (<code>static</code>)</strong> 与 <strong>Topology Manager Policy (<code>single-numa-node</code>)</strong>，将容器 CPU 线程锁定在本地 NUMA 域。</p>
 <hr />
-<h2 id="4-keda">第 4 部分: 生产级可观测性、指标与 KEDA 自动扩缩容<a class="headerlink" href="#4-keda" title="Permanent link">&para;</a></h2>
+<h3 id="32-hyperdisk-ml">3.2 解决冷启动扩容瓶颈: Hyperdisk ML 与高速缓存<a class="headerlink" href="#32-hyperdisk-ml" title="Permanent link">&para;</a></h3>
+<p>当业务流量激增触发 KEDA 自动扩容（例如从 2 个 Pod 扩至 20 个 Pod）时，传统云存储会陷入严重的“冷启动瘫痪”：
+- 70B 参数的 FP16/BF16 模型权重体积为 <strong><span class="arithmatex">\(140 \text{ GB}\)</span></strong>。
+- 405B 参数的模型权重体积高达 <strong><span class="arithmatex">\(810 \text{ GB}\)</span></strong>。
+- 通过 10 Gbps 常规网络从 HuggingFace 或标准对象存储逐个下载，每个 Pod 需要耗时 <strong><span class="arithmatex">\(15 \dots 30 \text{ 分钟}\)</span></strong>。
+- <strong>突发流量早已过去，扩容 Pod 却仍未就绪，导致自动扩缩容完全失效。</strong></p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph TRADITIONAL_STORAGE ["❌ 传统存储 (15-30 分钟冷启动)"]
+        HF["HuggingFace / 基础对象存储"] --&gt;|"10 Gbps 慢速下载"| POD_OLD["新扩容 vLLM Pod&lt;br&gt;等待 20 分钟..."]
+    end
+
+    subgraph HYPERDISK_ML_STORAGE ["✅ Cloud Hyperdisk ML 架构 (&lt; 10 秒极速就绪)"]
+        HD["⚡ Google Cloud Hyperdisk ML 卷&lt;br&gt;(Read-Only Many - 支持多达 2,500 个 Pod 并发挂载)"]
+        HD --&gt;|"以 1.2 TB/s 聚合吞吐直接读取 Block"| P1["vLLM Pod 1"]
+        HD --&gt;|"以 1.2 TB/s 聚合吞吐直接读取 Block"| P2["vLLM Pod 2"]
+        HD --&gt;|"以 1.2 TB/s 聚合吞吐直接读取 Block"| P20["vLLM Pod 20"]
+    end</code></pre>
+<h4 id="_1">高速存储加速方案:<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Google Cloud Hyperdisk ML</strong>:</li>
+<li>专为 AI 推理扩缩容设计。单个存储卷以 <strong>Read-Only Many (<code>ROX</code>)</strong> 模式可同时挂载给多达 <strong>2,500 个 GKE Pod</strong>。</li>
+<li>提供高达 <strong><span class="arithmatex">\(1.2 \text{ TB/s}\)</span> 的集群聚合读取吞吐量</strong>，20 个新启动的 vLLM Pod 同时加载 <span class="arithmatex">\(140 \text{ GB}\)</span> 权重仅需 <strong>不到 10 秒</strong>。</li>
+<li><strong>GCS FUSE CSI 驱动与本地 NVMe SSD 缓存</strong>:</li>
+<li>将 Cloud Storage Bucket 挂载为本地文件系统，配合本地 NVMe SSD 缓存与并行预读 (<code>file-cache: max-size-mb</code>)。</li>
+<li><strong>容器镜像流式加载 (Container Image Streaming / Stargz)</strong>:</li>
+<li>允许 GKE 节点在无需完整下载 20GB CUDA 基础镜像的情况下瞬间启动容器，按需流式拉取镜像层。</li>
+</ol>
+<hr />
+<h3 id="33">3.3 高性能跨节点云网络<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<p>多节点 TP/PP 分布式推理需要规避传统 TCP/IP 网络协议栈瓶颈：
+- <strong>Multi-NIC 多网卡拓扑</strong>: 云 AI 实例 (如 Google Cloud A3 Mega / A3 Ultra) 为每个节点配备 <strong>8 张专用的 <span class="arithmatex">\(200\text{ Gbps}\)</span> 或 <span class="arithmatex">\(400\text{ Gbps}\)</span> 网络接口卡 (NIC)</strong>，与 8 张 GPU 实现 1:1 独立带宽映射。
+- <strong>GPUDirect-TCPX 与 RoCEv2 RDMA</strong>: 绕过主机 CPU 与系统内存，实现从本地 GPU HBM 到远端 GPU HBM 的直传。
+- <strong>NCCL 关键调优环境变量</strong>:
+  <div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_DEBUG</span><span class="o">=</span>INFO
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_NET_GDR_LEVEL</span><span class="o">=</span><span class="m">5</span><span class="w">          </span><span class="c1"># 跨 PCIe/NVLink 启用完整 GPUDirect RDMA</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_CROSS_NIC</span><span class="o">=</span><span class="m">1</span><span class="w">              </span><span class="c1"># 均衡利用全部 8 张网卡发送 All-Reduce 流量</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_BUFFSIZE</span><span class="o">=</span><span class="m">8388608</span><span class="w">         </span><span class="c1"># 8MB 环形缓冲区以支撑超高吞吐通信</span>
+</code></pre></div></p>
+<hr />
+<h2 id="4-ai-llm">第 4 部分: 机密 AI 与零信任 LLM 推理<a class="headerlink" href="#4-ai-llm" title="Permanent link">&para;</a></h2>
+<p>在对安全性要求极高的企业领域（医疗健康/HIPAA、金融风控、政府国防、核心资产模型），部署前沿 LLM 会面临严峻的安全威胁：
+1. <strong>内存明文嗅探风险</strong>: 传统 GPU 显存 (HBM) 与系统物理内存 (RAM) 在前向计算时均保存明文数据（用户 Prompt、病历、商业模型权重）。
+2. <strong>不可信基础设施管理员 / 平台特权风险</strong>: 拥有物理机 Host OS 权限的恶意管理员、被攻破的 Hypervisor 或多租户恶意邻居可能通过 Dump 内存页面盗取专有模型权重或用户隐私会话。</p>
+<p>为此，Google Cloud 与 NVIDIA 推出了基于 <strong>Confidential Space</strong> 以及 <strong>搭载 NVIDIA H100 TEE 的 Confidential GKE</strong> 的 <strong>机密 AI (Confidential AI)</strong> 架构。</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph HOST_BOUNDARY ["物理服务器主机 (不可信基础设施层)"]
+        HYPERVISOR["Hypervisor / Host OS (不可信)"]
+
+        subgraph TEE ["🔒 硬件级可信执行环境 (TEE)"]
+            CPU_TEE["机密虚拟机 (AMD SEV-SNP / Intel TDX)&lt;br&gt;加密 RAM 硬件引擎 (AES-128/256)"]
+            GPU_TEE["NVIDIA H100 Hopper TEE (机密 GPU 模式)&lt;br&gt;加密 HBM + PCIe 总线链路硬件加密 (AES-GCM)"]
+
+            VLLM["vLLM 推理服务容器&lt;br&gt;(解密后的权重与明文 Prompt 仅存在于 TEE 内存中)"]
+        end
+    end
+
+    KMS["🔐 Google Cloud KMS / Secret Manager"] &lt;--&gt;|"密码学远程证明 Token (OIDC) 交换"| TEE</code></pre>
+<hr />
+<h3 id="41-tee">4.1 硬件级可信执行环境 (TEE)<a class="headerlink" href="#41-tee" title="Permanent link">&para;</a></h3>
+<p>机密 LLM 推理通过 CPU 与 GPU 双重硬件密码学边界提供保护：
+1. <strong>CPU TEE (AMD SEV-SNP / Intel TDX)</strong>: 内存加密密钥由 CPU 硅片内部的硬件安全处理器独立生成与管理，Hypervisor 无法读取或篡改 Guest VM 的内存页面。
+2. <strong>GPU TEE (NVIDIA Hopper H100 机密计算模式)</strong>:
+   - 当配置在 <strong>APM 模式 (Attested Pass-Through Mode)</strong> 时，H100 内部的安全引擎使用硬件 <strong>AES-GCM-256</strong> 对穿过 PCIe 总线的所有数据以及片上 HBM3 显存进行线速硬件级透明加密。
+   - 即使攻击者在物理 PCIe 插槽或显存总线上挂载逻辑分析仪，也只能读取到不可破解的密文。</p>
+<hr />
+<h3 id="42-remote-attestation">4.2 密码学远程证明 (Remote Attestation) 与安全权重加载管线<a class="headerlink" href="#42-remote-attestation" title="Permanent link">&para;</a></h3>
+<p>企业如何在绝不向云平台磁盘泄露明文权重的前提下，将核心模型安全加载至云端 vLLM 实例？</p>
+<p>解决方案是依托 <strong>Confidential Space / Confidential GKE</strong> 实现的<strong>密码学远程证明与条件解密流水线</strong>：</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant TEE as vLLM Pod (运行于 Confidential GKE TEE 中)
+    participant TPM as 硬件 vTPM / H100 安全处理器
+    participant ATTEST as Google Cloud 证明服务 (Attestation Service)
+    participant KMS as Cloud KMS / Secret Manager
+    participant STORE as Hyperdisk ML (保存加密后的模型权重)
+
+    TEE-&gt;&gt;TPM: 1. 度量启动状态 (BIOS、内核、容器镜像 Hash、GPU 证书)
+    TPM--&gt;&gt;TEE: 2. 生成硬件签名的证明 Quote
+    TEE-&gt;&gt;ATTEST: 3. 提交 Quote 申请验证
+    ATTEST--&gt;&gt;TEE: 4. 颁发验证通过的 OIDC 证明 Token (声明镜像 Hash 与 TEE 真实性)
+    TEE-&gt;&gt;KMS: 5. 请求模型解密密钥 (携带 OIDC Token)
+    Note over KMS: 验证 Token 声明是否符合预设授权策略 (如 Image Hash 匹配)
+    KMS--&gt;&gt;TEE: 6. 下发模型 AES 对称解密密钥
+    TEE-&gt;&gt;STORE: 7. 读取加密权重文件
+    Note over TEE: 在 TEE 硬件加密显存/内存中实时解密权重
+    TEE-&gt;&gt;TEE: 8. 启动 vLLM OpenAI API Server</code></pre>
+<ol>
+<li><strong>硬件度量</strong>: 当 vLLM Pod 在 Confidential GKE 中启动时，硬件 vTPM 与 NVIDIA H100 安全处理器计算 BIOS、容器镜像、操作系统内核及 GPU 微码的哈希值。</li>
+<li><strong>证明 Token 签发</strong>: Pod 将硬件度量值发送至证明服务，后者将其与企业预先审批的“黄金基线哈希”比对，确认无篡改后签发带防伪签名的 OIDC Token。</li>
+<li><strong>条件密钥释放</strong>: Cloud KMS 验证 Token 声明（如 <em>Image Hash == <code>vllm-prod-v2.4</code></em>, <em>Confidential GPU == <code>H100-TEE</code></em>），验证通过后才下发解密密钥。</li>
+<li><strong>安全运行</strong>: 模型权重在 TEE 硬件加密显存/内存中就地解密。整个生命周期中，明文权重从未落地持久化磁盘，也未出现在可被 Host OS 访问的物理内存中。</li>
+</ol>
+<hr />
+<h3 id="43-ai-hypercomputer-vs-confidential-space">4.3 架构对比总结: AI Hypercomputer vs. Confidential Space<a class="headerlink" href="#43-ai-hypercomputer-vs-confidential-space" title="Permanent link">&para;</a></h3>
+<p>清晰理解 Google Cloud AI Hypercomputer 与 Confidential Space 的定位差异：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">架构维度</th>
+<th style="text-align: left;"><strong>Google Cloud AI Hypercomputer</strong> (GKE AI)</th>
+<th style="text-align: left;"><strong>Confidential Space / Confidential GKE</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>主要工程定位</strong></td>
+<td style="text-align: left;"><strong>算力扩展、极致吞吐与低延迟工程优化</strong></td>
+<td style="text-align: left;"><strong>零信任安全隔离、数据隐私与核心资产保护</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>核心硬件支撑</strong></td>
+<td style="text-align: left;">NVIDIA H100/H200/B200、TPU v5p/v6e、Multi-NIC RoCE、Hyperdisk ML</td>
+<td style="text-align: left;">AMD SEV-SNP、Intel TDX、NVIDIA H100 TEE (机密 GPU 模式)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>核心软件抽象</strong></td>
+<td style="text-align: left;">LeaderWorkerSet (LWS)、KubeRay、Kueue、NCCL FastSocket、KEDA</td>
+<td style="text-align: left;">硬件证明服务 (Attestation)、Cloud KMS、Workload Identity OIDC</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>解决的关键痛点</strong></td>
+<td style="text-align: left;">超大模型跨机并行 (TP/PP)、冷启动秒级扩容、高并发吞吐打满</td>
+<td style="text-align: left;">抵御恶意特权管理员、Hypervisor 漏洞、多租户显存嗅探</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>典型应用场景</strong></td>
+<td style="text-align: left;">超大规模通用 LLM 服务 (如 Llama 3 405B、DeepSeek-V3)</td>
+<td style="text-align: left;">医疗大模型、金融风控 LLM、企业核心专有权重托管</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>融合部署架构</strong></td>
+<td style="text-align: left;">在 <strong>配备机密 H100 GPU 的 GKE A3 节点</strong> 上通过 <strong>LeaderWorkerSet + Hyperdisk ML</strong> 部署 vLLM，同时获得极致的分布式吞吐性能与硬件证明的零信任安全。</td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-prometheus-keda">第 5 部分: 生产级可观测性、Prometheus 指标与 KEDA 自动扩缩容<a class="headerlink" href="#5-prometheus-keda" title="Permanent link">&para;</a></h2>
 <p>vLLM 暴露了内置的 Prometheus 指标接口 (<code>/metrics</code>)，用于实时监控与事件驱动的自动扩缩容。</p>
-<h3 id="41-vllm-prometheus">4.1 核心 vLLM Prometheus 指标<a class="headerlink" href="#41-vllm-prometheus" title="Permanent link">&para;</a></h3>
+<h3 id="51-vllm-prometheus">5.1 核心 vLLM Prometheus 指标<a class="headerlink" href="#51-vllm-prometheus" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
 <th style="text-align: left;">指标名称</th>
 <th style="text-align: left;">类型</th>
 <th style="text-align: left;">描述</th>
-<th style="text-align: left;">运维指导意义</th>
+<th style="text-align: left;">运维指导意义与 SRE 阈值</th>
 </tr>
 </thead>
 <tbody>
@@ -1084,132 +1616,179 @@
 <td style="text-align: left;"><code>vllm:num_requests_waiting</code></td>
 <td style="text-align: left;">Gauge</td>
 <td style="text-align: left;">在调度器等待队列中排队的请求数</td>
-<td style="text-align: left;"><strong>水平自动扩缩容 (HPA) 的核心触发指标</strong></td>
+<td style="text-align: left;"><strong>水平自动扩缩容 (HPA) 的核心触发指标 (<span class="arithmatex">\(&gt; 5 \dots 10\)</span>)</strong></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>vllm:gpu_cache_usage_perc</code></td>
 <td style="text-align: left;">Gauge</td>
 <td style="text-align: left;">当前已分配的物理 GPU KV Cache Block 百分比</td>
-<td style="text-align: left;"><strong><span class="arithmatex">\(&gt; 85\%\)</span> 表明即将触发抢占/换页</strong></td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(&gt; 85\%\)</span> 表明即将触发抢占、换页或 TTFT 严重劣化</strong></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>vllm:cpu_cache_usage_perc</code></td>
 <td style="text-align: left;">Gauge</td>
 <td style="text-align: left;">当前已分配的物理 CPU Swap KV Cache Block 百分比</td>
-<td style="text-align: left;"><span class="arithmatex">\(&gt; 0\%\)</span> 表明 GPU 显存已饱和</td>
+<td style="text-align: left;"><span class="arithmatex">\(&gt; 0\%\)</span> 表明 GPU 显存已严重饱和</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>vllm:avg_prompt_throughput_tok_per_s</code></td>
+<td style="text-align: left;">Gauge</td>
+<td style="text-align: left;">整个引擎的 Prompt Token Prefill 聚合吞吐量</td>
+<td style="text-align: left;">监控 Prefill 算力利用率与 TTFT 处理容量</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>vllm:avg_generation_throughput_tok_per_s</code></td>
+<td style="text-align: left;">Gauge</td>
+<td style="text-align: left;">整个引擎的 Output Token 解码生成聚合吞吐量</td>
+<td style="text-align: left;">衡量自回归解码显存带宽的打满程度</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>vllm:time_to_first_token_seconds</code></td>
 <td style="text-align: left;">Histogram</td>
 <td style="text-align: left;">首 Token 延迟 (TTFT) 分布</td>
-<td style="text-align: left;">评估 Prompt 处理性能的核心 SLA 指标</td>
+<td style="text-align: left;">评估 Prompt 响应的核心 SLA 指标 (<span class="arithmatex">\(P_{99} &lt; 1.0\text{ s}\)</span>)</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>vllm:time_per_output_token_seconds</code></td>
 <td style="text-align: left;">Histogram</td>
-<td style="text-align: left;">Token 间延迟 (ITL) 分布</td>
-<td style="text-align: left;">评估文本生成速度的核心 SLA 指标</td>
+<td style="text-align: left;">Token 间延迟 (ITL / TBT) 分布</td>
+<td style="text-align: left;">评估文本生成速度的核心 SLA 指标 (<span class="arithmatex">\(P_{99} &lt; 25\text{ ms}\)</span>)</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h3 id="42-keda-pod">4.2 KEDA 事件驱动的 Pod 水平自动扩缩容<a class="headerlink" href="#42-keda-pod" title="Permanent link">&para;</a></h3>
+<h3 id="52-keda-pod">5.2 KEDA 事件驱动的 Pod 水平自动扩缩容<a class="headerlink" href="#52-keda-pod" title="Permanent link">&para;</a></h3>
 <p>标准的 Kubernetes Horizontal Pod Autoscaler (HPA) 基于 CPU 或内存利用率进行扩缩容，这对于 GPU 密集型推理任务完全无效。</p>
 <p>生产部署使用 <strong>KEDA (Kubernetes Event-driven Autoscaling)</strong>，根据 <strong>KV Cache 利用率</strong> 和 <strong>等待队列深度</strong> 动态扩缩容 vLLM Pod 副本数。</p>
 <pre class="mermaid"><code>flowchart TD
     VLLM_METRICS["vLLM Pod /metrics 接口"] --&gt; PROM["Prometheus 监控服务器"]
     PROM --&gt; KEDA["KEDA ScaledObject 控制器"]
 
-    subgraph SCALING_RULES ["扩缩容规则指标"]
-        RULE1["vllm:num_requests_waiting &gt; 5"]
-        RULE2["vllm:gpu_cache_usage_perc &gt; 0.80"]
+    subgraph SCALING_RULES ["复合扩缩容触发规则"]
+        RULE1["触发规则 A: sum(vllm:num_requests_waiting) &gt; 5"]
+        RULE2["触发规则 B: avg(vllm:gpu_cache_usage_perc) &gt; 0.80"]
     end
 
-    KEDA --&gt; HPA
-    SCALING_RULES --&gt; HPA["自动扩容 vLLM Pod 副本 (如 2 -&gt; 10 Pods)"]</code></pre>
-<h4 id="keda-scaledobject">KEDA <code>ScaledObject</code> 配置示例<a class="headerlink" href="#keda-scaledobject" title="Permanent link">&para;</a></h4>
+    KEDA --&gt; SCALING_RULES
+    SCALING_RULES --&gt; HPA["自动扩容 vLLM 副本 (如通过 Hyperdisk ML 从 2 扩至 20 个 Pod)"]</code></pre>
+<h4 id="keda-scaledobject">生产级 KEDA <code>ScaledObject</code> 配置示例<a class="headerlink" href="#keda-scaledobject" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keda.sh/v1alpha1</span>
 <span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ScaledObject</span>
 <span class="nt">metadata</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-autoscaler</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-keda-autoscaler</span>
+<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">llm-serving</span>
 <span class="nt">spec</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">scaleTargetRef</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-deployment</span>
+<span class="w">    </span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">leaderworkerset.x-k8s.io/v1</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LeaderWorkerSet</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-llama3-405b</span>
 <span class="w">  </span><span class="nt">minReplicaCount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 <span class="w">  </span><span class="nt">maxReplicaCount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">  </span><span class="nt">cooldownPeriod</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300</span><span class="w"> </span><span class="c1"># 冷却时间，防止突发流量下的抖动缩容</span>
+<span class="w">  </span><span class="nt">pollingInterval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 <span class="w">  </span><span class="nt">triggers</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prometheus</span>
 <span class="w">      </span><span class="nt">metadata</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">serverAddress</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://prometheus-k8s.monitoring:9090</span>
 <span class="w">        </span><span class="nt">metricName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm_num_requests_waiting</span>
-<span class="w">        </span><span class="nt">query</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sum(vllm:num_requests_waiting)</span>
+<span class="w">        </span><span class="nt">query</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sum(vllm:num_requests_waiting{namespace=&quot;llm-serving&quot;})</span>
 <span class="w">        </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;5&#39;</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prometheus</span>
+<span class="w">      </span><span class="nt">metadata</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">serverAddress</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://prometheus-k8s.monitoring:9090</span>
+<span class="w">        </span><span class="nt">metricName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm_gpu_cache_usage_perc</span>
+<span class="w">        </span><span class="nt">query</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">avg(vllm:gpu_cache_usage_perc{namespace=&quot;llm-serving&quot;})</span>
+<span class="w">        </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0.80&#39;</span>
 </code></pre></div>
 <hr />
-<h2 id="5">第 5 部分: 完整生产级参考架构<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
-<p>完整的企业级 LLM 服务架构将 API 网关、KEDA 自动扩缩容、Ray 分布式集群与多级内存管理融合为了统一的部署拓扑。</p>
+<h2 id="6_1">第 6 部分: 完整生产级参考架构<a class="headerlink" href="#6_1" title="Permanent link">&para;</a></h2>
+<p>完整的企业级 LLM 服务架构将前缀感知网关路由、LeaderWorkerSet 多节点扩容、Hyperdisk ML 极速存储、硬件证明机密计算与 KEDA 自动扩缩容融合为了统一的生产拓扑。</p>
 <pre class="mermaid"><code>flowchart TD
-    USERS["📱 客户端与 Web 应用"] --&gt; INGRESS["🌐 云端 Ingress / 负载均衡器 (Envoy / NGINX)"]
-    INGRESS --&gt; GATEWAY["🚪 API 网关 (鉴权 / 限流 / Token 计数)"]
+    USERS["📱 客户端与 Web 应用"] --&gt; WAF["🛡️ Cloud Armor / WAF / SSL 终结"]
+    WAF --&gt; GATEWAY["🚪 智能 API 网关 (鉴权 / 限流 / 前缀感知哈希路由)"]
 
-    GATEWAY --&gt; K8S_CLUSTER["☸️ Kubernetes vLLM 推理集群"]
+    GATEWAY --&gt; K8S_CLUSTER["☸️ GKE AI Hypercomputer 集群"]
 
-    subgraph K8S_CLUSTER
-        POD_A["vLLM Pod 实例 1 (8 x H100 GPUs)&lt;br&gt;OpenAI FastApi + AsyncLLMEngine"]
-        POD_B["vLLM Pod 实例 2 (8 x H100 GPUs)&lt;br&gt;OpenAI FastApi + AsyncLLMEngine"]
+    subgraph K8S_CLUSTER ["☸️ GKE AI Hypercomputer 集群 (Confidential A3 节点)"]
+        subgraph LWS_REPLICA_1 ["LeaderWorkerSet 副本 1 (TP=8, PP=2)"]
+            LEADER_1["👑 Leader Pod (Node 0: 8x H100 TEE)&lt;br&gt;OpenAI FastAPI + 主引擎"]
+            WORKER_1["👷 Worker Pod (Node 1: 8x H100 TEE)&lt;br&gt;分布式 Worker Ranks 8..15"]
+            LEADER_1 &lt;--&gt;|"Multi-NIC RoCEv2 (400 Gbps RDMA)"| WORKER_1
+        end
+
+        subgraph LWS_REPLICA_2 ["LeaderWorkerSet 副本 2 (TP=8, PP=2)"]
+            LEADER_2["👑 Leader Pod (Node 2: 8x H100 TEE)"]
+            WORKER_2["👷 Worker Pod (Node 3: 8x H100 TEE)"]
+            LEADER_2 &lt;--&gt;|"Multi-NIC RoCEv2 (400 Gbps RDMA)"| WORKER_2
+        end
     end
 
-    subgraph POD_INTERNALS ["📦 vLLM Pod 内部"]
-        RAY_HEAD["Ray 集群管理器"]
-        TP_WORKERS["TP=8 分布式 Worker (NVLink custom_ar)"]
-        BLOCK_MGR["PagedAttention Block 管理器 (GPU HBM + CPU Swap)"]
-        METRICS_EP["Prometheus /metrics 接口"]
-    end
+    STORAGE["⚡ Google Cloud Hyperdisk ML 卷&lt;br&gt;(Read-Only Many, 1.2 TB/s 聚合吞吐量)"]
+    STORAGE --&gt;|"10 秒内极速加载模型"| LWS_REPLICA_1
+    STORAGE --&gt;|"10 秒内极速加载模型"| LWS_REPLICA_2
 
-    POD_A --&gt; POD_INTERNALS
-    POD_B --&gt; POD_INTERNALS
-    METRICS_EP --&gt; PROM_SRV["📊 Prometheus 监控服务器"]
-    PROM_SRV --&gt; KEDA_CTRL["⚡ KEDA ScaledObject 控制器"]
-    KEDA_CTRL --&gt;|"自动扩缩容 Pod 副本"| K8S_CLUSTER</code></pre>
+    ATTEST["🔐 Google Cloud KMS 与证明服务"] &lt;--&gt;|"硬件证明与密钥下发"| K8S_CLUSTER
+
+    METRICS["📊 Prometheus 监控系统"] &lt;-- "抓取 /metrics" -- K8S_CLUSTER
+    METRICS --&gt; KEDA["⚡ KEDA ScaledObject 控制器"]
+    KEDA --&gt;|"自动扩缩容 LWS 副本 (2 -&gt; 20)"| K8S_CLUSTER</code></pre>
 <hr />
 <h2 id="checklist">总结: 生产就绪检查清单 (Checklist)<a class="headerlink" href="#checklist" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th style="text-align: left;">检查维度</th>
-<th style="text-align: left;">最佳实践要求</th>
+<th style="text-align: left;">最佳实践生产要求</th>
 <th style="text-align: left;">验证指标 / 命令</th>
+<th style="text-align: left;">消除的故障风险</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align: left;"><strong>共享内存</strong></td>
-<td style="text-align: left;">将 <code>emptyDir</code> 内存卷挂载至 <code>/dev/shm</code> (<span class="arithmatex">\(\ge 16 \text{ GB}\)</span>)</td>
+<td style="text-align: left;">将 <code>emptyDir</code> 内存卷挂载至 <code>/dev/shm</code> (<span class="arithmatex">\(\ge 32 \text{ GB}\)</span>)</td>
+<td style="text-align: left;">在容器内验证 <code>df -h /dev/shm</code></td>
 <td style="text-align: left;">防止 NVLink All-Reduce 期间因 IPC 导致的 <code>SIGBUS</code> 崩溃</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>CUDA Graphs</strong></td>
-<td style="text-align: left;">预热固定 Batch 桶的 CUDA Graph</td>
-<td style="text-align: left;">验证 <span class="arithmatex">\(b \in \{1 \dots 128\}\)</span> 时 <code>vllm:num_requests_running</code> 的延迟骤降</td>
+<td style="text-align: left;"><strong>多节点编排</strong></td>
+<td style="text-align: left;">使用 <code>LeaderWorkerSet</code> (LWS) 编排多机模型</td>
+<td style="text-align: left;">验证 <code>kubectl get lws</code> 且配置 <code>RecreateGroupOnPodRestart</code></td>
+<td style="text-align: left;">防止单机 GPU 故障时集群出现残缺 Pod 死锁</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>健康探针</strong></td>
-<td style="text-align: left;">将 Readiness Probe 指向 <code>GET /health</code></td>
-<td style="text-align: left;">确保仅在模型加载与 Graph 捕获完成后才分发流量</td>
+<td style="text-align: left;"><strong>冷启动存储</strong></td>
+<td style="text-align: left;">采用 <strong>Hyperdisk ML</strong> (<code>ROX</code> 模式) 或 GCS FUSE 缓存挂载权重</td>
+<td style="text-align: left;">测量容器启动到 Ready 耗时 (<span class="arithmatex">\(&lt; 15\text{ s}\)</span>)</td>
+<td style="text-align: left;">消除突发流量扩容时由于 20 分钟下载导致的扩容失效</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>智能路由</strong></td>
+<td style="text-align: left;">在 vLLM 前置部署前缀缓存感知路由网关</td>
+<td style="text-align: left;">追踪 <code>vllm:gpu_prefix_cache_hit_rate</code> (<span class="arithmatex">\(&gt; 80\%\)</span>)</td>
+<td style="text-align: left;">消除重复长 Prompt 的冗余 Prefill 计算</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>机密计算安全</strong></td>
+<td style="text-align: left;">启用 Confidential GKE (AMD SEV-SNP + NVIDIA H100 TEE)</td>
+<td style="text-align: left;">验证基于 KMS 的远程证明 Token 密钥交换</td>
+<td style="text-align: left;">防止主机特权管理员与云平台窥探模型权重与用户隐私</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>自动扩缩容</strong></td>
-<td style="text-align: left;">通过 KEDA 基于 <code>vllm:num_requests_waiting</code> 扩容</td>
-<td style="text-align: left;">防止突发 Prompt 流量导致 TTFT 飙升</td>
+<td style="text-align: left;">基于 <code>vllm:num_requests_waiting</code> (<span class="arithmatex">\(&gt; 5\)</span>) 与 GPU Cache (<span class="arithmatex">\(&gt; 0.80\)</span>) 进行 KEDA 扩容</td>
+<td style="text-align: left;">检查 Prometheus 中 KEDA <code>ScaledObject</code> 状态</td>
+<td style="text-align: left;">防止 TTFT 延迟雪崩与 GPU 显存 OOM 抢占</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>可观测性</strong></td>
-<td style="text-align: left;">每 5 秒抓取一次 Prometheus <code>/metrics</code></td>
-<td style="text-align: left;">监控 TTFT (<code>vllm:time_to_first_token_seconds</code>) 与 GPU Cache 利用率</td>
+<td style="text-align: left;"><strong>健康探针</strong></td>
+<td style="text-align: left;">将 Kubernetes Readiness Probe 指向 <code>GET /health</code></td>
+<td style="text-align: left;">验证 HTTP 200 仅在 CUDA Graph 捕获完成后返回</td>
+<td style="text-align: left;">确保不会向未预热完成的模型副本分发用户流量</td>
 </tr>
 </tbody>
 </table>
-<p>恭喜你完成《<strong>vLLM 核心架构与性能机制</strong>》系统的全部学习！你现在已经掌握了从 LLM 推理基础、内存管理、Kernel 优化、分布式并行到企业云原生部署的全栈硬核技术。</p>
+<p>恭喜你完成 <strong>vLLM 核心架构与性能机制</strong> 全书的学习！你现已全面掌握大模型推理基础、显存虚拟化管理、底层 Kernel 优化、多维分布式并行、云原生软硬件协同设计以及企业级零信任机密生产部署的全栈体系。</p>
 
 
 

@@ -917,7 +917,7 @@
     P3 --&gt; S3["Max HBM/SRAM bandwidth efficiency&lt;br&gt;*(Custom Fused Kernels and CUDA Graphs)*"]
 
     ROOT --&gt; P4["4. Scale-Out and Scale-Up Synergy"]
-    P4 --&gt; S4["Multi-dimensional parallelism and cloud orchestration&lt;br&gt;*(TP, PP, CP, EP via K8s / Ray)*"]</code></pre>
+    P4 --&gt; S4["Multi-dimensional parallelism and cloud orchestration&lt;br&gt;*(TP, PP, CP, EP via K8s / Ray / LWS)*"]</code></pre>
 <h3 id="principle-1-memory-is-the-ultimate-bottleneck-in-llm-decoding">Principle 1: Memory is the Ultimate Bottleneck in LLM Decoding<a class="headerlink" href="#principle-1-memory-is-the-ultimate-bottleneck-in-llm-decoding" title="Permanent link">&para;</a></h3>
 <p>In traditional serving systems, the Key-Value (KV) cache is allocated contiguously in high-bandwidth memory (HBM) based on the <em>maximum potential length</em> of a request. Because request lengths are unpredictable, this causes:</p>
 <ul>
@@ -948,11 +948,11 @@
 <strong>vLLM's Solution</strong>:</p>
 <ul>
 <li>Multi-dimensional parallelism: <strong>Tensor Parallelism (TP)</strong> for intra-node low latency, <strong>Pipeline Parallelism (PP)</strong> for inter-node scaling, <strong>Context/Sequence Parallelism (CP)</strong> for million-token contexts, and <strong>Expert Parallelism (EP)</strong> for Mixture-of-Experts (MoE).</li>
-<li>Clean separation between compute engines (managed via <strong>Ray</strong> or native multiprocessing) and serving gateways (OpenAI-compatible APIs, <strong>Kubernetes</strong> operators, and <strong>Triton Inference Server</strong> integration).</li>
+<li>Clean separation between compute engines (managed via <strong>Ray</strong> or Kubernetes-native <strong>LeaderWorkerSet (LWS)</strong>) and serving gateways (OpenAI-compatible APIs, prefix-cache-aware routing proxies, and <strong>Triton Inference Server</strong> integration).</li>
 </ul>
 <hr />
 <h2 id="part-2-curriculum-structure-and-textbook-roadmap">Part 2: Curriculum Structure and Textbook Roadmap<a class="headerlink" href="#part-2-curriculum-structure-and-textbook-roadmap" title="Permanent link">&para;</a></h2>
-<p>This learning folder (<code>vLLM/</code>) is organized into 6 comprehensive, self-contained modules. Each module will be authored as a deep-dive Markdown document containing theoretical concepts, mathematical formulas, architecture diagrams, code patterns, and production trade-offs.</p>
+<p>This learning folder (<code>vLLM/</code>) is organized into 6 comprehensive, self-contained modules. Each module is authored as a deep-dive Markdown document containing theoretical concepts, mathematical formulas, architecture diagrams, code patterns, and production trade-offs.</p>
 <table>
 <thead>
 <tr>
@@ -990,12 +990,12 @@
 <tr>
 <td style="text-align: left;"><strong><a href="06_deployment_and_orchestration/">Module 6: K8s and Orchestration</a></strong></td>
 <td style="text-align: left;"><a href="06_deployment_and_orchestration/"><code>06_deployment_and_orchestration.md</code></a></td>
-<td style="text-align: left;">OpenAI API Server structure, Ray multi-host actors, Kubernetes deployment (GPU Operator, <code>/dev/shm</code> sizing, NUMA pinning), KEDA autoscaling on KV utilization, and Triton integration.</td>
+<td style="text-align: left;">OpenAI API Server, Prefix-Aware Routing, Disaggregated Serving, Ray vs. LeaderWorkerSet (LWS), GKE AI Hypercomputer, Hyperdisk ML, and Confidential AI (Confidential Space / H100 TEE).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong><a href="appendix_glossary_and_terminology/">Appendix: Master Glossary</a></strong></td>
 <td style="text-align: left;"><a href="appendix_glossary_and_terminology/"><code>appendix_glossary_and_terminology.md</code></a></td>
-<td style="text-align: left;">Comprehensive reference of all architectural, mathematical (<code>RoPE</code>, <code>SwiGLU</code>), physical hardware (<code>HBM</code>, <code>L2</code>, <code>SM</code>), and distributed systems (<code>EP</code>, <code>TP</code>, <code>PP</code>) terminology.</td>
+<td style="text-align: left;">Comprehensive reference of all architectural, mathematical (<code>RoPE</code>, <code>SwiGLU</code>), physical hardware (<code>HBM</code>, <code>L2</code>, <code>SM</code>), and distributed systems (<code>EP</code>, <code>TP</code>, <code>PP</code>, <code>LWS</code>, <code>TEE</code>) terminology.</td>
 </tr>
 </tbody>
 </table>
@@ -1145,21 +1145,29 @@
 <hr />
 <h3 id="module-6-production-deployment-cloud-orchestration-and-observability"><a href="06_deployment_and_orchestration/">Module 6: Production Deployment, Cloud Orchestration, and Observability</a><a class="headerlink" href="#module-6-production-deployment-cloud-orchestration-and-observability" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>OpenAI API Server and AsyncEngine Architecture</strong><ul>
+<li><strong>OpenAI API Server, Prefix Routing, and Disaggregated Serving</strong><ul>
 <li><code>FastAPI</code> / <code>Uvicorn</code> server layer providing OpenAI-compatible endpoints (<code>/v1/completions</code> and <code>/v1/chat/completions</code>).</li>
 <li>Non-blocking <code>AsyncLLMEngine</code> with background <code>step_async()</code> loop decoupling HTTP queueing from GPU forward execution.</li>
-<li>Server-Sent Events (SSE) streaming (<code>text/event-stream</code>).</li>
+<li>Prefix-Cache-Aware Intelligent Routing Gateways to maximize APC hit rates from 15% to &gt;90%.</li>
+<li>Disaggregated Prefill and Decode (Split Serving Topology) transferring KV blocks via RDMA.</li>
 </ul>
 </li>
-<li><strong>Multi-Node Distributed Cluster Orchestration with Ray Core</strong><ul>
-<li>Ray Actor workers (<code>Worker</code> class) wrapping individual GPUs.</li>
-<li>Ray Placement Groups with <code>PACK</code> bundle strategy for intra-node locality before cross-node expansion.</li>
+<li><strong>Multi-Node Cluster Orchestration: Ray vs. LeaderWorkerSet (LWS)</strong><ul>
+<li>Ray Actor workers (<code>Worker</code> class) and Ray Placement Groups (<code>PACK</code> strategy).</li>
+<li>Kubernetes-Native <code>LeaderWorkerSet</code> (LWS): Zero control-plane overhead, atomic gang failure recovery (<code>RecreateGroupOnPodRestart</code>), and deterministic DNS topology.</li>
 </ul>
 </li>
-<li><strong>Kubernetes Production Deployment Best Practices</strong><ul>
-<li>Critical <code>/dev/shm</code> shared memory volume mounting (<code>emptyDir</code> with <code>medium: Memory</code> and <span class="arithmatex">\(\ge 16 \text{ GB}\)</span> capacity) to prevent NVLink IPC <code>SIGBUS</code> kernel crashes.</li>
-<li>NVIDIA GPU Operator resource limits (<code>nvidia.com/gpu: "8"</code>).</li>
-<li>Readiness Probe pointing to <code>GET /health</code> ensuring traffic routes only after CUDA Graph warm-up capture.</li>
+<li><strong>Enterprise Cloud Infrastructure and Cold-Start Acceleration</strong><ul>
+<li>Critical <code>/dev/shm</code> shared memory sizing (<span class="arithmatex">\(\ge 32 \text{ GB}\)</span>) and NUMA node core pinning.</li>
+<li>Eliminating Cold-Start Delays: <strong>Google Cloud Hyperdisk ML</strong> (1.2 TB/s aggregate throughput across up to 2,500 pods), GCS FUSE Local SSD file caching, and Image Streaming.</li>
+<li>High-performance multi-NIC cloud networking (GPUDirect-TCPX / RoCEv2 RDMA, FastSocket, NCCL tuning).</li>
+</ul>
+</li>
+<li><strong>Confidential AI and Zero-Trust LLM Serving</strong><ul>
+<li>Threat model: Host OS compromise, rogue cloud operators, hypervisors, and co-tenant memory snooping.</li>
+<li>Hardware-Enforced TEE: AMD SEV-SNP / Intel TDX + NVIDIA Hopper H100 TEE (APM mode, line-rate AES-GCM-256 HBM &amp; PCIe encryption).</li>
+<li>Cryptographic Remote Attestation and Key Release Pipeline via <strong>Confidential Space / Confidential GKE</strong>.</li>
+<li>Architecture synthesis: Google Cloud AI Hypercomputer (Scale &amp; Throughput) vs. Confidential Space (Zero-Trust Security &amp; Attestation).</li>
 </ul>
 </li>
 <li><strong>Production Observability, Metrics, and KEDA Autoscaling</strong><ul>
@@ -1167,8 +1175,8 @@
 <li>KEDA Event-Driven Autoscaling: Scaling pod replicas dynamically based on waiting queue depth and KV cache usage thresholds.</li>
 </ul>
 </li>
-<li><strong>Complete Production Reference Architecture</strong><ul>
-<li>End-to-end enterprise diagram bridging API Ingress/Gateway, Kubernetes Serving Clusters, Ray Workers, PagedAttention Memory Managers, Prometheus Monitoring, and KEDA Controllers.</li>
+<li><strong>Complete Production Reference Architecture and Checklist</strong><ul>
+<li>End-to-end enterprise reference topology and production readiness audit checklist.</li>
 </ul>
 </li>
 </ol>

@@ -492,15 +492,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#part-1-openai-api-server-and-async-engine-architecture" class="md-nav__link">
+  <a href="#part-1-openai-api-server-prefix-routing-and-disaggregated-serving" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 1: OpenAI API Server and Async Engine Architecture
+        Part 1: OpenAI API Server, Prefix Routing, and Disaggregated Serving
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 1: OpenAI API Server and Async Engine Architecture">
+    <nav class="md-nav" aria-label="Part 1: OpenAI API Server, Prefix Routing, and Disaggregated Serving">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -514,28 +514,22 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#part-2-multi-node-distributed-cluster-orchestration-with-ray-core" class="md-nav__link">
+          <li class="md-nav__item">
+  <a href="#12-prefix-cache-aware-intelligent-gateway-routing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 2: Multi-Node Distributed Cluster Orchestration with Ray Core
+        1.2 Prefix-Cache-Aware Intelligent Gateway Routing
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 2: Multi-Node Distributed Cluster Orchestration with Ray Core">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
-  <a href="#21-ray-actor-placement-groups" class="md-nav__link">
+  <a href="#13-disaggregated-prefill-and-decode-split-serving-topology" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2.1 Ray Actor Placement Groups
+        1.3 Disaggregated Prefill and Decode (Split Serving Topology)
       
     </span>
   </a>
@@ -548,34 +542,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#part-3-kubernetes-production-deployment-best-practices" class="md-nav__link">
+  <a href="#part-2-multi-node-cluster-orchestration-ray-vs-leaderworkerset-lws" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 3: Kubernetes Production Deployment Best Practices
+        Part 2: Multi-Node Cluster Orchestration: Ray vs. LeaderWorkerSet (LWS)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 3: Kubernetes Production Deployment Best Practices">
+    <nav class="md-nav" aria-label="Part 2: Multi-Node Cluster Orchestration: Ray vs. LeaderWorkerSet (LWS)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#31-critical-pod-configuration-requirements" class="md-nav__link">
+  <a href="#21-ray-core-distributed-orchestration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.1 Critical Pod Configuration Requirements
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="3.1 Critical Pod Configuration Requirements">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-shared-memory-devshm-volume-mounting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Shared Memory (/dev/shm) Volume Mounting
+        2.1 Ray Core Distributed Orchestration
       
     </span>
   </a>
@@ -583,10 +565,22 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-gpu-resource-allocation-and-drivers" class="md-nav__link">
+  <a href="#22-modern-kubernetes-native-orchestration-leaderworkerset-lws" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. GPU Resource Allocation and Drivers
+        2.2 Modern Kubernetes-Native Orchestration: LeaderWorkerSet (LWS)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 Modern Kubernetes-Native Orchestration: LeaderWorkerSet (LWS)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-advantages-of-leaderworkerset-lws-over-ray-in-k8s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Advantages of LeaderWorkerSet (LWS) over Ray in K8s:
       
     </span>
   </a>
@@ -594,10 +588,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-health-checks-and-graceful-termination" class="md-nav__link">
+  <a href="#production-leaderworkerset-yaml-specification-2-nodes-x-8-h100-gpus" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Health Checks and Graceful Termination
+        Production LeaderWorkerSet YAML Specification (2 Nodes x 8 H100 GPUs):
       
     </span>
   </a>
@@ -615,22 +609,34 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#part-4-production-observability-metrics-and-keda-autoscaling" class="md-nav__link">
+  <a href="#part-3-enterprise-cloud-infrastructure-cold-start-acceleration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 4: Production Observability, Metrics, and KEDA Autoscaling
+        Part 3: Enterprise Cloud Infrastructure &amp; Cold-Start Acceleration
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 4: Production Observability, Metrics, and KEDA Autoscaling">
+    <nav class="md-nav" aria-label="Part 3: Enterprise Cloud Infrastructure &amp; Cold-Start Acceleration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#41-key-vllm-prometheus-metrics" class="md-nav__link">
+  <a href="#31-critical-pod-configurations-for-high-performance-serving" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.1 Key vLLM Prometheus Metrics
+        3.1 Critical Pod Configurations for High-Performance Serving
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Critical Pod Configurations for High-Performance Serving">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-shared-memory-devshm-capacity-sizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Shared Memory (/dev/shm) Capacity Sizing
       
     </span>
   </a>
@@ -638,22 +644,155 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#42-keda-event-driven-horizontal-pod-autoscaling" class="md-nav__link">
+  <a href="#2-numa-alignment-and-cpu-core-pinning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.2 KEDA Event-Driven Horizontal Pod Autoscaling
+        2. NUMA Alignment and CPU Core Pinning
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="4.2 KEDA Event-Driven Horizontal Pod Autoscaling">
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-solving-the-cold-start-scaling-bottleneck-hyperdisk-ml-fast-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Solving the Cold-Start Scaling Bottleneck: Hyperdisk ML &amp; Fast Caching
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 Solving the Cold-Start Scaling Bottleneck: Hyperdisk ML &amp; Fast Caching">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#example-keda-scaledobject-configuration" class="md-nav__link">
+  <a href="#high-speed-storage-solutions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example KEDA ScaledObject Configuration
+        High-Speed Storage Solutions:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-high-performance-inter-node-cloud-networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 High-Performance Inter-Node Cloud Networking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-confidential-ai-and-zero-trust-llm-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Confidential AI and Zero-Trust LLM Serving
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Confidential AI and Zero-Trust LLM Serving">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-hardware-enforced-trusted-execution-environment-tee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Hardware-Enforced Trusted Execution Environment (TEE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-cryptographic-remote-attestation-key-release-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Cryptographic Remote Attestation &amp; Key Release Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-architecture-synthesis-ai-hypercomputer-vs-confidential-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Architecture Synthesis: AI Hypercomputer vs. Confidential Space
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-production-observability-metrics-and-keda-autoscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5: Production Observability, Metrics, and KEDA Autoscaling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 5: Production Observability, Metrics, and KEDA Autoscaling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-key-vllm-prometheus-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Key vLLM Prometheus Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-keda-event-driven-horizontal-pod-autoscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 KEDA Event-Driven Horizontal Pod Autoscaling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 KEDA Event-Driven Horizontal Pod Autoscaling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#production-keda-scaledobject-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production KEDA ScaledObject Configuration
       
     </span>
   </a>
@@ -671,10 +810,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#part-5-complete-production-reference-architecture" class="md-nav__link">
+  <a href="#part-6-complete-production-reference-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 5: Complete Production Reference Architecture
+        Part 6: Complete Production Reference Architecture
       
     </span>
   </a>
@@ -754,15 +893,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#part-1-openai-api-server-and-async-engine-architecture" class="md-nav__link">
+  <a href="#part-1-openai-api-server-prefix-routing-and-disaggregated-serving" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 1: OpenAI API Server and Async Engine Architecture
+        Part 1: OpenAI API Server, Prefix Routing, and Disaggregated Serving
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 1: OpenAI API Server and Async Engine Architecture">
+    <nav class="md-nav" aria-label="Part 1: OpenAI API Server, Prefix Routing, and Disaggregated Serving">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -776,28 +915,22 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#part-2-multi-node-distributed-cluster-orchestration-with-ray-core" class="md-nav__link">
+          <li class="md-nav__item">
+  <a href="#12-prefix-cache-aware-intelligent-gateway-routing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 2: Multi-Node Distributed Cluster Orchestration with Ray Core
+        1.2 Prefix-Cache-Aware Intelligent Gateway Routing
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 2: Multi-Node Distributed Cluster Orchestration with Ray Core">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
-  <a href="#21-ray-actor-placement-groups" class="md-nav__link">
+  <a href="#13-disaggregated-prefill-and-decode-split-serving-topology" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2.1 Ray Actor Placement Groups
+        1.3 Disaggregated Prefill and Decode (Split Serving Topology)
       
     </span>
   </a>
@@ -810,34 +943,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#part-3-kubernetes-production-deployment-best-practices" class="md-nav__link">
+  <a href="#part-2-multi-node-cluster-orchestration-ray-vs-leaderworkerset-lws" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 3: Kubernetes Production Deployment Best Practices
+        Part 2: Multi-Node Cluster Orchestration: Ray vs. LeaderWorkerSet (LWS)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 3: Kubernetes Production Deployment Best Practices">
+    <nav class="md-nav" aria-label="Part 2: Multi-Node Cluster Orchestration: Ray vs. LeaderWorkerSet (LWS)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#31-critical-pod-configuration-requirements" class="md-nav__link">
+  <a href="#21-ray-core-distributed-orchestration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.1 Critical Pod Configuration Requirements
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="3.1 Critical Pod Configuration Requirements">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-shared-memory-devshm-volume-mounting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Shared Memory (/dev/shm) Volume Mounting
+        2.1 Ray Core Distributed Orchestration
       
     </span>
   </a>
@@ -845,10 +966,22 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-gpu-resource-allocation-and-drivers" class="md-nav__link">
+  <a href="#22-modern-kubernetes-native-orchestration-leaderworkerset-lws" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. GPU Resource Allocation and Drivers
+        2.2 Modern Kubernetes-Native Orchestration: LeaderWorkerSet (LWS)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 Modern Kubernetes-Native Orchestration: LeaderWorkerSet (LWS)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-advantages-of-leaderworkerset-lws-over-ray-in-k8s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Advantages of LeaderWorkerSet (LWS) over Ray in K8s:
       
     </span>
   </a>
@@ -856,10 +989,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-health-checks-and-graceful-termination" class="md-nav__link">
+  <a href="#production-leaderworkerset-yaml-specification-2-nodes-x-8-h100-gpus" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Health Checks and Graceful Termination
+        Production LeaderWorkerSet YAML Specification (2 Nodes x 8 H100 GPUs):
       
     </span>
   </a>
@@ -877,22 +1010,34 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#part-4-production-observability-metrics-and-keda-autoscaling" class="md-nav__link">
+  <a href="#part-3-enterprise-cloud-infrastructure-cold-start-acceleration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 4: Production Observability, Metrics, and KEDA Autoscaling
+        Part 3: Enterprise Cloud Infrastructure &amp; Cold-Start Acceleration
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Part 4: Production Observability, Metrics, and KEDA Autoscaling">
+    <nav class="md-nav" aria-label="Part 3: Enterprise Cloud Infrastructure &amp; Cold-Start Acceleration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#41-key-vllm-prometheus-metrics" class="md-nav__link">
+  <a href="#31-critical-pod-configurations-for-high-performance-serving" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.1 Key vLLM Prometheus Metrics
+        3.1 Critical Pod Configurations for High-Performance Serving
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Critical Pod Configurations for High-Performance Serving">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-shared-memory-devshm-capacity-sizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Shared Memory (/dev/shm) Capacity Sizing
       
     </span>
   </a>
@@ -900,22 +1045,155 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#42-keda-event-driven-horizontal-pod-autoscaling" class="md-nav__link">
+  <a href="#2-numa-alignment-and-cpu-core-pinning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.2 KEDA Event-Driven Horizontal Pod Autoscaling
+        2. NUMA Alignment and CPU Core Pinning
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="4.2 KEDA Event-Driven Horizontal Pod Autoscaling">
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-solving-the-cold-start-scaling-bottleneck-hyperdisk-ml-fast-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Solving the Cold-Start Scaling Bottleneck: Hyperdisk ML &amp; Fast Caching
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 Solving the Cold-Start Scaling Bottleneck: Hyperdisk ML &amp; Fast Caching">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#example-keda-scaledobject-configuration" class="md-nav__link">
+  <a href="#high-speed-storage-solutions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example KEDA ScaledObject Configuration
+        High-Speed Storage Solutions:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-high-performance-inter-node-cloud-networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 High-Performance Inter-Node Cloud Networking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-confidential-ai-and-zero-trust-llm-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Confidential AI and Zero-Trust LLM Serving
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Confidential AI and Zero-Trust LLM Serving">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-hardware-enforced-trusted-execution-environment-tee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Hardware-Enforced Trusted Execution Environment (TEE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-cryptographic-remote-attestation-key-release-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Cryptographic Remote Attestation &amp; Key Release Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-architecture-synthesis-ai-hypercomputer-vs-confidential-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Architecture Synthesis: AI Hypercomputer vs. Confidential Space
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-production-observability-metrics-and-keda-autoscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5: Production Observability, Metrics, and KEDA Autoscaling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 5: Production Observability, Metrics, and KEDA Autoscaling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-key-vllm-prometheus-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Key vLLM Prometheus Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-keda-event-driven-horizontal-pod-autoscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 KEDA Event-Driven Horizontal Pod Autoscaling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 KEDA Event-Driven Horizontal Pod Autoscaling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#production-keda-scaledobject-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production KEDA ScaledObject Configuration
       
     </span>
   </a>
@@ -933,10 +1211,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#part-5-complete-production-reference-architecture" class="md-nav__link">
+  <a href="#part-6-complete-production-reference-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 5: Complete Production Reference Architecture
+        Part 6: Complete Production Reference Architecture
       
     </span>
   </a>
@@ -972,10 +1250,16 @@
 
 
 <h1 id="module-6-production-deployment-cloud-orchestration-and-observability">Module 6: Production Deployment, Cloud Orchestration, and Observability<a class="headerlink" href="#module-6-production-deployment-cloud-orchestration-and-observability" title="Permanent link">&para;</a></h1>
-<p>Moving a high-performance LLM engine from a single local GPU server to enterprise-grade production requires robust deployment, cloud orchestration, and real-time observability. Production LLM serving endpoints must deliver low-latency API response streaming, scale elastically under fluctuating traffic spikes, isolate hardware failures gracefully, and expose detailed operational metrics for autoscaling.</p>
-<p>This module explores the production engineering architecture of vLLM, covering the <strong>OpenAI API Server Architecture</strong>, <strong>Ray Distributed Clusters</strong>, <strong>Kubernetes Pod Deployment Best Practices</strong>, <strong>Prometheus Metrics and KEDA Autoscaling</strong>, and a <strong>Complete Production Reference Architecture</strong>.</p>
+<p>Moving a high-performance LLM engine from a single local GPU server to enterprise-grade production requires robust deployment architectures, cloud-native orchestration, ultra-fast cold-start storage pipelines, hardware-enforced confidential computing, and real-time observability. Production LLM serving endpoints must deliver low-latency API response streaming, scale elastically under fluctuating traffic spikes without multi-minute weight loading penalties, isolate hardware failures gracefully, protect sensitive model weights and customer data via hardware-enforced Trusted Execution Environments (TEEs), and expose detailed operational metrics for event-driven autoscaling.</p>
+<p>This module explores the complete production engineering architecture of vLLM, covering:
+1. <strong>OpenAI API Server, Prefix-Cache-Aware Routing, and Disaggregated Serving</strong>
+2. <strong>Multi-Node Cluster Orchestration: Ray vs. LeaderWorkerSet (LWS)</strong>
+3. <strong>Enterprise Cloud Infrastructure and Cold-Start Acceleration (GKE AI Hypercomputer &amp; Hyperdisk ML)</strong>
+4. <strong>Confidential AI and Zero-Trust LLM Serving (Confidential Space &amp; Confidential GKE with H100 TEE)</strong>
+5. <strong>Production Observability, Prometheus Metrics, and KEDA Event-Driven Autoscaling</strong>
+6. <strong>Complete Production Reference Architecture and Deployment Checklist</strong></p>
 <hr />
-<h2 id="part-1-openai-api-server-and-async-engine-architecture">Part 1: OpenAI API Server and Async Engine Architecture<a class="headerlink" href="#part-1-openai-api-server-and-async-engine-architecture" title="Permanent link">&para;</a></h2>
+<h2 id="part-1-openai-api-server-prefix-routing-and-disaggregated-serving">Part 1: OpenAI API Server, Prefix Routing, and Disaggregated Serving<a class="headerlink" href="#part-1-openai-api-server-prefix-routing-and-disaggregated-serving" title="Permanent link">&para;</a></h2>
 <p>vLLM provides an enterprise-ready HTTP server compatible with the <strong>OpenAI API specification</strong> (<code>vllm.entrypoints.openai.api_server</code>), supporting streaming endpoints for text completions (<code>/v1/completions</code>) and chat completions (<code>/v1/chat/completions</code>).</p>
 <pre class="mermaid"><code>flowchart TD
     CLIENT["🌐 Client Request (HTTP POST)"] --&gt; FASTAPI["FastAPI / Uvicorn Server Layer"]
@@ -999,78 +1283,326 @@
 <li><strong>Server-Sent Events (SSE) Streaming</strong>: As new tokens are generated in each GPU step, the API server formats them into <code>text/event-stream</code> chunks (<code>data: {"choices": [{"delta": {"content": "..."}}]}</code>) and streams them back to clients over HTTP instantly.</li>
 </ol>
 <hr />
-<h2 id="part-2-multi-node-distributed-cluster-orchestration-with-ray-core">Part 2: Multi-Node Distributed Cluster Orchestration with Ray Core<a class="headerlink" href="#part-2-multi-node-distributed-cluster-orchestration-with-ray-core" title="Permanent link">&para;</a></h2>
-<p>When running multi-GPU or multi-node distributed serving (e.g. Tensor Parallelism <span class="arithmatex">\(\text{TP} = 8\)</span> across 4 nodes), vLLM uses <strong>Ray Core</strong> (<code>vllm.engine.ray_utils</code>) to orchestrate worker processes.</p>
+<h3 id="12-prefix-cache-aware-intelligent-gateway-routing">1.2 Prefix-Cache-Aware Intelligent Gateway Routing<a class="headerlink" href="#12-prefix-cache-aware-intelligent-gateway-routing" title="Permanent link">&para;</a></h3>
+<p>When running a cluster of multiple vLLM replica instances, a standard Round-Robin or Random load balancer destroys <strong>Automatic Prefix Caching (APC)</strong> locality. If User A sends repeated queries sharing a 4,000-token system prompt (or a 32K RAG document context), routing request 1 to Pod A and request 2 to Pod B forces Pod B to recompute the entire prompt KV cache from scratch (<span class="arithmatex">\(\text{TTFT} \approx 800\text{ ms}\)</span> instead of <span class="arithmatex">\(&lt; 20\text{ ms}\)</span>).</p>
 <pre class="mermaid"><code>flowchart TD
-    DRIVER["vLLM Engine Driver Process (Head Node)"] --&gt; RAY_EXEC["Ray Worker Executor"]
+    REQ["Incoming User Request&lt;br&gt;(System Prompt Hash: 0x8F3A...)"] --&gt; ROUTER["🧭 Prefix-Cache-Aware Router / Gateway"]
 
-    subgraph RAY_CLUSTER ["Ray Cluster Placement Group (PACK Strategy)"]
-        RAY_EXEC --&gt; W0["Ray Actor Worker 0 (GPU 0 - Master)"]
-        RAY_EXEC --&gt; W1["Ray Actor Worker 1 (GPU 1)"]
-        RAY_EXEC --&gt; W7["Ray Actor Worker 7 (GPU 7)"]
+    ROUTER --&gt;|"Hash Ring Affinity (Prefix Hit)"| POD_A["vLLM Pod A (APC Cache Hit: TTFT &lt; 20ms)"]
+    ROUTER -.-&gt;|"Cache Miss Avoided"| POD_B["vLLM Pod B"]
+    ROUTER -.-&gt;|"Cache Miss Avoided"| POD_C["vLLM Pod C"]</code></pre>
+<p><strong>Production Routing Solution</strong>:
+- <strong>Consistent Hashing Proxy</strong>: Deploy an intelligent proxy (e.g. Envoy with custom Lua filter, or dedicated vLLM Router) that hashes the initial token prefix (or system prompt / document ID) into a consistent hash ring.
+- <strong>Cache Hit Affinity</strong>: Requests sharing identical prefix hashes are directed to the same vLLM pod replica, driving global APC cache hit rates from <span class="arithmatex">\(\sim 15\%\)</span> up to <span class="arithmatex">\(&gt; 90\%\)</span>, slashing compute FLOPs and cutting cluster-wide TTFT by up to <span class="arithmatex">\(10\times\)</span>.</p>
+<hr />
+<h3 id="13-disaggregated-prefill-and-decode-split-serving-topology">1.3 Disaggregated Prefill and Decode (Split Serving Topology)<a class="headerlink" href="#13-disaggregated-prefill-and-decode-split-serving-topology" title="Permanent link">&para;</a></h3>
+<p>As analyzed in <a href="../01_llm_inference_fundamentals/">Module 1</a> and <a href="../03_performance_and_quality/">Module 3</a>, LLM inference has two phases with conflicting hardware demands:
+- <strong>Prefill (Prompt Processing)</strong>: Compute-bound, highly parallel GEMM, saturates Tensor Cores, benefits from high TFLOPs and lower memory capacity.
+- <strong>Decode (Token Generation)</strong>: Memory-bandwidth bound GEMV, executes sequentially token-by-token, requires massive HBM capacity and memory bandwidth (TB/s).</p>
+<p>When Prefill and Decode are colocated in the same engine instance, a sudden arrival of long prompts stalls the decoding of active streams, causing severe Inter-Token Latency (ITL / TBT) jitter and tail latency spikes.</p>
+<pre class="mermaid"><code>flowchart TD
+    CLIENT_REQ["Incoming Request"] --&gt; ROUTER["Disaggregated Serving Router"]
+
+    subgraph PREFILL_CLUSTER ["⚡ Dedicated Prefill Nodes (Compute-Optimized, e.g. H100 / TPU v5p)"]
+        P_NODE["Prefill Engine&lt;br&gt;High Batch Parallel GEMM"]
     end
 
-    W0 --&gt;|"Custom NVLink All-Reduce / Ray IPC"| W1
-    W1 --&gt;|"Custom NVLink All-Reduce / Ray IPC"| W7</code></pre>
-<h3 id="21-ray-actor-placement-groups">2.1 Ray Actor Placement Groups<a class="headerlink" href="#21-ray-actor-placement-groups" title="Permanent link">&para;</a></h3>
-<p>To ensure multi-GPU worker processes achieve physical locality and high NVLink bandwidth:</p>
+    subgraph DECODE_CLUSTER ["📦 Dedicated Decode Nodes (Memory-Bandwidth Optimized, e.g. H200 / MI300X)"]
+        D_NODE["Decode Engine&lt;br&gt;Autoregressive Token Generation"]
+    end
+
+    ROUTER --&gt;|"1. Forward Prompt"| P_NODE
+    P_NODE --&gt;|"2. Transfer KV Cache Blocks via RDMA / NVLink-C2C"| D_NODE
+    D_NODE --&gt;|"3. Stream Generated Tokens"| CLIENT_REQ</code></pre>
 <ol>
-<li><strong>Ray Actors</strong>: vLLM wraps each GPU worker in a <strong>Ray Actor</strong> (<code>Worker</code> class). Each actor runs on a dedicated GPU.</li>
-<li><strong>Placement Groups (<code>PACK</code> Strategy)</strong>: vLLM requests Ray Placement Groups with the <code>PACK</code> bundles strategy, forcing Ray to pack GPU worker actors onto the same physical server node before spreading across nodes.</li>
-<li><strong>PyTorch Distributed Initialization</strong>: Once Ray actors are instantiated, Ray initializes <code>torch.distributed</code> process groups across the actors, enabling direct low-latency NVLink and InfiniBand transfers (<code>vllm._C.custom_ar</code>).</li>
+<li><strong>Dedicated Prefill Nodes</strong>: Prompt tokens are processed in large batches on compute-heavy nodes. Once the initial KV cache is formed, the physical KV blocks are transferred to a Decode node via low-latency InfiniBand / RoCE RDMA.</li>
+<li><strong>Dedicated Decode Nodes</strong>: Focus exclusively on smooth, uninterrupted autoregressive token generation, guaranteeing strict ITL SLA guarantees (e.g. <span class="arithmatex">\(&lt; 15\text{ ms/token}\)</span>).</li>
 </ol>
 <hr />
-<h2 id="part-3-kubernetes-production-deployment-best-practices">Part 3: Kubernetes Production Deployment Best Practices<a class="headerlink" href="#part-3-kubernetes-production-deployment-best-practices" title="Permanent link">&para;</a></h2>
-<p>In enterprise cloud environments (GKE, EKS, AKS), vLLM instances are deployed as <strong>Kubernetes Pods</strong> managed by Deployment or StatefulSet controllers.</p>
+<h2 id="part-2-multi-node-cluster-orchestration-ray-vs-leaderworkerset-lws">Part 2: Multi-Node Cluster Orchestration: Ray vs. LeaderWorkerSet (LWS)<a class="headerlink" href="#part-2-multi-node-cluster-orchestration-ray-vs-leaderworkerset-lws" title="Permanent link">&para;</a></h2>
+<p>When models exceed single-node GPU memory (e.g., Llama 3 70B across multiple nodes, or Llama 3 405B requiring <span class="arithmatex">\(\text{TP} = 8, \text{PP} = 8\)</span> across 8 nodes of 8xH100), the orchestrator must manage multi-node process lifecycles and physical GPU locality.</p>
 <pre class="mermaid"><code>flowchart TD
-    K8S_SVC["Kubernetes Service / Ingress"] --&gt; POD1["vLLM Pod Instance 1"]
-    K8S_SVC --&gt; POD2["vLLM Pod Instance 2"]
-
-    subgraph POD_SPEC ["📦 vLLM Pod Specification"]
-        LIMITS["NVIDIA GPU Resource Limits&lt;br&gt;nvidia.com/gpu: 8"]
-        SHM["Shared Memory Volume (/dev/shm)&lt;br&gt;emptyDir: medium: Memory | size: 16Gi"]
-        PROBES["Readiness and Liveness Probes&lt;br&gt;GET /health"]
+    subgraph ORCHESTRATION_CHOICE ["Distributed Orchestration Paradigms"]
+        RAY["Ray Core Orchestration&lt;br&gt;(Actor Placement Groups)"]
+        LWS["LeaderWorkerSet (LWS)&lt;br&gt;(Kubernetes-Native Multi-Node API)"]
     end
 
-    POD1 --&gt; POD_SPEC</code></pre>
-<h3 id="31-critical-pod-configuration-requirements">3.1 Critical Pod Configuration Requirements<a class="headerlink" href="#31-critical-pod-configuration-requirements" title="Permanent link">&para;</a></h3>
-<h4 id="1-shared-memory-devshm-volume-mounting">1. Shared Memory (<code>/dev/shm</code>) Volume Mounting<a class="headerlink" href="#1-shared-memory-devshm-volume-mounting" title="Permanent link">&para;</a></h4>
-<p>By default, Docker and Kubernetes restrict the container <code>/dev/shm</code> shared memory size to a tiny <span class="arithmatex">\(64 \text{ MB}\)</span>. </p>
-<p>Because vLLM's custom NVLink All-Reduce CUDA kernels (<code>vllm._C.custom_ar</code>) and PyTorch Distributed IPC use POSIX shared memory buffers, <strong>a <span class="arithmatex">\(64 \text{ MB}\)</span> <code>/dev/shm</code> will cause immediate kernel crashes (<code>SIGBUS</code> or CUDA Out of Memory)</strong>.</p>
-<p><strong>Kubernetes Fix</strong>: Mount an <code>emptyDir</code> memory volume to <code>/dev/shm</code> with at least <span class="arithmatex">\(16 \text{ GB}\)</span> capacity:</p>
+    RAY --&gt;|"Dynamic actors, multi-framework flex"| USE_RAY["Best for: Mixed Workloads &amp; Research"]
+    LWS --&gt;|"Zero Ray daemon overhead, atomic gang failure"| USE_LWS["Best for: Enterprise Kubernetes &amp; GKE AI Hypercomputer"]</code></pre>
+<hr />
+<h3 id="21-ray-core-distributed-orchestration">2.1 Ray Core Distributed Orchestration<a class="headerlink" href="#21-ray-core-distributed-orchestration" title="Permanent link">&para;</a></h3>
+<p>In standard setups, vLLM uses <strong>Ray Core</strong> (<code>vllm.engine.ray_utils</code>) to orchestrate worker processes across physical nodes:</p>
+<ol>
+<li><strong>Ray Actors</strong>: Each GPU worker is wrapped inside an actor (<code>Worker</code> class) pinned to a physical GPU device.</li>
+<li><strong>Placement Groups (<code>PACK</code> Strategy)</strong>: vLLM requests Ray Placement Groups with <code>PACK</code> bundles, forcing Ray to pack GPU worker actors onto the same physical server node before spreading across nodes to maximize NVLink bandwidth.</li>
+<li><strong>PyTorch Distributed Process Group</strong>: Ray initializes <code>torch.distributed</code> process groups across the actors, enabling direct low-latency NVLink and InfiniBand transfers (<code>vllm._C.custom_ar</code>).</li>
+</ol>
+<hr />
+<h3 id="22-modern-kubernetes-native-orchestration-leaderworkerset-lws">2.2 Modern Kubernetes-Native Orchestration: <code>LeaderWorkerSet</code> (LWS)<a class="headerlink" href="#22-modern-kubernetes-native-orchestration-leaderworkerset-lws" title="Permanent link">&para;</a></h3>
+<p>While Ray is widely used, managing Ray clusters inside enterprise Kubernetes environments introduces extra components (Ray Head pod, Ray Autoscaler daemon, Ray GCS storage) that can complicate production SRE operations.</p>
+<p>The Kubernetes community and Google Cloud introduced <strong><code>LeaderWorkerSet</code> (LWS)</strong>—a Kubernetes-native API designed specifically for multi-node AI/LLM workloads:</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph LWS_GROUP ["LeaderWorkerSet Instance (TP=8, PP=2 across 2 Nodes)"]
+        LEADER["👑 Leader Pod (Node 0 - GPUs 0..7)&lt;br&gt;Runs vLLM Master / HTTP Server / Rank 0..7"]
+        WORKER["👷 Worker Pod 1 (Node 1 - GPUs 8..15)&lt;br&gt;Runs vLLM Worker Ranks 8..15"]
+
+        LEADER &lt;--&gt;|"RoCE / InfiniBand Multi-NIC RDMA&lt;br&gt;(PyTorch Distributed / NCCL)"| WORKER
+    end
+
+    LWS_CTRL["LWS Kubernetes Controller"] --&gt;|"Atomic Gang Management (All-or-Nothing)"| LWS_GROUP</code></pre>
+<h4 id="key-advantages-of-leaderworkerset-lws-over-ray-in-k8s">Key Advantages of LeaderWorkerSet (LWS) over Ray in K8s:<a class="headerlink" href="#key-advantages-of-leaderworkerset-lws-over-ray-in-k8s" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Zero Control-Plane Overhead</strong>: Eliminates Ray Head nodes, Ray daemons, and Redis/GCS state backends; runs purely on standard Kubernetes Pod primitives.</li>
+<li><strong>Atomic Gang Lifecycle</strong>: In Tensor/Pipeline Parallelism, if a single GPU worker node crashes, the entire distributed serving group must restart together. LWS automatically enforces <strong>gang failure and atomic restarts</strong> for the group.</li>
+<li><strong>Deterministic Network Topology</strong>: Automatically establishes predictable pod DNS subdomains (<code>leader-0.lws-service</code>, <code>worker-0-1.lws-service</code>), allowing <code>torch.distributed</code> rendezvous to resolve instantly without external coordination services.</li>
+</ol>
+<h4 id="production-leaderworkerset-yaml-specification-2-nodes-x-8-h100-gpus">Production <code>LeaderWorkerSet</code> YAML Specification (2 Nodes x 8 H100 GPUs):<a class="headerlink" href="#production-leaderworkerset-yaml-specification-2-nodes-x-8-h100-gpus" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">leaderworkerset.x-k8s.io/v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LeaderWorkerSet</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-llama3-405b</span>
+<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">llm-serving</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"> </span><span class="c1"># 2 serving replicas, each spanning 2 nodes (4 nodes total)</span>
+<span class="w">  </span><span class="nt">leaderWorkerTemplate</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"> </span><span class="c1"># 1 Leader Pod + 1 Worker Pod per replica</span>
+<span class="w">    </span><span class="nt">restartPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RecreateGroupOnPodRestart</span><span class="w"> </span><span class="c1"># Gang failure recovery</span>
+<span class="w">    </span><span class="nt">leaderTemplate</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">metadata</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">leader</span>
+<span class="w">      </span><span class="nt">spec</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">containers</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-leader</span>
+<span class="w">            </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm/vllm-openai:latest</span>
+<span class="w">            </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python3</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-m</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm.entrypoints.openai.api_server</span>
+<span class="w">            </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--model=/models/llama-3-405b-instruct</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--tensor-parallel-size=8</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--pipeline-parallel-size=2</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--gpu-memory-utilization=0.92</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--enable-prefix-caching</span>
+<span class="w">            </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">limits</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+<span class="w">              </span><span class="nt">requests</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+<span class="w">            </span><span class="nt">volumeMounts</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/dev/shm</span>
+<span class="w">                </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/models</span>
+<span class="w">                </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model-storage</span>
+<span class="w">        </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
+<span class="w">            </span><span class="nt">emptyDir</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Memory</span>
+<span class="w">              </span><span class="nt">sizeLimit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64Gi</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model-storage</span>
+<span class="w">            </span><span class="nt">persistentVolumeClaim</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">claimName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hyperdisk-ml-pvc</span>
+<span class="w">    </span><span class="nt">workerTemplate</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">spec</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">containers</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-worker</span>
+<span class="w">            </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm/vllm-openai:latest</span>
+<span class="w">            </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">limits</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+<span class="w">              </span><span class="nt">requests</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+<span class="w">            </span><span class="nt">volumeMounts</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/dev/shm</span>
+<span class="w">                </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/models</span>
+<span class="w">                </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model-storage</span>
+<span class="w">        </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
+<span class="w">            </span><span class="nt">emptyDir</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Memory</span>
+<span class="w">              </span><span class="nt">sizeLimit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64Gi</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model-storage</span>
+<span class="w">            </span><span class="nt">persistentVolumeClaim</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">claimName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hyperdisk-ml-pvc</span>
+</code></pre></div>
+<hr />
+<h2 id="part-3-enterprise-cloud-infrastructure-cold-start-acceleration">Part 3: Enterprise Cloud Infrastructure &amp; Cold-Start Acceleration<a class="headerlink" href="#part-3-enterprise-cloud-infrastructure-cold-start-acceleration" title="Permanent link">&para;</a></h2>
+<p>In enterprise cloud environments such as <strong>Google Cloud AI Hypercomputer on GKE</strong>, infrastructure must be co-designed across compute accelerators, high-speed storage, and multi-NIC networking.</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph GKE_AI_HYPERCOMPUTER ["🚀 Enterprise Cloud AI Infrastructure (GKE AI Hypercomputer)"]
+        direction TB
+        STORAGE["⚡ Storage Layer: Hyperdisk ML (1.2 TB/s Multi-Attach) + GCS FUSE Cache"]
+        NETWORK["🌐 Network Layer: Multi-NIC RoCEv2 / GPUDirect-TCPX / FastSocket"]
+        COMPUTE["🔥 Compute Layer: A3 High / A3 Mega / A4 (H100/H200/B200 SXM5)"]
+        ORCH["☸️ Orchestration Layer: GKE + LeaderWorkerSet + Kueue + KEDA"]
+    end</code></pre>
+<h3 id="31-critical-pod-configurations-for-high-performance-serving">3.1 Critical Pod Configurations for High-Performance Serving<a class="headerlink" href="#31-critical-pod-configurations-for-high-performance-serving" title="Permanent link">&para;</a></h3>
+<h4 id="1-shared-memory-devshm-capacity-sizing">1. Shared Memory (<code>/dev/shm</code>) Capacity Sizing<a class="headerlink" href="#1-shared-memory-devshm-capacity-sizing" title="Permanent link">&para;</a></h4>
+<p>By default, Docker and Kubernetes restrict the container <code>/dev/shm</code> shared memory size to a tiny <span class="arithmatex">\(64 \text{ MB}\)</span>.</p>
+<p>Because vLLM's custom NVLink All-Reduce CUDA kernels (<code>vllm._C.custom_ar</code>) and PyTorch Distributed IPC use POSIX shared memory buffers to exchange intermediate tensor pointers across 8 GPUs, <strong>a <span class="arithmatex">\(64 \text{ MB}\)</span> <code>/dev/shm</code> will cause immediate kernel crashes (<code>SIGBUS</code> or CUDA Out of Memory)</strong>.</p>
+<p><strong>Production Sizing Rule</strong>: Mount an <code>emptyDir</code> memory volume with capacity <span class="arithmatex">\(\ge 16 \text{ GB}\)</span> (or <span class="arithmatex">\(\ge 64 \text{ GB}\)</span> for multi-node/large-batch models):</p>
 <div class="highlight"><pre><span></span><code><span class="nt">volumes</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
 <span class="w">    </span><span class="nt">emptyDir</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Memory</span>
-<span class="w">      </span><span class="nt">sizeLimit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16Gi</span>
+<span class="w">      </span><span class="nt">sizeLimit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32Gi</span>
 <span class="nt">volumeMounts</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/dev/shm</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dshm</span>
 </code></pre></div>
-<h4 id="2-gpu-resource-allocation-and-drivers">2. GPU Resource Allocation and Drivers<a class="headerlink" href="#2-gpu-resource-allocation-and-drivers" title="Permanent link">&para;</a></h4>
-<p>Specify exact GPU resource requests and limits using the <strong>NVIDIA GPU Operator</strong>:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">resources</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">limits</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
-<span class="w">  </span><span class="nt">requests</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">nvidia.com/gpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
-</code></pre></div>
-<h4 id="3-health-checks-and-graceful-termination">3. Health Checks and Graceful Termination<a class="headerlink" href="#3-health-checks-and-graceful-termination" title="Permanent link">&para;</a></h4>
-<ul>
-<li><strong>Readiness Probe</strong>: Query <code>GET /health</code> to ensure the model has finished warm-up CUDA Graph capture before the Kubernetes Service routes live traffic.</li>
-<li><strong>Graceful Termination (<code>terminationGracePeriodSeconds: 120</code>)</strong>: Allows active streaming requests to complete before the pod receives <code>SIGKILL</code>.</li>
-</ul>
+<h4 id="2-numa-alignment-and-cpu-core-pinning">2. NUMA Alignment and CPU Core Pinning<a class="headerlink" href="#2-numa-alignment-and-cpu-core-pinning" title="Permanent link">&para;</a></h4>
+<p>On dual-socket host servers (e.g. 2 x Intel Xeon / AMD EPYC CPUs hosting 8 x H100 GPUs), GPUs 0-3 are attached to NUMA Node 0 (PCIe Root Complex 0), while GPUs 4-7 are attached to NUMA Node 1.</p>
+<p>If Kubernetes schedules vLLM CPU threads on NUMA Node 1 while interacting with GPUs 0-3, memory copies traverse the high-latency CPU UPI/QPI inter-socket bridge, incurring a <span class="arithmatex">\(40\%\)</span> throughput penalty. In GKE, configure the <strong>Kubernetes CPU Manager Policy (<code>static</code>)</strong> and <strong>Topology Manager Policy (<code>single-numa-node</code>)</strong> to lock vLLM container threads to the local NUMA domain.</p>
 <hr />
-<h2 id="part-4-production-observability-metrics-and-keda-autoscaling">Part 4: Production Observability, Metrics, and KEDA Autoscaling<a class="headerlink" href="#part-4-production-observability-metrics-and-keda-autoscaling" title="Permanent link">&para;</a></h2>
+<h3 id="32-solving-the-cold-start-scaling-bottleneck-hyperdisk-ml-fast-caching">3.2 Solving the Cold-Start Scaling Bottleneck: Hyperdisk ML &amp; Fast Caching<a class="headerlink" href="#32-solving-the-cold-start-scaling-bottleneck-hyperdisk-ml-fast-caching" title="Permanent link">&para;</a></h3>
+<p>When traffic spikes trigger KEDA autoscaling (e.g., scaling from 2 to 20 Pods), conventional container storage creates a catastrophic failure mode:
+- A 70B parameter FP16/BF16 model is <strong><span class="arithmatex">\(140 \text{ GB}\)</span></strong>.
+- A 405B parameter model is <strong><span class="arithmatex">\(810 \text{ GB}\)</span></strong>.
+- Downloading weights sequentially from HuggingFace Hub or standard cloud object storage over 10 Gbps network takes <strong><span class="arithmatex">\(15 \dots 30 \text{ minutes per pod}\)</span></strong>.
+- <strong>Autoscaling becomes useless</strong> if pods take 20 minutes to become ready during a sudden user traffic surge.</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph TRADITIONAL_STORAGE ["❌ Traditional Storage (15-30 min cold start)"]
+        HF["HuggingFace / Standard Object Store"] --&gt;|"10 Gbps Link (Slow Download)"| POD_OLD["New vLLM Pod&lt;br&gt;Wait 20 minutes..."]
+    end
+
+    subgraph HYPERDISK_ML_STORAGE ["✅ Cloud Hyperdisk ML Architecture (&lt; 10 sec cold start)"]
+        HD["⚡ Google Cloud Hyperdisk ML Volume&lt;br&gt;(Read-Only Many - Multi-Attach up to 2,500 Pods)"]
+        HD --&gt;|"Direct Block Read @ 1.2 TB/s Aggregate"| P1["vLLM Pod 1"]
+        HD --&gt;|"Direct Block Read @ 1.2 TB/s Aggregate"| P2["vLLM Pod 2"]
+        HD --&gt;|"Direct Block Read @ 1.2 TB/s Aggregate"| P20["vLLM Pod 20"]
+    end</code></pre>
+<h4 id="high-speed-storage-solutions">High-Speed Storage Solutions:<a class="headerlink" href="#high-speed-storage-solutions" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Google Cloud Hyperdisk ML</strong>:</li>
+<li>Designed specifically for AI inference scale-out. A single volume holding model weights can be attached in <strong>Read-Only Many (<code>ROX</code>)</strong> mode to up to <strong>2,500 GKE Pods simultaneously</strong>.</li>
+<li>Delivers up to <strong><span class="arithmatex">\(1.2 \text{ TB/s}\)</span> aggregate cluster read throughput</strong>, allowing 20 newly spawned vLLM pods to load <span class="arithmatex">\(140 \text{ GB}\)</span> weights concurrently in <strong>under 10 seconds</strong>.</li>
+<li><strong>GCS FUSE CSI Driver with Local SSD File Cache</strong>:</li>
+<li>Mounts Cloud Storage buckets as local filesystems with streaming reads and local NVMe SSD caching (<code>file-cache: max-size-mb</code>).</li>
+<li><strong>Container Image Streaming (Containerd Stargz / CRFS)</strong>:</li>
+<li>Allows GKE nodes to start the vLLM container immediately without waiting for the entire <span class="arithmatex">\(20 \text{ GB}\)</span> CUDA container image to download, pulling individual image layers lazily on-demand.</li>
+</ol>
+<hr />
+<h3 id="33-high-performance-inter-node-cloud-networking">3.3 High-Performance Inter-Node Cloud Networking<a class="headerlink" href="#33-high-performance-inter-node-cloud-networking" title="Permanent link">&para;</a></h3>
+<p>For multi-node TP/PP distributed serving, inter-node communication must avoid host TCP/IP bottlenecks:
+- <strong>Multi-NIC Architecture</strong>: Cloud AI instances (e.g. Google Cloud A3 Mega / A3 Ultra) equip each node with <strong>8 dedicated <span class="arithmatex">\(200\text{ Gbps}\)</span> or <span class="arithmatex">\(400\text{ Gbps}\)</span> Network Interface Cards (NICs)</strong> mapped 1:1 to each of the 8 GPUs.
+- <strong>GPUDirect-TCPX and RoCEv2 RDMA</strong>: Bypasses the host CPU and system RAM, copying tensors directly from local GPU HBM over the network into remote GPU HBM.
+- <strong>NCCL Tuning Environment Flags</strong>:
+  <div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_DEBUG</span><span class="o">=</span>INFO
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_NET_GDR_LEVEL</span><span class="o">=</span><span class="m">5</span><span class="w">          </span><span class="c1"># Full GPUDirect RDMA across PCIe/NVLink</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_CROSS_NIC</span><span class="o">=</span><span class="m">1</span><span class="w">              </span><span class="c1"># Balance All-Reduce traffic across all 8 NICs</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_BUFFSIZE</span><span class="o">=</span><span class="m">8388608</span><span class="w">         </span><span class="c1"># 8MB ring buffer for high-throughput all-reduce</span>
+</code></pre></div></p>
+<hr />
+<h2 id="part-4-confidential-ai-and-zero-trust-llm-serving">Part 4: Confidential AI and Zero-Trust LLM Serving<a class="headerlink" href="#part-4-confidential-ai-and-zero-trust-llm-serving" title="Permanent link">&para;</a></h2>
+<p>In high-security enterprise domains (Healthcare/HIPAA, FinTech, Defense, Proprietary IP), deploying frontier LLMs introduces major security vulnerabilities:
+1. <strong>Data in Memory Snooping</strong>: Standard GPU memory (HBM) and host RAM store plaintext prompts, patient data, and model weights unencrypted during forward passes.
+2. <strong>Untrusted Cloud Operator / Host Admin</strong>: A malicious host OS administrator, compromised hypervisor, or co-located tenant could dump memory pages and extract proprietary model weights or private user sessions.</p>
+<p>To solve this, Google Cloud and NVIDIA introduced <strong>Confidential Computing for AI</strong> via <strong>Confidential Space</strong> and <strong>Confidential GKE with NVIDIA H100 TEE</strong>.</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph HOST_BOUNDARY ["Physical Server Host (Untrusted Infrastructure Layer)"]
+        HYPERVISOR["Hypervisor / Host OS (Untrusted)"]
+
+        subgraph TEE ["🔒 Hardware-Enforced Trusted Execution Environment (TEE)"]
+            CPU_TEE["Confidential VM (AMD SEV-SNP / Intel TDX)&lt;br&gt;Encrypted RAM Engine (AES-128/256)"]
+            GPU_TEE["NVIDIA H100 Hopper TEE (Confidential GPU Mode)&lt;br&gt;Encrypted HBM + PCIe Link Encryption (AES-GCM)"]
+
+            VLLM["vLLM Serving Container&lt;br&gt;(Decrypted Weights &amp; Plaintext Prompts in TEE Memory Only)"]
+        end
+    end
+
+    KMS["🔐 Google Cloud KMS / Secret Manager"] &lt;--&gt;|"Cryptographic Attestation Token (OIDC) Exchange"| TEE</code></pre>
+<hr />
+<h3 id="41-hardware-enforced-trusted-execution-environment-tee">4.1 Hardware-Enforced Trusted Execution Environment (TEE)<a class="headerlink" href="#41-hardware-enforced-trusted-execution-environment-tee" title="Permanent link">&para;</a></h3>
+<p>Confidential LLM serving combines CPU and GPU cryptographic boundaries:
+1. <strong>CPU TEE (AMD SEV-SNP / Intel TDX)</strong>: Memory encryption keys are generated by the hardware security processor inside the CPU silicon. The hypervisor cannot read or modify guest VM memory pages.
+2. <strong>GPU TEE (NVIDIA Hopper H100 Confidential Computing)</strong>: 
+   - When configured in <strong>Attested Pass-Through Mode (APM)</strong>, the H100 GPU's hardware security engine encrypts all data moving across the PCIe bus and inside the on-package HBM3 memory using line-rate <strong>AES-GCM-256</strong>.
+   - Even physical hardware probes attached to the PCIe bus or memory buses read only encrypted cipher-text.</p>
+<hr />
+<h3 id="42-cryptographic-remote-attestation-key-release-pipeline">4.2 Cryptographic Remote Attestation &amp; Key Release Pipeline<a class="headerlink" href="#42-cryptographic-remote-attestation-key-release-pipeline" title="Permanent link">&para;</a></h3>
+<p>How does an enterprise securely load proprietary model weights into a cloud vLLM pod without ever releasing plaintext weights to disk or to the cloud platform?</p>
+<p>The solution uses <strong>Cryptographic Remote Attestation</strong> orchestrated via <strong>Confidential Space / Confidential GKE</strong>:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant TEE as vLLM Pod in TEE (Confidential GKE)
+    participant TPM as Hardware vTPM / H100 Security Processor
+    participant ATTEST as Google Cloud Attestation Service
+    participant KMS as Cloud KMS / Secret Manager
+    participant STORE as Hyperdisk ML (Encrypted Weights)
+
+    TEE-&gt;&gt;TPM: 1. Measure Boot State (Kernel, Image Hash, GPU Cert)
+    TPM--&gt;&gt;TEE: 2. Signed Hardware Quote
+    TEE-&gt;&gt;ATTEST: 3. Submit Quote for Verification
+    ATTEST--&gt;&gt;TEE: 4. Verified OIDC Attestation Token (Claims: Image Hash, TEE=True)
+    TEE-&gt;&gt;KMS: 5. Request Weight Decryption Key (Provide OIDC Token)
+    Note over KMS: Validates Token Claims match authorized workload policy
+    KMS--&gt;&gt;TEE: 6. Release Model AES Decryption Key
+    TEE-&gt;&gt;STORE: 7. Read Encrypted Model Weights
+    Note over TEE: Decrypts weights directly into Encrypted HBM/RAM in TEE
+    TEE-&gt;&gt;TEE: 8. Start vLLM OpenAI API Server</code></pre>
+<ol>
+<li><strong>Measurement</strong>: When the vLLM pod boots inside Confidential GKE, the hardware vTPM and NVIDIA H100 security processor compute cryptographic hashes of the BIOS, container image, kernel, and GPU microcode.</li>
+<li><strong>Attestation Token</strong>: The pod sends these measurements to the Cloud Attestation Service, which validates them against approved "golden hashes" and issues a signed OIDC attestation token.</li>
+<li><strong>Conditioned Key Release</strong>: Cloud KMS evaluates the token claims (e.g. <em>Image Hash == <code>vllm-prod-v2.4</code></em>, <em>Confidential GPU == <code>H100-TEE</code></em>). If verified, KMS releases the symmetric decryption key.</li>
+<li><strong>Secure Execution</strong>: Model weights are decrypted on-the-fly inside hardware-encrypted RAM/HBM. At no point in time do unencrypted weights exist on persistent disks or accessible host memory.</li>
+</ol>
+<hr />
+<h3 id="43-architecture-synthesis-ai-hypercomputer-vs-confidential-space">4.3 Architecture Synthesis: AI Hypercomputer vs. Confidential Space<a class="headerlink" href="#43-architecture-synthesis-ai-hypercomputer-vs-confidential-space" title="Permanent link">&para;</a></h3>
+<p>Understanding the exact roles of Google Cloud AI Hypercomputer and Confidential Space eliminates architectural confusion:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Architectural Dimension</th>
+<th style="text-align: left;"><strong>Google Cloud AI Hypercomputer</strong> (GKE AI)</th>
+<th style="text-align: left;"><strong>Confidential Space / Confidential GKE</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Primary Engineering Purpose</strong></td>
+<td style="text-align: left;"><strong>Scale, Throughput, and Latency Optimization</strong></td>
+<td style="text-align: left;"><strong>Zero-Trust Security, Privacy, and IP Protection</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Key Hardware Technologies</strong></td>
+<td style="text-align: left;">NVIDIA H100/H200/B200, TPU v5p/v6e, RoCEv2 Multi-NIC, Hyperdisk ML</td>
+<td style="text-align: left;">AMD SEV-SNP, Intel TDX, NVIDIA H100 TEE (Confidential GPU mode)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Key Software Abstractions</strong></td>
+<td style="text-align: left;">LeaderWorkerSet (LWS), KubeRay, Kueue, NCCL FastSocket, KEDA</td>
+<td style="text-align: left;">Hardware Attestation Service, Cloud KMS, Workload Identity OIDC</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Problem Solved</strong></td>
+<td style="text-align: left;">High concurrency, multi-node TP/PP, sub-10-second cold-start scaling</td>
+<td style="text-align: left;">Protection against rogue admins, hypervisor exploits, co-tenant snooping</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Target Workload</strong></td>
+<td style="text-align: left;">Massive web-scale LLM serving (Llama 3 405B, DeepSeek)</td>
+<td style="text-align: left;">Healthcare/HIPAA LLMs, Financial risk models, Proprietary weight hosting</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Unified Deployment Mode</strong></td>
+<td style="text-align: left;">Deploy vLLM via <strong>LeaderWorkerSet on Confidential A3 GPU instances with Hyperdisk ML</strong> to achieve both ultra-scale throughput AND hardware-attested zero-trust guarantees.</td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="part-5-production-observability-metrics-and-keda-autoscaling">Part 5: Production Observability, Metrics, and KEDA Autoscaling<a class="headerlink" href="#part-5-production-observability-metrics-and-keda-autoscaling" title="Permanent link">&para;</a></h2>
 <p>vLLM exposes a built-in Prometheus metrics endpoint (<code>/metrics</code>) for real-time monitoring and event-driven autoscaling.</p>
-<h3 id="41-key-vllm-prometheus-metrics">4.1 Key vLLM Prometheus Metrics<a class="headerlink" href="#41-key-vllm-prometheus-metrics" title="Permanent link">&para;</a></h3>
+<h3 id="51-key-vllm-prometheus-metrics">5.1 Key vLLM Prometheus Metrics<a class="headerlink" href="#51-key-vllm-prometheus-metrics" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
 <th style="text-align: left;">Metric Name</th>
 <th style="text-align: left;">Type</th>
 <th style="text-align: left;">Description</th>
-<th style="text-align: left;">Operational Significance</th>
+<th style="text-align: left;">Operational Significance &amp; SRE Thresholds</th>
 </tr>
 </thead>
 <tbody>
@@ -1084,13 +1616,13 @@
 <td style="text-align: left;"><code>vllm:num_requests_waiting</code></td>
 <td style="text-align: left;">Gauge</td>
 <td style="text-align: left;">Count of requests queued in the scheduler waiting queue</td>
-<td style="text-align: left;"><strong>Primary trigger for Horizontal Autoscaling</strong></td>
+<td style="text-align: left;"><strong>Primary trigger for Horizontal Autoscaling (<span class="arithmatex">\(&gt; 5 \dots 10\)</span>)</strong></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>vllm:gpu_cache_usage_perc</code></td>
 <td style="text-align: left;">Gauge</td>
 <td style="text-align: left;">Percentage of physical GPU KV cache blocks currently allocated</td>
-<td style="text-align: left;"><strong><span class="arithmatex">\(&gt; 85\%\)</span> indicates impending preemption/swapping</strong></td>
+<td style="text-align: left;"><strong><span class="arithmatex">\(&gt; 85\%\)</span> indicates impending preemption, swapping, or TTFT degradation</strong></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>vllm:cpu_cache_usage_perc</code></td>
@@ -1099,117 +1631,164 @@
 <td style="text-align: left;"><span class="arithmatex">\(&gt; 0\%\)</span> indicates GPU memory saturation</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>vllm:avg_prompt_throughput_tok_per_s</code></td>
+<td style="text-align: left;">Gauge</td>
+<td style="text-align: left;">Aggregate prompt token prefill throughput across the engine</td>
+<td style="text-align: left;">Tracks Prefill engine efficiency and TTFT capacity</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>vllm:avg_generation_throughput_tok_per_s</code></td>
+<td style="text-align: left;">Gauge</td>
+<td style="text-align: left;">Aggregate output token generation throughput across the engine</td>
+<td style="text-align: left;">Measures decoding bandwidth saturation</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>vllm:time_to_first_token_seconds</code></td>
 <td style="text-align: left;">Histogram</td>
 <td style="text-align: left;">Time To First Token (TTFT) latency distribution</td>
-<td style="text-align: left;">Key SLA metric for prompt processing</td>
+<td style="text-align: left;">Key SLA metric for prompt processing (<span class="arithmatex">\(P_{99} &lt; 1.0\text{ s}\)</span>)</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>vllm:time_per_output_token_seconds</code></td>
 <td style="text-align: left;">Histogram</td>
-<td style="text-align: left;">Inter-Token Latency (ITL) distribution</td>
-<td style="text-align: left;">Key SLA metric for token generation speed</td>
+<td style="text-align: left;">Inter-Token Latency (ITL / TBT) distribution</td>
+<td style="text-align: left;">Key SLA metric for token generation speed (<span class="arithmatex">\(P_{99} &lt; 25\text{ ms}\)</span>)</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h3 id="42-keda-event-driven-horizontal-pod-autoscaling">4.2 KEDA Event-Driven Horizontal Pod Autoscaling<a class="headerlink" href="#42-keda-event-driven-horizontal-pod-autoscaling" title="Permanent link">&para;</a></h3>
+<h3 id="52-keda-event-driven-horizontal-pod-autoscaling">5.2 KEDA Event-Driven Horizontal Pod Autoscaling<a class="headerlink" href="#52-keda-event-driven-horizontal-pod-autoscaling" title="Permanent link">&para;</a></h3>
 <p>Standard Kubernetes Horizontal Pod Autoscalers (HPA) scale pods based on CPU or RAM usage, which is completely ineffective for GPU workloads.</p>
 <p>Production deployments use <strong>KEDA (Kubernetes Event-driven Autoscaling)</strong> to scale vLLM pod replicas dynamically based on <strong>KV Cache Usage</strong> and <strong>Waiting Queue Depth</strong>.</p>
 <pre class="mermaid"><code>flowchart TD
     VLLM_METRICS["vLLM Pod /metrics Endpoint"] --&gt; PROM["Prometheus Monitoring Server"]
     PROM --&gt; KEDA["KEDA ScaledObject Controller"]
 
-    subgraph SCALING_RULES ["Scaling Rule Metrics"]
-        RULE1["vllm:num_requests_waiting &gt; 5"]
-        RULE2["vllm:gpu_cache_usage_perc &gt; 0.80"]
+    subgraph SCALING_RULES ["Composite Scaling Triggers"]
+        RULE1["Trigger A: sum(vllm:num_requests_waiting) &gt; 5"]
+        RULE2["Trigger B: avg(vllm:gpu_cache_usage_perc) &gt; 0.80"]
     end
 
-    KEDA --&gt; HPA
-    SCALING_RULES --&gt; HPA["Scale Up vLLM Pod Replicas (e.g. 2 -&gt; 10 Pods)"]</code></pre>
-<h4 id="example-keda-scaledobject-configuration">Example KEDA <code>ScaledObject</code> Configuration<a class="headerlink" href="#example-keda-scaledobject-configuration" title="Permanent link">&para;</a></h4>
+    KEDA --&gt; SCALING_RULES
+    SCALING_RULES --&gt; HPA["Scale Up vLLM Pod Replicas (e.g. 2 -&gt; 20 Pods via Hyperdisk ML)"]</code></pre>
+<h4 id="production-keda-scaledobject-configuration">Production KEDA <code>ScaledObject</code> Configuration<a class="headerlink" href="#production-keda-scaledobject-configuration" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keda.sh/v1alpha1</span>
 <span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ScaledObject</span>
 <span class="nt">metadata</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-autoscaler</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-keda-autoscaler</span>
+<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">llm-serving</span>
 <span class="nt">spec</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">scaleTargetRef</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-deployment</span>
+<span class="w">    </span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">leaderworkerset.x-k8s.io/v1</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LeaderWorkerSet</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm-llama3-405b</span>
 <span class="w">  </span><span class="nt">minReplicaCount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 <span class="w">  </span><span class="nt">maxReplicaCount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">  </span><span class="nt">cooldownPeriod</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300</span><span class="w"> </span><span class="c1"># Prevent flapping during bursty traffic</span>
+<span class="w">  </span><span class="nt">pollingInterval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 <span class="w">  </span><span class="nt">triggers</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prometheus</span>
 <span class="w">      </span><span class="nt">metadata</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">serverAddress</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://prometheus-k8s.monitoring:9090</span>
 <span class="w">        </span><span class="nt">metricName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm_num_requests_waiting</span>
-<span class="w">        </span><span class="nt">query</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sum(vllm:num_requests_waiting)</span>
+<span class="w">        </span><span class="nt">query</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sum(vllm:num_requests_waiting{namespace=&quot;llm-serving&quot;})</span>
 <span class="w">        </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;5&#39;</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prometheus</span>
+<span class="w">      </span><span class="nt">metadata</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">serverAddress</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://prometheus-k8s.monitoring:9090</span>
+<span class="w">        </span><span class="nt">metricName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vllm_gpu_cache_usage_perc</span>
+<span class="w">        </span><span class="nt">query</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">avg(vllm:gpu_cache_usage_perc{namespace=&quot;llm-serving&quot;})</span>
+<span class="w">        </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0.80&#39;</span>
 </code></pre></div>
 <hr />
-<h2 id="part-5-complete-production-reference-architecture">Part 5: Complete Production Reference Architecture<a class="headerlink" href="#part-5-complete-production-reference-architecture" title="Permanent link">&para;</a></h2>
-<p>The complete end-to-end enterprise serving architecture combines API gateways, KEDA autoscaling, Ray distributed clusters, and multi-tier memory management into a unified deployment topology.</p>
+<h2 id="part-6-complete-production-reference-architecture">Part 6: Complete Production Reference Architecture<a class="headerlink" href="#part-6-complete-production-reference-architecture" title="Permanent link">&para;</a></h2>
+<p>The complete end-to-end enterprise serving architecture combines intelligent API routing, LeaderWorkerSet multi-node scaling, Hyperdisk ML fast storage, hardware-attested Confidential Computing, and KEDA autoscaling into a unified production topology.</p>
 <pre class="mermaid"><code>flowchart TD
-    USERS["📱 Clients and Web Applications"] --&gt; INGRESS["🌐 Cloud Ingress / Load Balancer (Envoy / NGINX)"]
-    INGRESS --&gt; GATEWAY["🚪 API Gateway (Authentication / Rate Limiting / Token Counting)"]
+    USERS["📱 Clients and Web Applications"] --&gt; WAF["🛡️ Cloud Armor / WAF / SSL Termination"]
+    WAF --&gt; GATEWAY["🚪 Intelligent API Gateway (Auth / Rate Limiting / Prefix-Aware Hash Router)"]
 
-    GATEWAY --&gt; K8S_CLUSTER["☸️ Kubernetes vLLM Serving Cluster"]
+    GATEWAY --&gt; K8S_CLUSTER["☸️ GKE AI Hypercomputer Cluster"]
 
-    subgraph K8S_CLUSTER
-        POD_A["vLLM Pod Instance 1 (8 x H100 GPUs)&lt;br&gt;OpenAI FastApi + AsyncLLMEngine"]
-        POD_B["vLLM Pod Instance 2 (8 x H100 GPUs)&lt;br&gt;OpenAI FastApi + AsyncLLMEngine"]
+    subgraph K8S_CLUSTER ["☸️ GKE AI Hypercomputer Cluster (Confidential A3 Nodes)"]
+        subgraph LWS_REPLICA_1 ["LeaderWorkerSet Replica 1 (TP=8, PP=2)"]
+            LEADER_1["👑 Leader Pod (Node 0: 8x H100 TEE)&lt;br&gt;OpenAI FastAPI + Engine Master"]
+            WORKER_1["👷 Worker Pod (Node 1: 8x H100 TEE)&lt;br&gt;Distributed Worker Ranks 8..15"]
+            LEADER_1 &lt;--&gt;|"Multi-NIC RoCEv2 (400 Gbps RDMA)"| WORKER_1
+        end
+
+        subgraph LWS_REPLICA_2 ["LeaderWorkerSet Replica 2 (TP=8, PP=2)"]
+            LEADER_2["👑 Leader Pod (Node 2: 8x H100 TEE)"]
+            WORKER_2["👷 Worker Pod (Node 3: 8x H100 TEE)"]
+            LEADER_2 &lt;--&gt;|"Multi-NIC RoCEv2 (400 Gbps RDMA)"| WORKER_2
+        end
     end
 
-    subgraph POD_INTERNALS ["📦 Inside Each vLLM Pod"]
-        RAY_HEAD["Ray Cluster Manager"]
-        TP_WORKERS["TP=8 Distributed Workers (NVLink custom_ar)"]
-        BLOCK_MGR["PagedAttention Block Manager (GPU HBM + CPU Swap)"]
-        METRICS_EP["Prometheus /metrics Endpoint"]
-    end
+    STORAGE["⚡ Google Cloud Hyperdisk ML Volume&lt;br&gt;(Read-Only Many, 1.2 TB/s Aggregate Throughput)"]
+    STORAGE --&gt;|"Sub-10s Model Loading"| LWS_REPLICA_1
+    STORAGE --&gt;|"Sub-10s Model Loading"| LWS_REPLICA_2
 
-    POD_A --&gt; POD_INTERNALS
-    POD_B --&gt; POD_INTERNALS
-    METRICS_EP --&gt; PROM_SRV["📊 Prometheus Monitoring Server"]
-    PROM_SRV --&gt; KEDA_CTRL["⚡ KEDA ScaledObject Controller"]
-    KEDA_CTRL --&gt;|"Auto-scale Pod Replicas"| K8S_CLUSTER</code></pre>
+    ATTEST["🔐 Google Cloud KMS &amp; Attestation Service"] &lt;--&gt;|"Hardware Attestation &amp; Key Release"| K8S_CLUSTER
+
+    METRICS["📊 Prometheus Monitoring"] &lt;-- "Scrape /metrics" -- K8S_CLUSTER
+    METRICS --&gt; KEDA["⚡ KEDA ScaledObject Controller"]
+    KEDA --&gt;|"Auto-scale LWS Replicas (2 -&gt; 20)"| K8S_CLUSTER</code></pre>
 <hr />
 <h2 id="summary-production-readiness-checklist">Summary: Production Readiness Checklist<a class="headerlink" href="#summary-production-readiness-checklist" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th style="text-align: left;">Category</th>
-<th style="text-align: left;">Best Practice Requirement</th>
+<th style="text-align: left;">Production Best Practice Requirement</th>
 <th style="text-align: left;">Verification Metric / Command</th>
+<th style="text-align: left;">Failure Mode Mitigated</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align: left;"><strong>Shared Memory</strong></td>
-<td style="text-align: left;">Mount <code>emptyDir</code> memory volume to <code>/dev/shm</code> (<span class="arithmatex">\(\ge 16 \text{ GB}\)</span>)</td>
+<td style="text-align: left;">Mount <code>emptyDir</code> memory volume to <code>/dev/shm</code> (<span class="arithmatex">\(\ge 32 \text{ GB}\)</span>)</td>
+<td style="text-align: left;">Verify <code>df -h /dev/shm</code> inside container</td>
 <td style="text-align: left;">Prevents <code>SIGBUS</code> IPC crashes during NVLink All-Reduce</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>CUDA Graphs</strong></td>
-<td style="text-align: left;">Warm-up captured CUDA Graphs for fixed batch buckets</td>
-<td style="text-align: left;">Verify <code>vllm:num_requests_running</code> latency drop at <span class="arithmatex">\(b \in \{1 \dots 128\}\)</span></td>
+<td style="text-align: left;"><strong>Multi-Node Orchestration</strong></td>
+<td style="text-align: left;">Deploy multi-node models via <code>LeaderWorkerSet</code> (LWS)</td>
+<td style="text-align: left;">Verify <code>kubectl get lws</code> with <code>RecreateGroupOnPodRestart</code></td>
+<td style="text-align: left;">Prevents partial cluster deadlocks on single-node GPU fault</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>Probes</strong></td>
-<td style="text-align: left;">Set Readiness Probe to <code>GET /health</code></td>
-<td style="text-align: left;">Ensures traffic routes only after model loading &amp; graph capture</td>
+<td style="text-align: left;"><strong>Cold-Start Storage</strong></td>
+<td style="text-align: left;">Attach model weights via <strong>Hyperdisk ML</strong> (<code>ROX</code> mode) or GCS FUSE Cache</td>
+<td style="text-align: left;">Measure container start-to-ready time (<span class="arithmatex">\(&lt; 15\text{ s}\)</span>)</td>
+<td style="text-align: left;">Prevents 20-minute autoscaling lag during traffic surges</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>Autoscaling</strong></td>
-<td style="text-align: left;">Scale on <code>vllm:num_requests_waiting</code> via KEDA</td>
-<td style="text-align: left;">Prevents TTFT degradation during prompt traffic spikes</td>
+<td style="text-align: left;"><strong>Intelligent Routing</strong></td>
+<td style="text-align: left;">Enable Prefix-Cache-Aware Router in front of vLLM pods</td>
+<td style="text-align: left;">Track <code>vllm:gpu_prefix_cache_hit_rate</code> (<span class="arithmatex">\(&gt; 80\%\)</span>)</td>
+<td style="text-align: left;">Prevents redundant prompt prefill recomputation</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>Observability</strong></td>
-<td style="text-align: left;">Scraping Prometheus <code>/metrics</code> every 5 seconds</td>
-<td style="text-align: left;">Track TTFT (<code>vllm:time_to_first_token_seconds</code>) and GPU Cache usage</td>
+<td style="text-align: left;"><strong>Confidential Security</strong></td>
+<td style="text-align: left;">Enable Confidential GKE (AMD SEV-SNP + NVIDIA H100 TEE)</td>
+<td style="text-align: left;">Check Attestation token exchange via Cloud KMS</td>
+<td style="text-align: left;">Protects proprietary weights and user prompts from host snooping</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Autoscaling Triggers</strong></td>
+<td style="text-align: left;">Scale on <code>vllm:num_requests_waiting</code> (<span class="arithmatex">\(&gt; 5\)</span>) and GPU Cache (<span class="arithmatex">\(&gt; 0.80\)</span>) via KEDA</td>
+<td style="text-align: left;">Verify KEDA <code>ScaledObject</code> status in Prometheus</td>
+<td style="text-align: left;">Prevents TTFT degradation and Out-of-Memory preemption</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Health Probes</strong></td>
+<td style="text-align: left;">Point Kubernetes Readiness Probe to <code>GET /health</code></td>
+<td style="text-align: left;">Verify HTTP 200 returned strictly after CUDA graph warm-up</td>
+<td style="text-align: left;">Prevents routing user traffic to un-warmed model replicas</td>
 </tr>
 </tbody>
 </table>
-<p>Congratulations on completing the <strong>vLLM Core Architecture and Performance Mechanics</strong> textbook! You now possess an end-to-end mastery of LLM inference fundamentals, memory management, kernel optimization, distributed parallelism, and enterprise cloud deployment.</p>
+<p>Congratulations on completing the <strong>vLLM Core Architecture and Performance Mechanics</strong> textbook! You now possess an end-to-end mastery of LLM inference fundamentals, memory management, kernel optimization, distributed parallelism, cloud infrastructure co-design, and enterprise zero-trust production deployment.</p>
 
 
 
